@@ -1,4 +1,4 @@
-from enum import unique
+
 from sqlalchemy import Column, Integer, String, Double, DateTime, Float, Boolean, ForeignKey, column,Enum
 import enum
 from QuanLyHocSinh import db, app
@@ -16,17 +16,17 @@ class User(db.Model):
     email = Column(String(50), unique=True)
     userAccount = Column(String(50), unique=True)
     password = Column(String(50))
-    admins = relationship('Admin', backref='user', lazy=True)
-    teachers = relationship('Teacher',backref='user',lazy=True)
-    staffs = relationship('Staff',backref='user',lazy=True)
+    admins = relationship('Administrator', backref='User_Admin', lazy=True)
+    teachers = relationship('Teacher',backref='User_Teacher',lazy=True)
+    staffs = relationship('Staff',backref='User_Staff',lazy=True)
 
     def __str__(self):
         return self.name
 
 
-class Admin(db.Model):
-    __tablename__ = 'admin'
-    id = Column(Integer, primary_key=True)
+class Administrator(db.Model):
+    __tablename__ = 'administrator'
+    id = Column(Integer, primary_key=True,autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.userID'), nullable=False)
 
     def __str__(self):
@@ -43,8 +43,8 @@ class Subject(db.Model):
     subjectID = Column(Integer, primary_key=True)
     subjectName = Column(String(50), nullable=False)
     grade_level = Column(Enum(GradeLevel), nullable=False)
-    teachers = relationship('Teacher',backref='subject',lazy=True)
-    points = relationship('Point',backref='subject',lazy=True)
+    teachers = relationship('Teacher',backref='Subject_Teacher',lazy=True)
+    points = relationship('Point',backref='Subject_Point',lazy=True)
     def __str__(self):
         return self.subjectName
 
@@ -53,9 +53,9 @@ class Subject(db.Model):
 
 class Teacher(db.Model):
     __tablename__ = 'teacher'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True,autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.userID'), nullable=False)
-    teaches = relationship('Teach',backref='teacher',lazy=True)
+    teaches = relationship('Teach',backref='teacher_teach',lazy=True)
     subject_ID = Column(Integer, ForeignKey('subject.subjectID'))
 
     def __str__(self):
@@ -63,7 +63,7 @@ class Teacher(db.Model):
 
 class Staff(db.Model):
     __tablename__ = 'staff'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True,autoincrement=True)
     user_id = Column(Integer, ForeignKey('user.userID'), nullable=False)
 
     def __str__(self):
@@ -73,8 +73,8 @@ class Year(db.Model):
     __tablename__ = 'year'
     yearID = Column(Integer, primary_key=True, autoincrement=True)
     yearName = Column(String(50),nullable=False)
-    classes = relationship('Class', backref='year', lazy=True)
-    semesters = relationship('Semester',backref='year',lazy=True)
+    classes = relationship('Class', backref='Year_Class', lazy=True)
+    semesters = relationship('Semester',backref='Year_semester',lazy=True)
 
     def __str__(self):
         return self.yearName
@@ -85,7 +85,7 @@ class Semester(db.Model):
     semesterID = Column(Integer, primary_key=True, autoincrement=True)
     semesterName = Column(String(20), nullable=False)
     year_ID = Column(Integer, ForeignKey('year.yearID'),nullable=False)
-    points = relationship('Point',backref='semester',lazy=True)
+    points = relationship('Point',backref='semester_point',lazy=True)
     def __str__(self):
         return self.semesterName
 
@@ -94,7 +94,7 @@ class ClassRule(db.Model):
     __tablename__ = 'class_rule'
     classRuleID = Column(Integer, primary_key=True, autoincrement=True)
     maxNumber = Column(Integer, nullable=False)
-    classes = relationship('Class', backref='class_rule', lazy=True)
+    classes = relationship('Class', backref='class_rule_class', lazy=True)
 
     def __str__(self):
         return str(self.classRuleID)
@@ -106,8 +106,8 @@ class Class(db.Model):
     number = Column(Integer)
     year_ID = Column(Integer, ForeignKey('year.yearID'), nullable=False)
     classRule_ID = Column(Integer, ForeignKey('class_rule.classRuleID'), nullable=False)
-    teaches = relationship('Teach', backref='class', lazy=True)
-    studies = relationship('Study', backref='class',lazy=True)
+    teaches = relationship('Teach', backref='class_teach', lazy=True)
+    studies = relationship('Study', backref='class_study',lazy=True)
     grade_level = Column(Enum(GradeLevel), nullable=False)
 
     def __str__(self):
@@ -136,7 +136,7 @@ class StudentRule(db.Model):
     stuRuleID = Column(Integer, primary_key=True, autoincrement=True)
     maxAge = Column(Integer, nullable=False)
     minAge = Column(Integer, nullable=False)
-    classes = relationship('Student', backref='student_rule', lazy=True)
+    classes = relationship('Student', backref='student_rule_class', lazy=True)
 
     def __str__(self):
         return str(self.classRuleID)
@@ -151,8 +151,8 @@ class Student(db.Model):
     phoneNumber = Column(String(11), unique=True)
     email = Column(String(50), unique=True)
     stuRule_ID = Column(Integer, ForeignKey('student_rule.stuRuleID'),nullable=False)
-    studies = relationship('Study',backref='student', lazy=True)
-    points = relationship('Point',backref='student',lazy=True)
+    studies = relationship('Study',backref='student_study', lazy=True)
+    points = relationship('Point',backref='student_point',lazy=True)
     def __str__(self):
         return self.name
 
@@ -163,7 +163,7 @@ class Point(db.Model):
     subject_ID = Column(Integer,ForeignKey('subject.subjectID'),nullable=False)
     student_ID = Column(Integer,ForeignKey('student.studentID'),nullable=False)
     semester_ID = Column(Integer,ForeignKey('semester.semesterID'),nullable=False)
-    pointDetails = relationship('PointDetails',backref='point',lazy=True)
+    pointDetails = relationship('PointDetails',backref='point_pointDetails',lazy=True)
     def __str__(self):
         return str(self.pointID)
 
@@ -185,7 +185,3 @@ class PointDetails(db.Model):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # u1 = User(name='Hau', dateOfBirth=datetime.strptime('2004-10-17', '%Y-%m-%d'), gender='Nam',
-        #           phoneNumber='0346916012', email='abc@gmail.com', userAccount='user1', password='123')
-        # db.session.add(u1)
-        # db.session.commit()
