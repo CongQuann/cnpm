@@ -1,24 +1,11 @@
-*{
-    border:0;
-    padding:0;
-    font-family: Tahoma;
-}
+ #edit-regulations-form {
+       background-color: #f8f9fa;
+       padding: 20px;
+       border-radius: 8px;
+       box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
+ }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-
-}
-
-main {
-    flex: 1; /* Đẩy footer xuống đáy */
-}
-
-.custom-footer {
+ .custom-footer {
     background-color: #212529;
     color: #fff;
     text-align: center;
@@ -28,7 +15,9 @@ main {
     width: 100%;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
     font-size:1.2rem;
-}
+ }
+
+
 
 
 .logout-btn{
@@ -42,5 +31,3 @@ main {
     border-radius: 7px;
     transition: ease 0.7s;
 }
-
-

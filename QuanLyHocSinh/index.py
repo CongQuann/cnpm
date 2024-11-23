@@ -8,7 +8,7 @@ def home():
     return render_template('index.html')
 
 
-@app.route("/Administrator", methods=["GET", "POST"])
+@app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
     data = [
@@ -28,6 +28,15 @@ def report():
 
     ]
     return render_template('Administrator/Report.html', data=data)
+
+@app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
+def rule():
+    regulations = {
+        "min_age": 6,
+        "max_age": 18,
+        "max_class_size": 40
+    }
+    return render_template('Administrator/RuleManagement.html',regulations=regulations)
 
 
 if __name__ == '__main__':

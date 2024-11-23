@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Chỉnh sửa quy định
+{% endblock %}
+
+{% block css%}
+ <link href="{{ url_for('static', filename='css/Administrator/RuleManagement.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Chỉnh Sửa Quy Định</h2>
+
+    <!-- Form chỉnh sửa quy định -->
+    <form id="edit-regulations-form" method="POST" action="/update-regulations">
+        <!-- Độ tuổi tối thiểu -->
+        <div class="mb-3 row">
+            <label for="min-age" class="col-md-4 col-form-label text-end">Độ tuổi tối thiểu:</label>
+            <div class="col-md-6">
+                <input
+                    type="number"
+                    class="form-control"
+                    id="min-age"
+                    name="min_age"
+                    value="{{ regulations.min_age }}"
+                    required>
+            </div>
+        </div>
+
+        <!-- Độ tuổi tối đa -->
+        <div class="mb-3 row">
+            <label for="max-age" class="col-md-4 col-form-label text-end">Độ tuổi tối đa:</label>
+            <div class="col-md-6">
+                <input
+                    type="number"
+                    class="form-control"
+                    id="max-age"
+                    name="max_age"
+                    value="{{ regulations.max_age }}"
+                    required>
+            </div>
+        </div>
+
+        <!-- Sĩ số tối đa của lớp -->
+        <div class="mb-3 row">
+            <label for="max-class-size" class="col-md-4 col-form-label text-end">Sĩ số tối đa của lớp:</label>
+            <div class="col-md-6">
+                <input
+                    type="number"
+                    class="form-control"
+                    id="max-class-size"
+                    name="max_class_size"
+                    value="{{ regulations.max_class_size }}"
+                    required>
+            </div>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="row mt-4">
+            <div class="col-md-6 offset-md-4">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a href="/" class="btn btn-secondary">Hủy</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
