@@ -38,6 +38,12 @@ def rule():
     }
     return render_template('Administrator/RuleManagement.html',regulations=regulations)
 
+@app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
+def enter_point():
+    regulations = {
+
+    }
+    return render_template('Teacher/EnterPoints.html',regulations=regulations)
 
 if __name__ == '__main__':
     app.run(debug=True)
