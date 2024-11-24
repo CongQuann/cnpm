@@ -38,12 +38,26 @@ def rule():
     }
     return render_template('Administrator/RuleManagement.html',regulations=regulations)
 
+<<<<<<< Updated upstream
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     regulations = {
 
     }
     return render_template('Teacher/EnterPoints.html',regulations=regulations)
+=======
+@app.route("/Administrator/SubjectMng",methods=["GET","POST"])
+def subject_mng():
+    # Dữ liệu mẫu
+    subjects = [
+        {"id": 1, "name": "Toán", "max_students": 40},
+        {"id": 2, "name": "Vật lý", "max_students": 35},
+        {"id": 3, "name": "Hóa học", "max_students": 30}
+    ]
+
+    # Truyền dữ liệu đến template
+    return render_template('Administrator/SubjectManagement.html', subjects=subjects)
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     app.run(debug=True)
