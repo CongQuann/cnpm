@@ -40,8 +40,8 @@ Quản lý môn học
                 <td>{{ subject.id }}</td>
                 <td>{{ subject.name }}</td>
                 <td>
-                    <button class="btn btn-warning">Cập nhật</button>
-                    <button class="btn btn-danger">Xóa</button>
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editSubjectModal">Cập nhật</button>
+                    <button class="btn btn-danger" >Xóa</button>
                 </td>
             </tr>
             {% endfor %}
@@ -61,7 +61,7 @@ Quản lý môn học
                 <form id="add-subject-form">
                     <div class="mb-3">
                         <label for="subject-name" class="form-label">Tên môn học</label>
-                        <input type="text" class="form-control" id="subject-name" required>
+                        <input type="text" class="form-control" id="subject-name" autocomplete="off" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Lưu</button>
                 </form>

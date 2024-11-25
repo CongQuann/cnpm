@@ -1,4 +1,6 @@
-from flask import render_template
+
+
+from flask import render_template, request
 
 from QuanLyHocSinh import app
 
@@ -7,7 +9,7 @@ from QuanLyHocSinh import app
 def home():
     return render_template('index.html')
 
-
+#=========================Administrator==============================
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
@@ -38,15 +40,8 @@ def rule():
     }
     return render_template('Administrator/RuleManagement.html',regulations=regulations)
 
-<<<<<<< Updated upstream
-@app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
-def enter_point():
-    regulations = {
 
-    }
-    return render_template('Teacher/EnterPoints.html',regulations=regulations)
-=======
-@app.route("/Administrator/SubjectMng",methods=["GET","POST"])
+@app.route("/Administrator/SubjectManagement",methods=["GET","POST"])
 def subject_mng():
     # Dữ liệu mẫu
     subjects = [
@@ -57,7 +52,39 @@ def subject_mng():
 
     # Truyền dữ liệu đến template
     return render_template('Administrator/SubjectManagement.html', subjects=subjects)
->>>>>>> Stashed changes
+
+@app.route("/Administrator/TeacherManagement",methods=["GET","POST"])
+def teacher_mng():
+    # Dữ liệu mẫu (sau này thay bằng database)
+    teachers = [
+        {"id": 1, "name": "Nguyễn Văn A", "subject": "Toán"},
+        {"id": 2, "name": "Trần Thị B", "subject": "Vật lý"}
+    ]
+
+    subjects = ["Toán", "Vật lý", "Hóa học", "Sinh học"]
+
+    if request.method == "POST":
+        # Xử lý thêm giáo viên
+        new_teacher = {
+            "id": len(teachers) + 1,  # Tăng ID tự động
+            "name": request.form["teacher_name"],
+            "subject": request.form["subject"]
+        }
+        teachers.append(new_teacher)
+
+    return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
+
+
+#======================================================================================================
+@app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
+def enter_point():
+    regulations = {
+
+    }
+    return render_template('Teacher/EnterPoints.html',regulations=regulations)
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
