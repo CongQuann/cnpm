@@ -1,14 +1,16 @@
 /* Container chính */
 
 #scoreboard-container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 50px auto;
     padding: 20px;
     background-color: #f8f9fa;
     border-radius: 10px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
-
+.container-div{
+    max-width: 800px;
+}
 /* Tiêu đề */
 .title {
     text-align: center;
@@ -46,7 +48,11 @@
     border-collapse: collapse;
     margin-top: 20px;
     flex: 1 1 45%; / Mỗi ô input chiếm 45% chiều rộng, cho phép co giãn /
-    min-width: 200px; / Đảm bảo độ rộng tối thiểu của mỗi ô /
+    min-width: 150px; / Đảm bảo độ rộng tối thiểu của mỗi ô /
+    font-size: 1.2rem; /* Tăng kích cỡ chữ */
+    border-spacing: 0; /* Khoảng cách giữa các ô */
+    margin: 0 auto; /* Canh giữa bảng */
+
 }
 
 .table-header {
@@ -55,12 +61,18 @@
     padding: 10px;
     border: 1px solid #ccc;
     text-align: center;
+    position: sticky;
+    height: 50px;
+    box-sizing: border-box;
 }
-
+.score-15min-header{
+    width:200px;
+}
 .table-cell {
     padding: 10px;
     border: 1px solid #ccc;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .input-cell {
@@ -70,7 +82,9 @@
     border-radius: 5px;
     gap: 10px;
 }
-
+.score-15min-container .input-cell {
+    width: 170px; /* Chiều rộng lớn hơn cho ô điểm 15 phút */
+}
 /* Hiệu ứng hover cho hàng */
 #scoreboard-table tbody tr:hover {
     background-color: #f1f1f1;
@@ -90,4 +104,30 @@
  #semester-input {
     margin-bottom: 10px;
 }
+.small-input {
+    text-align: center; /* Canh giữa nội dung */
+    font-size: 0.9rem; /* Giảm cỡ chữ */
+    padding: 0.2rem;
+}
+.student-id{
+    width: 90px
+}
+/* Dropdown Styles */
+.dropdown-menu {
+    max-height: 200px;
+    overflow-y: auto;
+}
 
+/* Khi dropdown được chọn */
+.dropdown-toggle:focus {
+    box-shadow: none;
+}
+
+#score-15min{
+    position: sticky;
+}
+.input-cell input-cell{
+     width: 15%;
+
+    box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước */
+}
