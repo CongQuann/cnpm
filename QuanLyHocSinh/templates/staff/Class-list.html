@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý lớp học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../../static/css/staff/Class-list.css">
+    <link rel="icon" href="../../static/pictures/logo.jpg">
+</head>
+
+<body>
+    <div>
+        <div id="header_div">
+            <nav class="navbar navbar-expand-sm navbar-dark custom-bg">
+                <div class="container-fluid">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#demo">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </nav>
+            <div class="sub_head_div">
+                <h1>Quản Lý Lớp Học</h1>
+            </div>
+            <!-- Offcanvas Sidebar -->
+            <div class="offcanvas offcanvas-start" id="demo">
+                <div class="offcanvas-header">
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+                    <a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></a>
+                    <span class="offcanvas-title" id="offcanvas-title-1">Trung Học Phổ Thông</span>
+                    <h1 class="staff-name">staff1</h1>
+                    <h1 class="staff-mail">staff1@gmail.com</h1>
+
+                </div>
+                <div class="offcanvas-body">
+                    <a href="staff.html">
+                        Tiếp Nhận Học Sinh
+                    </a><br>
+                    <a href="Class-list.html">
+                        Quản Lý Lớp Học
+                    </a><br>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Tìm kiếm và reset -->
+        <div class="search-container">
+            <label for="class">Lớp:</label>
+                <select id="class" name="class">
+                    <option value="1">10C1</option>
+                    <option value="2">11C2</option>
+                    <option value="3">12C3</option>
+                </select>
+                <label for="student-name">Tên:</label>
+            <input type="text" id="searchLocation" placeholder="Nhập tên học sinh">  
+            <button id="searchBtn" class="btn btn-primary">Tìm kiếm</button>
+            <button id="resetBtn" class="btn btn-secondary">Reset</button>
+        </div>
+
+        <div id="main">
+            <table id="tour-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Họ và tên</th>
+                        <th>Giới tính</th>
+                        <th>Năm sinh</th>
+                        <th>Địa chỉ</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody id="tour-data">
+                    <tr>
+                        <td>1</td>
+                        <td>Nguyen Van A</td>
+                        <td>Nam</td>
+                        <td>10/10/2007</td>
+                        <td>105/72, Lý Thái Tổ, Bình Thạnh, HCM</td>
+                        <td>
+                            <a class="edit-btn" href="Student-edit.html">Sửa</a>
+                            <a class="delete-btn" href="#">Xóa</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="title">
+            <h2>Học Sinh Chưa Có Lớp</h2>
+        </div>
+        <div id="main">
+            <table id="tour-table">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Họ và tên</th>
+                        <th>Lớp</th>
+                        <th>Giới tính</th>
+                        <th>Năm sinh</th>
+                        <th>Địa chỉ</th>
+                        <th>Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody id="tour-data">
+                    <tr>
+                        <td>1</td>
+                        <td>Nguyen Van A</td>
+                        <td>
+                            <select id="class-choice" name="class-choice">
+                                <option value="0">None</option>
+                                <option value="1">10C1</option>
+                                <option value="2">11C2</option>
+                                <option value="3">12C3</option>
+                            </select>
+                        </td>
+                        <td>Nam</td>
+                        <td>10/10/2007</td>
+                        <td>105/72, Lý Thái Tổ, Bình Thạnh, HCM</td>
+                        <td>
+                            <a class="edit-btn" href="Student-edit.html">Sửa</a>
+                            <a class="edit-btn" href="#">Thêm</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Chức năng tìm kiếm
+            document.getElementById('searchBtn').addEventListener('click', function () {
+                const locationValue = document.getElementById('searchLocation').value.toLowerCase();
+                const seatsValue = document.getElementById('searchSeats').value;
+                const priceValue = document.getElementById('searchPrice').value;
+
+                document.querySelectorAll('#tour-data tr').forEach(row => {
+                    const locationText = row.cells[0].textContent.toLowerCase();
+                    const seatsText = row.cells[3].textContent;
+                    const priceText = row.cells[5].textContent;
+
+                    const isMatch = (!locationValue || locationText.includes(locationValue)) &&
+                        (!seatsValue || seatsText == seatsValue) &&
+                        (!priceValue || priceText == priceValue);
+
+                    row.style.display = isMatch ? '' : 'none';
+                });
+            });
+
+            // Chức năng reset
+            document.getElementById('resetBtn').addEventListener('click', function () {
+                document.getElementById('searchLocation').value = '';
+                document.getElementById('searchSeats').value = '';
+                document.getElementById('searchPrice').value = '';
+
+                document.querySelectorAll('#tour-data tr').forEach(row => {
+                    row.style.display = '';
+                });
+            });
+
+            // Xác nhận xóa tour
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault(); // Ngăn chặn hành động mặc định để xử lý xác nhận xóa
+                    const confirmDelete = confirm("Bạn có chắc chắn muốn xóa tour này không?");
+                    if (confirmDelete) {
+                        window.location.href = this.href; // Chuyển đến URL xóa nếu xác nhận
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+</body>
+
+</html>
