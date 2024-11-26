@@ -2,7 +2,7 @@
 
 from flask import render_template, request
 
-from QuanLyHocSinh import app
+from QuanLyHocSinh import app,db
 from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
 
 
@@ -18,15 +18,15 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
-    student_id = 1
-    subject_id = 2
-    average_score = calculate_average(2, 2)
+    checkPassed = is_student_passed(2,9,1)
+
+
 
     return render_template('Administrator/Report.html',
                            classes=class_list,
                            subjects = subject_list,
                            semesters = semester_list,
-                           average_score=average_score)
+                           checkPassed = checkPassed)
 
 
 def calculate_average(student_id, subject_id,semester_id):
@@ -57,6 +57,18 @@ def calculate_average(student_id, subject_id,semester_id):
 
     average = total_points / total_weight
     return average
+
+
+def is_student_passed(student_id, subject_id, semester_id):
+    # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
+    average = calculate_average(student_id, subject_id, semester_id)
+
+    # Kiểm tra nếu điểm trung bình >= 5 thì đạt
+    if average >= 5:
+        return True  # Học sinh đạt môn
+    else:
+        return False  # Học sinh không đạt môn
+
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
