@@ -1,7 +1,7 @@
 
 from sqlalchemy import Column, Integer, String, Double, DateTime, Float, Boolean, ForeignKey, column,Enum
 import enum
-
+import random
 from wtforms.fields.numeric import IntegerField
 from sqlalchemy.exc import IntegrityError
 from QuanLyHocSinh import db, app
@@ -189,29 +189,102 @@ def seed_data():
     # Thêm Student mẫu
     students = [
         Student(name="Trần Văn H", gender="Nam", DOB=datetime(2008, 5, 15), classID=1, stuRuleID=1),
-        Student(name="Nguyễn Thị K", gender="Nữ", DOB=datetime(2009, 3, 22), classID=2, stuRuleID=1),
-        Student(name="Lê Văn M", gender="Nam", DOB=datetime(2007, 9, 5), classID=3, stuRuleID=1),
-        Student(name="Phạm Thị N", gender="Nữ", DOB=datetime(2009, 6, 19), classID=4, stuRuleID=1),
-        Student(name="Nguyễn Văn A", gender="Nam", DOB=datetime(2008, 2, 15), classID=1, stuRuleID=1),
-        Student(name="Trần Thị B", gender="Nữ", DOB=datetime(2009, 7, 12), classID=2, stuRuleID=1),
-        Student(name="Phạm Văn C", gender="Nam", DOB=datetime(2007, 10, 9), classID=3, stuRuleID=1),
-        Student(name="Lê Thị D", gender="Nữ", DOB=datetime(2008, 1, 28), classID=4, stuRuleID=1),
-        Student(name="Đỗ Văn E", gender="Nam", DOB=datetime(2009, 3, 16), classID=5, stuRuleID=1),
-        Student(name="Hoàng Thị F", gender="Nữ", DOB=datetime(2008, 8, 25), classID=6, stuRuleID=1),
-        Student(name="Ngô Văn G", gender="Nam", DOB=datetime(2007, 12, 4), classID=7, stuRuleID=1),
-        Student(name="Vũ Thị H", gender="Nữ", DOB=datetime(2009, 9, 10), classID=8, stuRuleID=1),
-        Student(name="Bùi Văn I", gender="Nam", DOB=datetime(2008, 6, 19), classID=9, stuRuleID=1),
-        Student(name="Phan Thị J", gender="Nữ", DOB=datetime(2007, 11, 2), classID=1, stuRuleID=1),
-        Student(name="Nguyễn Văn K", gender="Nam", DOB=datetime(2008, 5, 20), classID=2, stuRuleID=1),
-        Student(name="Lê Thị L", gender="Nữ", DOB=datetime(2009, 4, 15), classID=3, stuRuleID=1),
-        Student(name="Hoàng Văn M", gender="Nam", DOB=datetime(2007, 8, 8), classID=4, stuRuleID=1),
-        Student(name="Phạm Thị N", gender="Nữ", DOB=datetime(2008, 7, 21), classID=5, stuRuleID=1),
-        Student(name="Đỗ Văn O", gender="Nam", DOB=datetime(2009, 2, 6), classID=6, stuRuleID=1),
-        Student(name="Vũ Thị P", gender="Nữ", DOB=datetime(2008, 11, 30), classID=7, stuRuleID=1),
-        Student(name="Ngô Văn Q", gender="Nam", DOB=datetime(2007, 3, 9), classID=8, stuRuleID=1),
-        Student(name="Bùi Thị R", gender="Nữ", DOB=datetime(2009, 6, 27), classID=9, stuRuleID=1),
-        Student(name="Phan Văn S", gender="Nam", DOB=datetime(2008, 9, 14), classID=1, stuRuleID=1),
-        Student(name="Trần Thị T", gender="Nữ", DOB=datetime(2007, 1, 22), classID=2, stuRuleID=1),
+        Student(name="Nguyễn Thị K", gender="Nữ", DOB=datetime(2009, 3, 22), classID=1, stuRuleID=1),
+        Student(name="Lê Văn M", gender="Nam", DOB=datetime(2007, 9, 5), classID=1, stuRuleID=1),
+        Student(name="Phạm Thị N", gender="Nữ", DOB=datetime(2009, 6, 19), classID=1, stuRuleID=1),
+        Student(name="Đặng Thị P", gender="Nữ", DOB=datetime(2008, 8, 12), classID=1, stuRuleID=1),
+        Student(name="Trần Thị L", gender="Nữ", DOB=datetime(2007, 7, 17), classID=1, stuRuleID=1),
+        Student(name="Hoàng Văn C", gender="Nam", DOB=datetime(2008, 12, 5), classID=1, stuRuleID=1),
+        Student(name="Nguyễn Hồng V", gender="Nữ", DOB=datetime(2009, 2, 26), classID=1, stuRuleID=1),
+        Student(name="Lê Thị T", gender="Nữ", DOB=datetime(2008, 4, 2), classID=1, stuRuleID=1),
+        Student(name="Vũ Minh H", gender="Nam", DOB=datetime(2009, 1, 9), classID=1, stuRuleID=1),
+
+        Student(name="Lý Hồng A", gender="Nữ", DOB=datetime(2008, 5, 15), classID=2, stuRuleID=1),
+        Student(name="Nguyễn Văn Q", gender="Nam", DOB=datetime(2008, 11, 30), classID=2, stuRuleID=1),
+        Student(name="Phan Thị D", gender="Nữ", DOB=datetime(2009, 3, 25), classID=2, stuRuleID=1),
+        Student(name="Trần Huy T", gender="Nam", DOB=datetime(2008, 6, 17), classID=2, stuRuleID=1),
+        Student(name="Hoàng Văn H", gender="Nam", DOB=datetime(2008, 10, 5), classID=2, stuRuleID=1),
+        Student(name="Lý Minh M", gender="Nữ", DOB=datetime(2009, 1, 21), classID=2, stuRuleID=1),
+        Student(name="Phạm Thị M", gender="Nữ", DOB=datetime(2008, 4, 19), classID=2, stuRuleID=1),
+        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2007, 12, 3), classID=2, stuRuleID=1),
+        Student(name="Nguyễn Thị L", gender="Nữ", DOB=datetime(2009, 2, 11), classID=2, stuRuleID=1),
+        Student(name="Vũ Thị K", gender="Nữ", DOB=datetime(2008, 7, 29), classID=2, stuRuleID=1),
+
+        Student(name="Lê Hoàng T", gender="Nam", DOB=datetime(2008, 9, 18), classID=3, stuRuleID=1),
+        Student(name="Trần Thị H", gender="Nữ", DOB=datetime(2009, 5, 7), classID=3, stuRuleID=1),
+        Student(name="Nguyễn Minh L", gender="Nam", DOB=datetime(2008, 8, 24), classID=3, stuRuleID=1),
+        Student(name="Phan Minh T", gender="Nam", DOB=datetime(2009, 2, 12), classID=3, stuRuleID=1),
+        Student(name="Lý Minh H", gender="Nam", DOB=datetime(2008, 6, 3), classID=3, stuRuleID=1),
+        Student(name="Vũ Thị H", gender="Nữ", DOB=datetime(2007, 12, 25), classID=3, stuRuleID=1),
+        Student(name="Nguyễn Thanh P", gender="Nam", DOB=datetime(2008, 11, 18), classID=3, stuRuleID=1),
+        Student(name="Lê Hương L", gender="Nữ", DOB=datetime(2009, 1, 14), classID=3, stuRuleID=1),
+        Student(name="Trần Minh M", gender="Nam", DOB=datetime(2008, 10, 9), classID=3, stuRuleID=1),
+        Student(name="Hoàng Thanh D", gender="Nam", DOB=datetime(2009, 3, 3), classID=3, stuRuleID=1),
+
+        Student(name="Nguyễn Hằng P", gender="Nữ", DOB=datetime(2008, 12, 20), classID=4, stuRuleID=1),
+        Student(name="Lê Thanh T", gender="Nam", DOB=datetime(2007, 11, 3), classID=4, stuRuleID=1),
+        Student(name="Phan Thanh L", gender="Nam", DOB=datetime(2008, 7, 2), classID=4, stuRuleID=1),
+        Student(name="Trần Thị P", gender="Nữ", DOB=datetime(2008, 8, 30), classID=4, stuRuleID=1),
+        Student(name="Vũ Hồng A", gender="Nam", DOB=datetime(2007, 10, 14), classID=4, stuRuleID=1),
+        Student(name="Lý Hương A", gender="Nữ", DOB=datetime(2008, 4, 11), classID=4, stuRuleID=1),
+        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2009, 5, 9), classID=4, stuRuleID=1),
+        Student(name="Nguyễn Thị P", gender="Nữ", DOB=datetime(2009, 6, 5), classID=4, stuRuleID=1),
+        Student(name="Lê Văn A", gender="Nam", DOB=datetime(2008, 12, 2), classID=4, stuRuleID=1),
+        Student(name="Nguyễn Thị M", gender="Nữ", DOB=datetime(2008, 1, 22), classID=4, stuRuleID=1),
+        Student(name="Lê Minh T", gender="Nam", DOB=datetime(2008, 9, 12), classID=5, stuRuleID=1),
+        Student(name="Nguyễn Hồng K", gender="Nữ", DOB=datetime(2009, 4, 22), classID=5, stuRuleID=1),
+        Student(name="Phạm Ngọc H", gender="Nam", DOB=datetime(2008, 6, 9), classID=5, stuRuleID=1),
+        Student(name="Trần Thị M", gender="Nữ", DOB=datetime(2008, 7, 19), classID=5, stuRuleID=1),
+        Student(name="Nguyễn Thị T", gender="Nữ", DOB=datetime(2008, 8, 3), classID=5, stuRuleID=1),
+        Student(name="Lý Minh P", gender="Nam", DOB=datetime(2009, 1, 25), classID=5, stuRuleID=1),
+        Student(name="Vũ Thị Q", gender="Nữ", DOB=datetime(2008, 12, 14), classID=5, stuRuleID=1),
+        Student(name="Phan Minh D", gender="Nam", DOB=datetime(2008, 5, 30), classID=5, stuRuleID=1),
+        Student(name="Trần Hương A", gender="Nữ", DOB=datetime(2008, 10, 25), classID=5, stuRuleID=1),
+        Student(name="Lê Thanh H", gender="Nam", DOB=datetime(2009, 3, 7), classID=5, stuRuleID=1),
+
+        Student(name="Nguyễn Thị B", gender="Nữ", DOB=datetime(2008, 9, 18), classID=6, stuRuleID=1),
+        Student(name="Phạm Quang H", gender="Nam", DOB=datetime(2009, 4, 9), classID=6, stuRuleID=1),
+        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2008, 7, 11), classID=6, stuRuleID=1),
+        Student(name="Lê Hương T", gender="Nữ", DOB=datetime(2008, 5, 6), classID=6, stuRuleID=1),
+        Student(name="Nguyễn Quang V", gender="Nam", DOB=datetime(2007, 12, 17), classID=6, stuRuleID=1),
+        Student(name="Trần Quang T", gender="Nam", DOB=datetime(2008, 10, 22), classID=6, stuRuleID=1),
+        Student(name="Lý Minh Q", gender="Nam", DOB=datetime(2009, 3, 14), classID=6, stuRuleID=1),
+        Student(name="Vũ Minh T", gender="Nam", DOB=datetime(2008, 6, 23), classID=6, stuRuleID=1),
+        Student(name="Nguyễn Thanh T", gender="Nam", DOB=datetime(2008, 8, 18), classID=6, stuRuleID=1),
+        Student(name="Lê Minh Q", gender="Nam", DOB=datetime(2009, 1, 5), classID=6, stuRuleID=1),
+
+        Student(name="Nguyễn Thị M", gender="Nữ", DOB=datetime(2008, 12, 29), classID=7, stuRuleID=1),
+        Student(name="Trần Văn H", gender="Nam", DOB=datetime(2007, 11, 2), classID=7, stuRuleID=1),
+        Student(name="Vũ Thanh L", gender="Nam", DOB=datetime(2008, 9, 7), classID=7, stuRuleID=1),
+        Student(name="Phan Hương T", gender="Nữ", DOB=datetime(2009, 2, 20), classID=7, stuRuleID=1),
+        Student(name="Lê Minh N", gender="Nam", DOB=datetime(2009, 3, 17), classID=7, stuRuleID=1),
+        Student(name="Trần Ngọc M", gender="Nam", DOB=datetime(2008, 4, 10), classID=7, stuRuleID=1),
+        Student(name="Nguyễn Thị T", gender="Nữ", DOB=datetime(2009, 1, 14), classID=7, stuRuleID=1),
+        Student(name="Lý Minh K", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
+        Student(name="Trần Thị V", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
+        Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
+
+        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2009, 2, 3), classID=8, stuRuleID=1),
+        Student(name="Vũ Thị K", gender="Nữ", DOB=datetime(2008, 11, 1), classID=8, stuRuleID=1),
+        Student(name="Lê Hồng P", gender="Nam", DOB=datetime(2008, 12, 8), classID=8, stuRuleID=1),
+        Student(name="Nguyễn Thanh T", gender="Nam", DOB=datetime(2008, 6, 17), classID=8, stuRuleID=1),
+        Student(name="Lý Minh T", gender="Nam", DOB=datetime(2009, 1, 26), classID=8, stuRuleID=1),
+        Student(name="Phan Thanh K", gender="Nam", DOB=datetime(2008, 7, 14), classID=8, stuRuleID=1),
+        Student(name="Trần Minh L", gender="Nam", DOB=datetime(2009, 3, 21), classID=8, stuRuleID=1),
+        Student(name="Nguyễn Hương T", gender="Nữ", DOB=datetime(2009, 4, 11), classID=8, stuRuleID=1),
+        Student(name="Vũ Quang P", gender="Nam", DOB=datetime(2008, 8, 6), classID=8, stuRuleID=1),
+        Student(name="Lê Minh K", gender="Nam", DOB=datetime(2008, 12, 25), classID=8, stuRuleID=1),
+
+        Student(name="Trần Hương M", gender="Nữ", DOB=datetime(2008, 5, 10), classID=9, stuRuleID=1),
+        Student(name="Nguyễn Thị V", gender="Nữ", DOB=datetime(2009, 1, 7), classID=9, stuRuleID=1),
+        Student(name="Lê Quang L", gender="Nam", DOB=datetime(2009, 3, 12), classID=9, stuRuleID=1),
+        Student(name="Phan Thanh Q", gender="Nam", DOB=datetime(2008, 11, 25), classID=9, stuRuleID=1),
+        Student(name="Trần Minh V", gender="Nam", DOB=datetime(2008, 7, 27), classID=9, stuRuleID=1),
+        Student(name="Vũ Thị M", gender="Nữ", DOB=datetime(2009, 4, 4), classID=9, stuRuleID=1),
+        Student(name="Lý Thanh K", gender="Nam", DOB=datetime(2008, 10, 10), classID=9, stuRuleID=1),
+        Student(name="Nguyễn Hồng M", gender="Nữ", DOB=datetime(2008, 12, 18), classID=9, stuRuleID=1),
+        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2009, 2, 2), classID=9, stuRuleID=1),
+        Student(name="Phan Minh A", gender="Nam", DOB=datetime(2008, 6, 5), classID=9, stuRuleID=1),
     ]
     db.session.add_all(students)
 
@@ -247,56 +320,10 @@ def seed_data():
     db.session.add_all(point_types)
 
     # Thêm Point mẫu
-    points = [
-        Point(pointValue=8.5, pointTypeID=1, semesterID=1, subjectID=1, studentID=1),
-        Point(pointValue=9.0, pointTypeID=2, semesterID=1, subjectID=1, studentID=1),
-        Point(pointValue=7.5, pointTypeID=3, semesterID=1, subjectID=1, studentID=1),
-        Point(pointValue=8.0, pointTypeID=1, semesterID=2, subjectID=2, studentID=2),
-        Point(pointValue=7.5, pointTypeID=2, semesterID=2, subjectID=2, studentID=2),
-        Point(pointValue=9.0, pointTypeID=3, semesterID=2, subjectID=3, studentID=3),
-        Point(pointValue=10.0, pointTypeID=1, semesterID=2, subjectID=4, studentID=4),
-        Point(pointValue=8.5, pointTypeID=1, semesterID=1, subjectID=1, studentID=5),
-        Point(pointValue=7.5, pointTypeID=2, semesterID=1, subjectID=2, studentID=6),
-        Point(pointValue=9.0, pointTypeID=3, semesterID=1, subjectID=3, studentID=7),
-        Point(pointValue=8.0, pointTypeID=1, semesterID=1, subjectID=4, studentID=8),
-        Point(pointValue=7.0, pointTypeID=2, semesterID=1, subjectID=5, studentID=9),
-        Point(pointValue=8.5, pointTypeID=3, semesterID=1, subjectID=6, studentID=10),
-        Point(pointValue=6.5, pointTypeID=1, semesterID=1, subjectID=7, studentID=11),
-        Point(pointValue=9.5, pointTypeID=2, semesterID=1, subjectID=8, studentID=12),
-        Point(pointValue=8.0, pointTypeID=3, semesterID=1, subjectID=9, studentID=13),
-        Point(pointValue=7.5, pointTypeID=1, semesterID=1, subjectID=10, studentID=14),
-        Point(pointValue=9.0, pointTypeID=2, semesterID=2, subjectID=1, studentID=15),
-        Point(pointValue=8.0, pointTypeID=3, semesterID=2, subjectID=2, studentID=16),
-        Point(pointValue=7.0, pointTypeID=1, semesterID=2, subjectID=3, studentID=17),
-        Point(pointValue=8.5, pointTypeID=2, semesterID=2, subjectID=4, studentID=18),
-        Point(pointValue=9.5, pointTypeID=3, semesterID=2, subjectID=5, studentID=19),
-        Point(pointValue=6.5, pointTypeID=1, semesterID=2, subjectID=6, studentID=20),
-        Point(pointValue=8.0, pointTypeID=2, semesterID=2, subjectID=7, studentID=21),
-        Point(pointValue=7.5, pointTypeID=3, semesterID=2, subjectID=8, studentID=22),
-        Point(pointValue=9.0, pointTypeID=1, semesterID=2, subjectID=9, studentID=23),
-        Point(pointValue=10.0, pointTypeID=2, semesterID=2, subjectID=10, studentID=24),
-        Point(pointValue=8.5, pointTypeID=3, semesterID=1, subjectID=1, studentID=1),
-        Point(pointValue=7.5, pointTypeID=2, semesterID=1, subjectID=2, studentID=2),
-        Point(pointValue=8.0, pointTypeID=1, semesterID=1, subjectID=3, studentID=3),
-        Point(pointValue=9.5, pointTypeID=3, semesterID=1, subjectID=4, studentID=4),
-        Point(pointValue=7.0, pointTypeID=2, semesterID=1, subjectID=5, studentID=5),
-        Point(pointValue=6.5, pointTypeID=1, semesterID=1, subjectID=6, studentID=6),
-        Point(pointValue=9.0, pointTypeID=2, semesterID=1, subjectID=7, studentID=7),
-        Point(pointValue=10.0, pointTypeID=3, semesterID=1, subjectID=8, studentID=8),
-        Point(pointValue=8.0, pointTypeID=1, semesterID=1, subjectID=9, studentID=9),
-        Point(pointValue=7.5, pointTypeID=2, semesterID=1, subjectID=10, studentID=10),
-        Point(pointValue=9.5, pointTypeID=3, semesterID=2, subjectID=1, studentID=11),
-        Point(pointValue=8.5, pointTypeID=2, semesterID=2, subjectID=2, studentID=12),
-        Point(pointValue=7.0, pointTypeID=1, semesterID=2, subjectID=3, studentID=13),
-        Point(pointValue=8.5, pointTypeID=3, semesterID=2, subjectID=4, studentID=14),
-        Point(pointValue=9.0, pointTypeID=1, semesterID=2, subjectID=5, studentID=15),
-        Point(pointValue=8.0, pointTypeID=2, semesterID=2, subjectID=6, studentID=16),
-        Point(pointValue=7.5, pointTypeID=3, semesterID=2, subjectID=7, studentID=17),
-        Point(pointValue=9.0, pointTypeID=1, semesterID=2, subjectID=8, studentID=18),
-        Point(pointValue=10.0, pointTypeID=2, semesterID=2, subjectID=9, studentID=19),
-        Point(pointValue=8.5, pointTypeID=3, semesterID=2, subjectID=10, studentID=20),
-    ]
-    db.session.add_all(points)
+    points_data = generate_points()
+
+    # Lưu vào cơ sở dữ liệu
+    db.session.add_all(points_data)
 
     try:
         db.session.commit()
@@ -308,17 +335,46 @@ def seed_data():
 #===================================Hàm chứa các thao tác thêm sửa xóa một phần tử trong bảng=============================
 
 
+
+
+# Hàm tạo dữ liệu điểm cho học sinh
+def generate_points():
+    points = []
+    for student_id in range(1, 91):  # Tổng cộng 97 học sinh
+        for semester_id in range(1, 3):  # 2 học kỳ
+            for subject_id in range(1, 11):  # 10 môn học
+                # Số lượng bài kiểm tra 15 phút (từ 1 đến 5 bài)
+                num_15min = random.randint(1, 5)
+                # Tạo điểm cho các bài kiểm tra 15 phút
+                for _ in range(num_15min):
+                    point_15min = round(random.uniform(1, 5), 1)
+                    points.append(
+                        Point(pointValue=point_15min, pointTypeID=1, semesterID=semester_id, subjectID=subject_id,
+                              studentID=student_id))
+
+                # Số lượng bài kiểm tra 1 tiết (từ 1 đến 3 bài)
+                num_45min = random.randint(1, 3)
+                # Tạo điểm cho các bài kiểm tra 1 tiết
+                for _ in range(num_45min):
+                    point_45min = round(random.uniform(1, 3), 1)
+                    points.append(
+                        Point(pointValue=point_45min, pointTypeID=2, semesterID=semester_id, subjectID=subject_id,
+                              studentID=student_id))
+
+                # Điểm cuối kỳ (1 bài duy nhất, từ 1 đến 10 điểm)
+                point_final = round(random.uniform(1, 10), 1)
+                points.append(Point(pointValue=point_final, pointTypeID=3, semesterID=semester_id, subjectID=subject_id,
+                                    studentID=student_id))
+
+    return points
+
+
+# Tạo dữ liệu điểm cho tất cả học sinh
+
+
 if __name__ == '__main__':
     with app.app_context():
         # db.create_all()
         seed_data()
 
 
-        # class_to_delete = Class.query.get(1)
-        #
-        # if class_to_delete:
-        #     db.session.delete(class_to_delete)  # Tự động xóa liên quan nhờ cascade
-        #     db.session.commit()
-        #     print(f"Đã xóa lớp có ID {1} và các bản ghi liên quan.")
-        # else:
-        #     print(f"Không tìm thấy lớp có ID {1}.")
