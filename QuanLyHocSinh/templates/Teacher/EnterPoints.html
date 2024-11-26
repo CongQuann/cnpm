@@ -9,7 +9,7 @@ Báo cáo thống kê
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-4 container-div">
     <h2 class="text-center">Báo Cáo Thống Kê Điểm</h2>
 
     <!-- Bộ lọc -->
@@ -45,11 +45,10 @@ Báo cáo thống kê
             <!-- Học kỳ -->
             <p>
                 <strong>Học kỳ:</strong>
-                <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2, 3)" list="semester-list">
+                <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2)" list="semester-list">
                 <datalist id="semester-list">
                     <option value="Học kỳ 1"></option>
                     <option value="Học kỳ 2"></option>
-                    <option value="Học kỳ hè"></option>
                 </datalist>
             </p>
             <p id="semester-display"><strong>Học kỳ đã nhập/chọn: </strong></p>
@@ -72,8 +71,9 @@ Báo cáo thống kê
             <thead>
                 <tr>
                     <th class="table-header">STT</th>
+                    <th class="table-header">Mã học sinh</th>
                     <th class="table-header">Họ tên</th>
-                    <th class="table-header">Điểm 15’
+                    <th class="table-header score-15min-header">Điểm 15’
                         <button id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
                         <button id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
                     </th>
@@ -87,14 +87,15 @@ Báo cáo thống kê
             <tbody id="student-rows">
                 <tr>
                     <td class="table-cell">1</td>
-                    <td class="table-cell"><input type="text" class="input-cell" placeholder="Họ tên học sinh"></td>
+                    <td class="table-cell"><input type="text" class="input-cell student-id small-input" placeholder="Mã học sinh"></td>
+                    <td class="table-cell"><input type="text" class="input-cell student-name" placeholder="Họ tên học sinh"></td>
                     <td class="table-cell score-15min-container">
-                        <input type="number" class="input-cell score-15min" placeholder="Điểm 15’" min="0" max="10">
+                        <input type="number" class="input-cell " id="score-15min" placeholder="Điểm 15’" min="0" max="10">
                     </td>
                     <td class="table-cell test-container">
                         <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
                     </td>
-                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm thi" min="0" max="10"></td>
+                    <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi" min="0" max="10"></td>
                 </tr>
             </tbody>
         </table>
