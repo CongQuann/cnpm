@@ -15,7 +15,48 @@ def home():
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
     class_list = Class.query.all()
-    return render_template('Administrator/Report.html',classes=class_list)
+    subject_list = Subject.query.all()
+    semester_list = Semester.query.all()
+
+    student_id = 1
+    subject_id = 2
+    average_score = calculate_average(2, 2)
+
+    return render_template('Administrator/Report.html',
+                           classes=class_list,
+                           subjects = subject_list,
+                           semesters = semester_list,
+                           average_score=average_score)
+
+
+def calculate_average(student_id, subject_id,semester_id):
+    # Lấy tất cả các điểm của học sinh trong môn học cụ thể
+    points = Point.query.filter_by(studentID=student_id, subjectID=subject_id, semesterID=semester_id).all()
+
+    # Khởi tạo các biến để tính toán tổng điểm và số lượng cột
+    total_points = 0
+    total_weight = 0
+
+    # Duyệt qua tất cả các điểm để tính tổng và trọng số
+    for point in points:
+        point_type = point.pointType_point.type  # Lấy loại điểm (15p, 1 tiết, cuối kỳ)
+
+        if point_type == "15 phút":
+            total_points += point.pointValue
+            total_weight += 1  # Trọng số 1 cho điểm 15p
+        elif point_type == "1 tiết":
+            total_points += 2 * point.pointValue
+            total_weight += 2  # Trọng số 2 cho điểm 1 tiết
+        elif point_type == "Cuối kỳ":
+            total_points += 3 * point.pointValue
+            total_weight += 3  # Trọng số 3 cho điểm cuối kỳ
+
+    # Tính điểm trung bình
+    if total_weight == 0:  # Tránh trường hợp chia cho 0 nếu không có điểm nào
+        return 0
+
+    average = total_points / total_weight
+    return average
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():

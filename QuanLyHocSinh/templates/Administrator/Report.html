@@ -19,31 +19,27 @@ Báo cáo thống kê
         <div class="col-md-4">
             <label for="subject" class="form-label">Môn học</label>
             <select class="form-select" id="subject" name="subject">
-                <option selected disabled>Chọn môn học</option>
-                <option value="Math">Toán</option>
-                <option value="Physics">Vật lý</option>
-                <option value="Chemistry">Hóa học</option>
+                {% for subject in subjects %}
+                <option>{{subject.subjectName}}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
             <label for="year" class="form-label">Năm học</label>
             <select class="form-select" id="year" name="year">
-                <option selected disabled>Chọn năm học</option>
-                <option value="2023-2024">2023-2024</option>
-                <option value="2024-2025">2024-2025</option>
+                <option selected disabled>{{semesters[1].year}}</option>
             </select>
         </div>
         <div class="col-md-4">
             <label for="semester" class="form-label">Học kì</label>
             <select class="form-select" id="semester" name="semester">
-                <option selected disabled>Chọn học kì</option>
-                <option value="1">Học kì 1</option>
-                <option value="2">Học kì 2</option>
+                {% for semester in semesters %}
+                <option>{{semester.semesterName}}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="col-md-12 text-center">
             <button type="submit" class="btn btn-primary">Xem báo cáo</button>
-            <button type="reset" class="btn btn-secondary">Reset</button>
         </div>
     </form>
 
@@ -64,8 +60,8 @@ Báo cáo thống kê
                 {% for class in classes %}
                 <tr>
                     <td>{{ class.className }}</td>
-                    <td></td>
-                    <td></td>
+                    <td>{{class.students|length}}</td>
+                    <td>{{average_score}}</td>
                     <td></td>
 
                 </tr>
