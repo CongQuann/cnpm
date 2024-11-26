@@ -1,0 +1,99 @@
+{% extends 'Teacher/base.html' %}
+
+{% block title %}
+Báo cáo thống kê
+{% endblock %}
+
+{% block css %}
+<link href="{{ url_for('static', filename='css/Teacher/EnterPoints.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center">Báo Cáo Thống Kê Điểm</h2>
+
+    <!-- Bộ lọc -->
+    <div id="scoreboard-container">
+        <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
+        <div id="class-info">
+            <!-- Lớp -->
+            <p>
+                <strong>Lớp:</strong>
+                <input type="text" id="class-input" class="input-field" placeholder="Nhập lớp (vd: 10A1)" list="class-list">
+                <datalist id="class-list">
+                    <option value="10A1">
+                    <option value="10A2">
+                    <option value="11A1">
+                    <option value="12A1">
+                </datalist>
+            </p>
+            <p id="class-display"><strong>Lớp đã nhập/chọn: </strong></p>
+
+            <!-- Môn -->
+            <p>
+                <strong>Môn:</strong>
+                <input type="text" id="subject-input" class="input-field" placeholder="Nhập môn học" list="subject-list">
+                <datalist id="subject-list">
+                    <option value="Toán">
+                    <option value="Lý">
+                    <option value="Hóa">
+                    <option value="Anh">
+                </datalist>
+            </p>
+            <p id="subject-display"><strong>Môn đã nhập/chọn: </strong></p>
+
+            <!-- Học kỳ -->
+            <p>
+                <strong>Học kỳ:</strong>
+                <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2, 3)" list="semester-list">
+                <datalist id="semester-list">
+                    <option value="Học kỳ 1"></option>
+                    <option value="Học kỳ 2"></option>
+                    <option value="Học kỳ hè"></option>
+                </datalist>
+            </p>
+            <p id="semester-display"><strong>Học kỳ đã nhập/chọn: </strong></p>
+
+            <!-- Năm học -->
+            <p>
+                <strong>Năm học:</strong>
+                <input type="text" id="academic-year-input" class="input-field" placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list">
+                <datalist id="academic-year-list">
+                    <option value="2024-2025">
+                    <option value="2025-2026">
+                    <option value="2026-2027">
+                </datalist>
+            </p>
+            <p id="academic-year-display"><strong>Năm học đã nhập/chọn: </strong></p>
+        </div>
+
+        <!-- Bảng điểm -->
+        <table id="scoreboard-table">
+            <thead>
+                <tr>
+                    <th class="table-header">STT</th>
+                    <th class="table-header">Họ tên</th>
+                    <th class="table-header">Điểm 15’</th>
+                    <th class="table-header">Điểm 1 tiết</th>
+                    <th class="table-header">Điểm thi</th>
+                </tr>
+            </thead>
+            <tbody id="student-rows">
+                <tr>
+                    <td class="table-cell">1</td>
+                    <td class="table-cell"><input type="text" class="input-cell" placeholder="Họ tên học sinh"></td>
+                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm 15’"></td>
+                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm 1 tiết"></td>
+                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm thi"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="save-score-btn" class="btn btn-success mt-3">Lưu bảng điểm</button>
+    </div>
+</div>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="static/js/Teacher/EnterPoints/EnterPoints.js"></script>
+
+

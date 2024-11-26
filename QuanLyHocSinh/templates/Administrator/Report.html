@@ -1,11 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'Administrator/base.html' %}
 
 {% block title %}
 Báo cáo thống kê
 {% endblock %}
 
 {% block css %}
- <link href="{{ url_for('static', filename='css/Administrator/Report.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/Administrator/Report.css') }}" rel="stylesheet">
 {% endblock %}
 
 
@@ -61,12 +61,12 @@ Báo cáo thống kê
                 </tr>
                 </thead>
                 <tbody class="table-data">
-                {% for row in data %}
+                {% for class in classes %}
                 <tr>
-                    <td>{{ row.class }}</td>
-                    <td>{{ row.total_students }}</td>
-                    <td>{{ row.pass }}</td>
-                    <td>{{ row.proportion }}</td>
+                    <td>{{ class.className }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
 
                 </tr>
                 {% endfor %}
