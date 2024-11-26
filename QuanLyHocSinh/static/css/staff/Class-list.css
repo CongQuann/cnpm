@@ -165,7 +165,9 @@ body {
     margin: 0;
     padding: 0;
 }
-
+a{
+    text-decoration:none !important;
+}
 
 
 #header_div {
@@ -372,9 +374,11 @@ footer {
     transition: 0.5s ease;
     margin: 1rem;
 }
-
 .offcanvas-body {
-    padding: 0;
+    padding: 0 !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .offcanvas-header {
@@ -432,7 +436,7 @@ footer {
 
 .offcanvas {
     transition: 0.7s ease-in-out;
-    width: 20%;
+    width: 20% !important;
 }
 
 .offcanvas-title {

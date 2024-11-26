@@ -70,10 +70,18 @@ def enter_point():
     return render_template('Teacher/EnterPoints.html',regulations=regulations)
 
 
-#của bé
-@app.route('/staff')
+#staff
+@app.route('/student_add')
 def staff():
     return render_template('staff/staff.html')
+
+@app.route('/class_edit')
+def class_edit():
+    return render_template('staff/ClassList.html')
+
+@app.route('/student_edit')
+def student_edit():
+    return render_template('staff/StudentEdit.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

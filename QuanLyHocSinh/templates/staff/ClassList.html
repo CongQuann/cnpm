@@ -1,58 +1,20 @@
 <!DOCTYPE html>
+{% extends "staff/base.html" %}
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý lớp học</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="../../static/css/staff/Class-list.css">
-    <link rel="icon" href="../../static/pictures/logo.jpg">
+    {% block privateCss %}
+        <title>Quản lý lớp học</title>
+        <link href="{{ url_for('static', filename='css/staff/Class-list.css') }}" rel="stylesheet">
+    {%endblock%}
 </head>
 
 <body>
-    <div>
-        <div id="header_div">
-            <nav class="navbar navbar-expand-sm navbar-dark custom-bg">
-                <div class="container-fluid">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#demo">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                </div>
-            </nav>
-            <div class="sub_head_div">
-                <h1>Quản Lý Lớp Học</h1>
-            </div>
-            <!-- Offcanvas Sidebar -->
-            <div class="offcanvas offcanvas-start" id="demo">
-                <div class="offcanvas-header">
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
-                    <a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></a>
-                    <span class="offcanvas-title" id="offcanvas-title-1">Trung Học Phổ Thông</span>
-                    <h1 class="staff-name">staff1</h1>
-                    <h1 class="staff-mail">staff1@gmail.com</h1>
+        {%block menu%}
+            {%include 'staff/menu.html'%}
+        {%endblock%}
 
-                </div>
-                <div class="offcanvas-body">
-                    <a href="staff.html">
-                        Tiếp Nhận Học Sinh
-                    </a><br>
-                    <a href="Class-list.html">
-                        Quản Lý Lớp Học
-                    </a><br>
-                </div>
-            </div>
-
-        </div>
-
-
+        {% block content %}
         <!-- Tìm kiếm và reset -->
         <div class="search-container">
             <label for="class">Lớp:</label>
@@ -87,7 +49,7 @@
                         <td>10/10/2007</td>
                         <td>105/72, Lý Thái Tổ, Bình Thạnh, HCM</td>
                         <td>
-                            <a class="edit-btn" href="Student-edit.html">Sửa</a>
+                            <a class="edit-btn" href="{{url_for('student_edit')}}">Sửa</a>
                             <a class="delete-btn" href="#">Xóa</a>
                         </td>
                     </tr>
@@ -133,7 +95,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+        {%endblock%}
 
 
     <script>
