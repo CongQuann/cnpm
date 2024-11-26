@@ -14,16 +14,16 @@
         <div class="offcanvas-header">
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
             <a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></a>
-            <span class="offcanvas-title" id="offcanvas-title-1" >Trung Học Phổ Thôn</span>
+            <span class="offcanvas-title" id="offcanvas-title-1" >Trung Học Phổ Thông</span>
             <h1 class="staff-name">staff1</h1>
             <h1 class="staff-mail">staff1@gmail.com</h1>
 
         </div>
         <div class="offcanvas-body">
-            <a href="staff.html">
+            <a href="{{url_for('staff')}}">
                 Tiếp Nhận Học Sinh
             </a>
-            <a href="Class-list.html">
+            <a href="{{url_for('class_edit')}}">
                 Quản Lý Lớp Học
             </a>
         </div>

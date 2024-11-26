@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+{% extends "staff/base.html" %}
+<html lang="vi">
+<head>
+    {% block privateCss %}
+        <title>Quản Lý Học Sinh</title>
+        <link href="{{ url_for('static', filename='css/staff/Student-manage.css') }}" rel="stylesheet">
+    {% endblock %}
+</head>
+<body>
+    {% block menu %}
+        {% include 'staff/menu.html' %}
+    {% endblock %}
+    {% block content %}
+    <div class="container">
+    <h2>Nguyễn Văn A</h2>
+    <section class="input-students">
+        {%block studentform%}
+                {%include 'staff/student-form.html'%}
+            {%endblock%}
+    </section>
+</div>
+{% endblock %}
+</body>
+</html>
