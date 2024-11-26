@@ -1,0 +1,516 @@
+:root {
+    --main_color: #38809f;
+}
+
+#main::-webkit-scrollbar {
+    width: 8px;
+    /* Độ rộng của thanh cuộn */
+    background: #e6ebeb;
+    /* Màu của phần tay cầm */
+    border-radius: 5px;
+    /* Góc bo cho phần tay cầm */
+}
+
+#main::-webkit-scrollbar-thumb {
+    background: var(--main_color);
+    /* Màu của phần tay cầm */
+    border-radius: 10px;
+    /* Góc bo cho phần tay cầm */
+}
+
+/* Modal */
+/* Modal container */
+
+/* Modal */
+.modal {
+    display: none;
+    /* Ẩn modal theo mặc định */
+    position: fixed;
+    /* Vị trí cố định */
+    z-index: 1000;
+    /* Đảm bảo modal ở trên cùng */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Chiếm toàn bộ chiều rộng */
+    height: 100%;
+    /* Chiếm toàn bộ chiều cao */
+    overflow: auto;
+    /* Cuộn nếu nội dung quá dài */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* Màu nền mờ */
+}
+
+/* Nội dung của modal */
+.modal-content {
+    background-color: #fff;
+    /* Màu nền trắng */
+    margin: 15% auto;
+    /* Tạo khoảng cách trên và giữa */
+    padding: 20px;
+    /* Khoảng cách bên trong */
+    border: 1px solid #888;
+    /* Viền xung quanh */
+    border-radius: 10px;
+    /* Bo góc */
+    width: 80%;
+    /* Chiều rộng của modal */
+    max-width: 500px;
+    /* Chiều rộng tối đa */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Đổ bóng cho modal */
+}
+
+.modal-content p {
+    text-align: center;
+}
+
+
+/* Nút đóng */
+.close-button {
+    color: #aaa;
+    /* Màu chữ */
+    position: absolute;
+    /* Đặt vị trí tuyệt đối */
+    top: 10px;
+    /* Khoảng cách từ trên cùng */
+    right: 10px;
+    /* Khoảng cách từ bên phải */
+    font-size: 28px;
+    /* Kích thước chữ */
+    font-weight: bold;
+    /* Đậm */
+}
+
+/* Hiệu ứng hover cho nút đóng */
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    /* Đổi màu khi hover */
+    text-decoration: none;
+    /* Bỏ gạch chân */
+    cursor: pointer;
+    /* Con trỏ chuột thành tay */
+}
+
+/* Tiêu đề */
+h2 {
+    margin: 0 0 15px;
+    /* Khoảng cách bên dưới */
+    text-align: center;
+    /* Căn giữa tiêu đề */
+}
+
+/* Nút trong modal */
+.modal-actions {
+    display: flex;
+    /* Sử dụng flexbox */
+    justify-content: center;
+    /* Căn giữa các nút */
+    gap: 10px;
+    /* Khoảng cách giữa các nút */
+    margin-top: 20px;
+    /* Khoảng cách trên */
+}
+
+/* Định dạng cho nút */
+.modal-button {
+    background-color: var(--main_color);
+    /* Màu nền */
+    color: white;
+    /* Màu chữ */
+    padding: 10px 20px;
+    /* Khoảng cách bên trong */
+    border: none;
+    /* Bỏ viền */
+    border-radius: 5px;
+    /* Bo góc */
+    cursor: pointer;
+    /* Con trỏ chuột thành tay */
+    transition: background-color 0.3s, transform 0.3s;
+    /* Hiệu ứng chuyển màu và phóng to */
+}
+
+/* Hiệu ứng hover cho nút */
+.modal-button:hover {
+    background-color: darken(var(--main_color), 10%);
+    /* Tối màu nền khi hover */
+    transform: scale(1.05);
+    /* Phóng to nút */
+}
+
+/* Nút hủy */
+.modal-button.cancel {
+    background-color: #d3392e;
+    /* Màu nền cho nút hủy */
+}
+
+.modal-button.cancel:hover {
+    background-color: #f44336;
+    /* Màu nền khi hover */
+}
+
+
+/**********************/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+#header_div {
+    background-color: var(--main_color);
+    padding: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.sub_head_div {
+    display: flex;
+    align-items: center;
+    margin-right: 5%;
+}
+
+h1 {
+    color: #f2f2f2;
+    font-size: 2rem;
+}
+
+.logout_btn {
+    background-color: #d3392e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-left: 20px;
+    box-shadow: 0px 10px 16px rgba(0, 0, 0, 0.2);
+    display: inline-block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+
+
+th,
+td {
+    border: 1px solid #ddd;
+    background-color: #fef6f6;
+}
+
+
+th {
+    background-color: var(--main_color);
+    color: #f2f2f2;
+    position: sticky;
+    /* Dính vào phần trên */
+    top: 0;
+
+    /* Giữ nó ở trên cùng */
+    z-index: 1;
+    /* Đặt chỉ số z để nó nằm trên nội dung khác */
+    padding: 10px;
+}
+
+.edit-btn,
+.delete-btn,
+.more-info-btn {
+    background-color: var(--main_color);
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    margin: 0.3rem;
+}
+
+
+.more-info-btn a {
+    text-decoration: none;
+    color: #f2f2f2;
+}
+
+
+
+.edit-btn {
+    background-color: #ca8912;
+}
+
+a {
+    text-decoration: none;
+    color: #f2f2f2;
+    display: inline-block;
+}
+
+.delete-btn {
+    background-color: #d3392e;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--main_color);
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+#main {
+    margin: 2%;
+    overflow-y: auto;
+    height: 60vh;
+    border-radius: 0.5rem;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+
+}
+
+/* Dropdown Menu CSS */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: var(--main_color);
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+/*==============HOVER====================*/
+.dropdown-content a:hover {
+    background-color: #37a0cd;
+    transition-duration: 0.5s;
+    color: #f2f2f2;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.logout_btn:hover {
+    padding: 15px 25px;
+    transition-duration: 0.5s;
+    background-color: #f44336;
+    color: #f2f2f2;
+}
+
+.delete-btn:hover {
+    background-color: #f44336;
+    transition-duration: 0.5s;
+    color: #f2f2f2;
+}
+
+.edit-btn:hover {
+    background-color: #ffa500;
+    transition-duration: 0.5s;
+    color: #f2f2f2;
+}
+
+
+.more-info-btn:hover {
+    background-color: #44b9ec;
+    transition-duration: 0.5s;
+    color: #f2f2f2;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #5ba4c6;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-button:hover {
+    background-color: #5ba4c6;
+    transition-duration: 0.5s;
+}
+
+
+
+.btn-primary {
+    background-color: var(--main_color);
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    transition: 0.5s ease;
+    margin: 1rem;
+}
+
+.offcanvas-body {
+    padding: 0;
+}
+
+.offcanvas-header {
+    padding: 0 0rem 0 1rem;
+    height: 25%;
+    background-image: url(../../images/Menu-background.jpg);
+    background-size: cover;
+    justify-content: left;
+    position: relative;
+
+}
+
+.offcanvas-header h1 {
+    font-size: 0.8rem;
+}
+
+.staff-name {
+    position: absolute;
+    bottom: 20%;
+}
+
+.staff-mail {
+    position: absolute;
+    bottom: 10%;
+}
+
+.offcanvas-header span {
+    font-size: 2rem;
+}
+
+
+.offcanvas-header .btn-close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    background-color: #ffffff;
+
+}
+
+.offcanvas-body a {
+    color: #676464;
+    font-size: 1rem;
+    padding: 1rem 0 1rem 1rem;
+    width: 100%;
+    justify-content: left;
+}
+
+
+
+.offcanvas-body a:hover {
+    color: #f2f2f2;
+    background-color: #2c627c;
+    transition: ease-in-out 0.3s;
+}
+
+.offcanvas {
+    transition: 0.7s ease-in-out;
+    width: 20%;
+}
+
+.offcanvas-title {
+    color: #5bb4d7;
+    font-size: 1rem;
+    margin-bottom: 30px !important;
+}
+
+.logout-btn {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    font-size: 1rem;
+}
+
+.logout-btn:hover {
+    color: #00d4ff;
+}
+
+/* Tạo bố cục căn giữa và khoảng cách giữa các phần tử trong container */
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+/* Thiết kế cho các trường nhập */
+.search-container #class, .search-container input{
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 200px;
+    transition: border-color 0.3s ease;
+}
+
+.search-container #class:focus, .search-container input:focus{
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Nút tìm kiếm và reset */
+.search-container .btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Nút tìm kiếm (màu xanh) */
+.search-container .btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.search-container .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Nút reset (màu xám) */
+.search-container .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.search-container .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+#class-choice{
+    border: 0;
+    background: #fef6f6;
+    width: 100%;
+    height: 40px;
+    text-align: center;
+}
