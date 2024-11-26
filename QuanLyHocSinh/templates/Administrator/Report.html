@@ -15,26 +15,28 @@ Báo cáo thống kê
     <h2 class="text-center">Báo Cáo Thống Kê Điểm</h2>
 
     <!-- Bộ lọc -->
-    <form id="filter-form" class="row g-3 my-4">
+    <form id="filter-form" class="row g-3 my-4" method="GET" action="{{ url_for('generate_report') }}">
         <div class="col-md-4">
             <label for="subject" class="form-label">Môn học</label>
             <select class="form-select" id="subject" name="subject">
                 {% for subject in subjects %}
-                <option>{{subject.subjectName}}</option>
+                <option value="{{ subject.id }}">{{ subject.subjectName }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="col-md-4">
             <label for="year" class="form-label">Năm học</label>
             <select class="form-select" id="year" name="year">
-                <option selected disabled>{{semesters[1].year}}</option>
+
+                <option value="{{ semesters[1].year }}">{{ semesters[1].year }}</option>
+
             </select>
         </div>
         <div class="col-md-4">
             <label for="semester" class="form-label">Học kì</label>
             <select class="form-select" id="semester" name="semester">
                 {% for semester in semesters %}
-                <option>{{semester.semesterName}}</option>
+                <option value="{{ semester.id }}">{{ semester.semesterName }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -42,6 +44,7 @@ Báo cáo thống kê
             <button type="submit" class="btn btn-primary">Xem báo cáo</button>
         </div>
     </form>
+
 
     <!-- Bảng thống kê -->
     <div id="report-section" class="mt-4">
@@ -57,13 +60,12 @@ Báo cáo thống kê
                 </tr>
                 </thead>
                 <tbody class="table-data">
-                {% for class in classes %}
+                {% for stat in statistics %}
                 <tr>
-                    <td>{{ class.className }}</td>
-                    <td>{{class.students|length}}</td>
-                    <td>{{checkPassed}}</td>
-                    <td></td>
-
+                    <td>{{ stat.class_name }}</td>
+                    <td>{{ stat.total_students }}</td>
+                    <td>{{ stat.num_passed }}</td>
+                    <td>{{ stat.pass_rate }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

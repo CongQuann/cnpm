@@ -10,7 +10,7 @@ from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,
 def home():
     return render_template('index.html')
 
-#=========================Administrator==============================
+#===========================================================ADMINISTRATOR================================================
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
@@ -18,15 +18,43 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
-    checkPassed = is_student_passed(2,9,1)
-
-
-
     return render_template('Administrator/Report.html',
                            classes=class_list,
                            subjects = subject_list,
-                           semesters = semester_list,
-                           checkPassed = checkPassed)
+                           semesters = semester_list,)
+
+
+@app.route('/generate_report', methods=['GET'])
+def generate_report():
+    # Lấy dữ liệu từ request
+    subject_id = request.args.get('subject')  # ID môn học
+    semester_id = request.args.get('semester')  # ID học kỳ
+
+    # Lấy thông tin từ cơ sở dữ liệu
+    classes = Class.query.all()
+
+    # Thống kê số lượng học sinh đạt theo lớp
+    statistics = []
+    for cls in classes:
+        students = Student.query.filter_by(classID=cls.id).all()
+        num_students = len(students)
+        num_passed = 0
+        for student in students:
+            average = calculate_average(student.id, subject_id, semester_id)
+            if is_student_passed(student.id, subject_id, semester_id):  # Gọi đủ tham số
+                num_passed += 1
+
+        # Tính tỷ lệ đạt
+        pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
+        statistics.append({
+            "class_name": cls.className,
+            "total_students": num_students,
+            "num_passed": num_passed,
+            "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
+        })
+
+    # Render template với dữ liệu thống kê
+    return render_template('Administrator/Report.html', statistics=statistics, subjects=Subject.query.all(), semesters=Semester.query.all())
 
 
 def calculate_average(student_id, subject_id,semester_id):
@@ -59,6 +87,7 @@ def calculate_average(student_id, subject_id,semester_id):
     return average
 
 
+
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
     average = calculate_average(student_id, subject_id, semester_id)
@@ -70,6 +99,8 @@ def is_student_passed(student_id, subject_id, semester_id):
         return False  # Học sinh không đạt môn
 
 
+
+
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
     regulations = {
@@ -78,6 +109,8 @@ def rule():
         "max_class_size": 40
     }
     return render_template('Administrator/RuleManagement.html',regulations=regulations)
+
+
 
 
 @app.route("/Administrator/SubjectManagement",methods=["GET","POST"])
@@ -91,6 +124,8 @@ def subject_mng():
 
     # Truyền dữ liệu đến template
     return render_template('Administrator/SubjectManagement.html', subjects=subjects)
+
+
 
 @app.route("/Administrator/TeacherManagement",methods=["GET","POST"])
 def teacher_mng():
@@ -114,7 +149,11 @@ def teacher_mng():
     return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
 
 
-#======================================================================================================
+
+
+
+
+#===================================================================================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     regulations = {

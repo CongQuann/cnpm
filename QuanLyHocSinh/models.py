@@ -199,7 +199,6 @@ def seed_data():
         Student(name="Lê Thị T", gender="Nữ", DOB=datetime(2008, 4, 2), classID=1, stuRuleID=1),
         Student(name="Vũ Minh H", gender="Nam", DOB=datetime(2009, 1, 9), classID=1, stuRuleID=1),
         Student(name="Lê Văn K", gender="Nam", DOB=datetime(2007, 9, 5), classID=1, stuRuleID=1),
-
         Student(name="Lý Hồng A", gender="Nữ", DOB=datetime(2008, 5, 15), classID=2, stuRuleID=1),
         Student(name="Nguyễn Văn Q", gender="Nam", DOB=datetime(2008, 11, 30), classID=2, stuRuleID=1),
         Student(name="Phan Thị D", gender="Nữ", DOB=datetime(2009, 3, 25), classID=2, stuRuleID=1),
@@ -210,7 +209,6 @@ def seed_data():
         Student(name="Trần Minh T", gender="Nam", DOB=datetime(2007, 12, 3), classID=2, stuRuleID=1),
         Student(name="Nguyễn Thị L", gender="Nữ", DOB=datetime(2009, 2, 11), classID=2, stuRuleID=1),
         Student(name="Vũ Thị K", gender="Nữ", DOB=datetime(2008, 7, 29), classID=2, stuRuleID=1),
-
         Student(name="Lê Hoàng T", gender="Nam", DOB=datetime(2008, 9, 18), classID=3, stuRuleID=1),
         Student(name="Trần Thị H", gender="Nữ", DOB=datetime(2009, 5, 7), classID=3, stuRuleID=1),
         Student(name="Nguyễn Minh L", gender="Nam", DOB=datetime(2008, 8, 24), classID=3, stuRuleID=1),
@@ -224,7 +222,6 @@ def seed_data():
         Student(name="Lý Hồn A", gender="Nữ", DOB=datetime(2008, 5, 15), classID=2, stuRuleID=1),
         Student(name="Nguyễn Văn L", gender="Nam", DOB=datetime(2008, 11, 30), classID=2, stuRuleID=1),
         Student(name="Phan Thị U", gender="Nữ", DOB=datetime(2009, 3, 25), classID=2, stuRuleID=1),
-
         Student(name="Nguyễn Hằng P", gender="Nữ", DOB=datetime(2008, 12, 20), classID=4, stuRuleID=1),
         Student(name="Lê Thanh T", gender="Nam", DOB=datetime(2007, 11, 3), classID=4, stuRuleID=1),
         Student(name="Phan Thanh L", gender="Nam", DOB=datetime(2008, 7, 2), classID=4, stuRuleID=1),
@@ -245,7 +242,6 @@ def seed_data():
         Student(name="Phan Minh D", gender="Nam", DOB=datetime(2008, 5, 30), classID=5, stuRuleID=1),
         Student(name="Trần Hương A", gender="Nữ", DOB=datetime(2008, 10, 25), classID=5, stuRuleID=1),
         Student(name="Lê Thanh H", gender="Nam", DOB=datetime(2009, 3, 7), classID=5, stuRuleID=1),
-
         Student(name="Nguyễn Thị B", gender="Nữ", DOB=datetime(2008, 9, 18), classID=6, stuRuleID=1),
         Student(name="Phạm Quang H", gender="Nam", DOB=datetime(2009, 4, 9), classID=6, stuRuleID=1),
         Student(name="Trần Minh T", gender="Nam", DOB=datetime(2008, 7, 11), classID=6, stuRuleID=1),
@@ -260,7 +256,6 @@ def seed_data():
         Student(name="Nguyễn Thị E", gender="Nữ", DOB=datetime(2008, 8, 3), classID=5, stuRuleID=1),
         Student(name="Lý Minh Y", gender="Nam", DOB=datetime(2009, 1, 25), classID=5, stuRuleID=1),
         Student(name="Vũ Thị U", gender="Nữ", DOB=datetime(2008, 12, 14), classID=5, stuRuleID=1),
-
         Student(name="Nguyễn Thị M", gender="Nữ", DOB=datetime(2008, 12, 29), classID=7, stuRuleID=1),
         Student(name="Trần Văn H", gender="Nam", DOB=datetime(2007, 11, 2), classID=7, stuRuleID=1),
         Student(name="Vũ Thanh L", gender="Nam", DOB=datetime(2008, 9, 7), classID=7, stuRuleID=1),
@@ -274,7 +269,6 @@ def seed_data():
         Student(name="Lý Minh J", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
         Student(name="Trần Thị O", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
         Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
-
         Student(name="Lý Minh L", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
         Student(name="Trần Thị P", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
         Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
@@ -286,7 +280,6 @@ def seed_data():
         Student(name="Nguyễn Hương T", gender="Nữ", DOB=datetime(2009, 4, 11), classID=8, stuRuleID=1),
         Student(name="Vũ Quang P", gender="Nam", DOB=datetime(2008, 8, 6), classID=8, stuRuleID=1),
         Student(name="Lê Minh K", gender="Nam", DOB=datetime(2008, 12, 25), classID=8, stuRuleID=1),
-
         Student(name="Trần Hương M", gender="Nữ", DOB=datetime(2008, 5, 10), classID=9, stuRuleID=1),
         Student(name="Nguyễn Thị V", gender="Nữ", DOB=datetime(2009, 1, 7), classID=9, stuRuleID=1),
         Student(name="Lê Quang L", gender="Nam", DOB=datetime(2009, 3, 12), classID=9, stuRuleID=1),
