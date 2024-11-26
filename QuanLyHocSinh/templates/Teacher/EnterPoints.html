@@ -73,8 +73,14 @@ Báo cáo thống kê
                 <tr>
                     <th class="table-header">STT</th>
                     <th class="table-header">Họ tên</th>
-                    <th class="table-header">Điểm 15’</th>
-                    <th class="table-header">Điểm 1 tiết</th>
+                    <th class="table-header">Điểm 15’
+                        <button id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
+                        <button id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
+                    </th>
+                    <th class="table-header">Điểm 1 tiết
+                        <button id="add-test-btn" class="btn btn-sm btn-primary">+</button>
+                        <button id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
+                    </th>
                     <th class="table-header">Điểm thi</th>
                 </tr>
             </thead>
@@ -82,18 +88,22 @@ Báo cáo thống kê
                 <tr>
                     <td class="table-cell">1</td>
                     <td class="table-cell"><input type="text" class="input-cell" placeholder="Họ tên học sinh"></td>
-                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm 15’"></td>
-                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm 1 tiết"></td>
-                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm thi"></td>
+                    <td class="table-cell score-15min-container">
+                        <input type="number" class="input-cell score-15min" placeholder="Điểm 15’" min="0" max="10">
+                    </td>
+                    <td class="table-cell test-container">
+                        <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
+                    </td>
+                    <td class="table-cell"><input type="number" class="input-cell" placeholder="Điểm thi" min="0" max="10"></td>
                 </tr>
             </tbody>
         </table>
         <button id="save-score-btn" class="btn btn-success mt-3">Lưu bảng điểm</button>
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"> </script>
 {% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="static/js/Teacher/EnterPoints/EnterPoints.js"></script>
+
 
 
