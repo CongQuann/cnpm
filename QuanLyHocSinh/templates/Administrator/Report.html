@@ -19,6 +19,7 @@ Báo cáo thống kê
         <div class="col-md-4">
             <label for="subject" class="form-label">Môn học</label>
             <select class="form-select" id="subject" name="subject">
+                <option value="">Chọn môn học</option>
                 {% for subject in subjects %}
                 <option value="{{ subject.id }}">{{ subject.subjectName }}</option>
                 {% endfor %}
@@ -35,6 +36,7 @@ Báo cáo thống kê
         <div class="col-md-4">
             <label for="semester" class="form-label">Học kì</label>
             <select class="form-select" id="semester" name="semester">
+                <option value="">Chọn học kì</option>
                 {% for semester in semesters %}
                 <option value="{{ semester.id }}">{{ semester.semesterName }}</option>
                 {% endfor %}
