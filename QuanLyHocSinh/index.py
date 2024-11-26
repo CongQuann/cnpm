@@ -15,7 +15,12 @@ def home():
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
     class_list = Class.query.all()
-    return render_template('Administrator/Report.html',classes=class_list)
+    subject_list = Subject.query.all()
+    semester_list = Semester.query.all()
+    return render_template('Administrator/Report.html',
+                           classes=class_list,
+                           subjects = subject_list,
+                           semesters = semester_list)
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():

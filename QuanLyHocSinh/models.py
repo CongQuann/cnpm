@@ -228,7 +228,6 @@ def seed_data():
         Subject(subjectName="Giáo dục công dân"),
         Subject(subjectName="Thể dục"),
 
-
     ]
     db.session.add_all(subjects)
 
