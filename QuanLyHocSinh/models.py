@@ -198,6 +198,7 @@ def seed_data():
         Student(name="Nguyễn Hồng V", gender="Nữ", DOB=datetime(2009, 2, 26), classID=1, stuRuleID=1),
         Student(name="Lê Thị T", gender="Nữ", DOB=datetime(2008, 4, 2), classID=1, stuRuleID=1),
         Student(name="Vũ Minh H", gender="Nam", DOB=datetime(2009, 1, 9), classID=1, stuRuleID=1),
+        Student(name="Lê Văn K", gender="Nam", DOB=datetime(2007, 9, 5), classID=1, stuRuleID=1),
 
         Student(name="Lý Hồng A", gender="Nữ", DOB=datetime(2008, 5, 15), classID=2, stuRuleID=1),
         Student(name="Nguyễn Văn Q", gender="Nam", DOB=datetime(2008, 11, 30), classID=2, stuRuleID=1),
@@ -220,6 +221,9 @@ def seed_data():
         Student(name="Lê Hương L", gender="Nữ", DOB=datetime(2009, 1, 14), classID=3, stuRuleID=1),
         Student(name="Trần Minh M", gender="Nam", DOB=datetime(2008, 10, 9), classID=3, stuRuleID=1),
         Student(name="Hoàng Thanh D", gender="Nam", DOB=datetime(2009, 3, 3), classID=3, stuRuleID=1),
+        Student(name="Lý Hồn A", gender="Nữ", DOB=datetime(2008, 5, 15), classID=2, stuRuleID=1),
+        Student(name="Nguyễn Văn L", gender="Nam", DOB=datetime(2008, 11, 30), classID=2, stuRuleID=1),
+        Student(name="Phan Thị U", gender="Nữ", DOB=datetime(2009, 3, 25), classID=2, stuRuleID=1),
 
         Student(name="Nguyễn Hằng P", gender="Nữ", DOB=datetime(2008, 12, 20), classID=4, stuRuleID=1),
         Student(name="Lê Thanh T", gender="Nam", DOB=datetime(2007, 11, 3), classID=4, stuRuleID=1),
@@ -252,6 +256,10 @@ def seed_data():
         Student(name="Vũ Minh T", gender="Nam", DOB=datetime(2008, 6, 23), classID=6, stuRuleID=1),
         Student(name="Nguyễn Thanh T", gender="Nam", DOB=datetime(2008, 8, 18), classID=6, stuRuleID=1),
         Student(name="Lê Minh Q", gender="Nam", DOB=datetime(2009, 1, 5), classID=6, stuRuleID=1),
+        Student(name="Trần Thị K", gender="Nữ", DOB=datetime(2008, 7, 19), classID=5, stuRuleID=1),
+        Student(name="Nguyễn Thị E", gender="Nữ", DOB=datetime(2008, 8, 3), classID=5, stuRuleID=1),
+        Student(name="Lý Minh Y", gender="Nam", DOB=datetime(2009, 1, 25), classID=5, stuRuleID=1),
+        Student(name="Vũ Thị U", gender="Nữ", DOB=datetime(2008, 12, 14), classID=5, stuRuleID=1),
 
         Student(name="Nguyễn Thị M", gender="Nữ", DOB=datetime(2008, 12, 29), classID=7, stuRuleID=1),
         Student(name="Trần Văn H", gender="Nam", DOB=datetime(2007, 11, 2), classID=7, stuRuleID=1),
@@ -263,9 +271,13 @@ def seed_data():
         Student(name="Lý Minh K", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
         Student(name="Trần Thị V", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
         Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
+        Student(name="Lý Minh J", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
+        Student(name="Trần Thị O", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
+        Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
 
-        Student(name="Trần Minh T", gender="Nam", DOB=datetime(2009, 2, 3), classID=8, stuRuleID=1),
-        Student(name="Vũ Thị K", gender="Nữ", DOB=datetime(2008, 11, 1), classID=8, stuRuleID=1),
+        Student(name="Lý Minh L", gender="Nam", DOB=datetime(2008, 7, 30), classID=7, stuRuleID=1),
+        Student(name="Trần Thị P", gender="Nữ", DOB=datetime(2008, 8, 10), classID=7, stuRuleID=1),
+        Student(name="Phạm Thanh T", gender="Nam", DOB=datetime(2009, 5, 3), classID=7, stuRuleID=1),
         Student(name="Lê Hồng P", gender="Nam", DOB=datetime(2008, 12, 8), classID=8, stuRuleID=1),
         Student(name="Nguyễn Thanh T", gender="Nam", DOB=datetime(2008, 6, 17), classID=8, stuRuleID=1),
         Student(name="Lý Minh T", gender="Nam", DOB=datetime(2009, 1, 26), classID=8, stuRuleID=1),
@@ -336,18 +348,21 @@ def seed_data():
 
 
 
-
 # Hàm tạo dữ liệu điểm cho học sinh
 def generate_points():
     points = []
-    for student_id in range(1, 91):  # Tổng cộng 97 học sinh
+    for student_id in range(1, 103):  # Tổng cộng 90 học sinh
         for semester_id in range(1, 3):  # 2 học kỳ
             for subject_id in range(1, 11):  # 10 môn học
                 # Số lượng bài kiểm tra 15 phút (từ 1 đến 5 bài)
                 num_15min = random.randint(1, 5)
                 # Tạo điểm cho các bài kiểm tra 15 phút
                 for _ in range(num_15min):
-                    point_15min = round(random.uniform(1, 5), 1)
+                    # Tạo điểm với xác suất cao hơn cho điểm >= 5
+                    if random.random() < 0.7:  # 70% xác suất điểm >= 5
+                        point_15min = round(random.uniform(5, 10), 1)  # Sinh điểm từ 5 đến 10
+                    else:
+                        point_15min = round(random.uniform(1, 4), 1)  # Sinh điểm dưới 5
                     points.append(
                         Point(pointValue=point_15min, pointTypeID=1, semesterID=semester_id, subjectID=subject_id,
                               studentID=student_id))
@@ -356,17 +371,26 @@ def generate_points():
                 num_45min = random.randint(1, 3)
                 # Tạo điểm cho các bài kiểm tra 1 tiết
                 for _ in range(num_45min):
-                    point_45min = round(random.uniform(1, 3), 1)
+                    # Tạo điểm với xác suất cao hơn cho điểm >= 5
+                    if random.random() < 0.7:  # 70% xác suất điểm >= 5
+                        point_45min = round(random.uniform(5, 10), 1)  # Sinh điểm từ 5 đến 10
+                    else:
+                        point_45min = round(random.uniform(1, 4), 1)  # Sinh điểm dưới 5
                     points.append(
                         Point(pointValue=point_45min, pointTypeID=2, semesterID=semester_id, subjectID=subject_id,
                               studentID=student_id))
 
                 # Điểm cuối kỳ (1 bài duy nhất, từ 1 đến 10 điểm)
-                point_final = round(random.uniform(1, 10), 1)
+                # Tạo điểm với xác suất cao hơn cho điểm >= 5
+                if random.random() < 0.7:  # 70% xác suất điểm >= 5
+                    point_final = round(random.uniform(5, 10), 1)  # Sinh điểm từ 5 đến 10
+                else:
+                    point_final = round(random.uniform(1, 4), 1)  # Sinh điểm dưới 5
                 points.append(Point(pointValue=point_final, pointTypeID=3, semesterID=semester_id, subjectID=subject_id,
                                     studentID=student_id))
 
     return points
+
 
 
 # Tạo dữ liệu điểm cho tất cả học sinh
