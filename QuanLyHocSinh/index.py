@@ -3,6 +3,7 @@
 from flask import render_template, request
 
 from QuanLyHocSinh import app
+from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -13,23 +14,8 @@ def home():
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
-    data = [
-        {"class": "10A1", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A2", "total_students": 50, "pass": 35, "proportion": 70},
-        {"class": "10A3", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A4", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A5", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A6", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A7", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A8", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A9", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A10", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A11", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A12", "total_students": 45, "pass": 40, "proportion": 55},
-        {"class": "10A13", "total_students": 45, "pass": 40, "proportion": 55},
-
-    ]
-    return render_template('Administrator/Report.html', data=data)
+    class_list = Class.query.all()
+    return render_template('Administrator/Report.html',classes=class_list)
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
