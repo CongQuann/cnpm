@@ -55,6 +55,7 @@ Báo cáo thống kê
             <table class="table table-bordered table-striped">
                 <thead>
                 <tr class="table-primary">
+                    <th>STT</th>
                     <th>Lớp</th>
                     <th>Sĩ số</th>
                     <th>Số lượng đạt</th>
@@ -64,6 +65,7 @@ Báo cáo thống kê
                 <tbody class="table-data">
                 {% for stat in statistics %}
                 <tr>
+                    <td>{{ loop.index }}</td>
                     <td>{{ stat.class_name }}</td>
                     <td>{{ stat.total_students }}</td>
                     <td>{{ stat.num_passed }}</td>

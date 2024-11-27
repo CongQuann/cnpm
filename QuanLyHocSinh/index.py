@@ -1,6 +1,6 @@
 
 
-from flask import render_template, request,redirect,flash
+from flask import render_template, request,redirect,flash,jsonify
 
 from QuanLyHocSinh import app,db
 from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
@@ -149,18 +149,64 @@ def rule():
 
 
 
-@app.route("/Administrator/SubjectManagement",methods=["GET","POST"])
+@app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
 def subject_mng():
-    # Dữ liệu mẫu
-    subjects = [
-        {"id": 1, "name": "Toán", "max_students": 40},
-        {"id": 2, "name": "Vật lý", "max_students": 35},
-        {"id": 3, "name": "Hóa học", "max_students": 30}
-    ]
+    if request.method == "POST":
+        subject_name = request.form.get("subject_name")  # Lấy tên môn học từ form
 
-    # Truyền dữ liệu đến template
+        if not subject_name:
+            flash("Tên môn học không được để trống!", "danger")
+            return redirect("/Administrator/SubjectManagement")
+
+        # Kiểm tra xem môn học đã tồn tại chưa
+        existing_subject = Subject.query.filter_by(subjectName=subject_name).first()
+        if existing_subject:
+            flash("Môn học đã tồn tại!", "warning")
+            return redirect("/Administrator/SubjectManagement")
+
+        # Thêm môn học mới vào cơ sở dữ liệu
+        try:
+            new_subject = Subject(subjectName=subject_name)
+            db.session.add(new_subject)
+            db.session.commit()
+            flash("Thêm môn học thành công!", "success")
+            return redirect("/Administrator/SubjectManagement")
+        except Exception as e:
+            db.session.rollback()
+            flash("Có lỗi xảy ra khi thêm môn học.", "danger")
+
+        return redirect("/Administrator/SubjectManagement")
+
+    # Nếu là GET, trả về giao diện
+    subjects = Subject.query.all()
     return render_template('Administrator/SubjectManagement.html', subjects=subjects)
 
+
+#======Thêm route xử lý để xóa môn học=======
+@app.route("/Administrator/SubjectManagement/delete", methods=["POST"])
+def delete_subject():
+    subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
+
+    if not subject_id:
+        flash("Không tìm thấy môn học cần xóa.", "danger")
+        return redirect("/Administrator/SubjectManagement")
+
+    # Tìm môn học trong cơ sở dữ liệu
+    subject = Subject.query.get(subject_id)
+    if not subject:
+        flash("Môn học không tồn tại.", "warning")
+        return redirect("/Administrator/SubjectManagement")
+
+    # Xóa môn học
+    try:
+        db.session.delete(subject)
+        db.session.commit()
+        flash("Xóa môn học thành công!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("Có lỗi xảy ra khi xóa môn học.", "danger")
+
+    return redirect("/Administrator/SubjectManagement")
 
 
 @app.route("/Administrator/TeacherManagement",methods=["GET","POST"])

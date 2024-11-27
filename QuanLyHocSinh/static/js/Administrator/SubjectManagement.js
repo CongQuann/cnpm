@@ -8,11 +8,7 @@ document.getElementById('add-subject-form').addEventListener('submit', function 
     }
 });
 
-document.getElementById('edit-subject-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const subjectName = document.getElementById('edit-subject-name').value;
-    if (subjectName) {
-        // Gửi yêu cầu cập nhật tên môn học
-        alert('Môn học đã được cập nhật!');
-    }
-});
+
+
+
+
