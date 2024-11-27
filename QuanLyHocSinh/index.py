@@ -1,6 +1,6 @@
 
 
-from flask import render_template, request
+from flask import render_template, request,redirect,flash
 
 from QuanLyHocSinh import app,db
 from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
@@ -30,6 +30,9 @@ def generate_report():
     subject_id = request.args.get('subject')  # ID môn học
     semester_id = request.args.get('semester')  # ID học kỳ
 
+    subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
+    semester_name = Semester.query.with_entities(Semester.semesterName).filter_by(id=semester_id).scalar()
+
     # Lấy thông tin từ cơ sở dữ liệu
     classes = Class.query.all()
 
@@ -54,7 +57,12 @@ def generate_report():
         })
 
     # Render template với dữ liệu thống kê
-    return render_template('Administrator/Report.html', statistics=statistics, subjects=Subject.query.all(), semesters=Semester.query.all())
+    return render_template('Administrator/Report.html',
+                           statistics=statistics,
+                           subjects=Subject.query.all(),
+                           semesters=Semester.query.all(),
+                           subject_name=subject_name,
+                           semester_name=semester_name,)
 
 
 def calculate_average(student_id, subject_id,semester_id):
@@ -103,13 +111,41 @@ def is_student_passed(student_id, subject_id, semester_id):
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
-    regulations = {
-        "min_age": 6,
-        "max_age": 18,
-        "max_class_size": 40
-    }
-    return render_template('Administrator/RuleManagement.html',regulations=regulations)
+    if request.method == "POST":
+        # Lấy dữ liệu từ form
+        min_age = request.form.get("min_age")
+        max_age = request.form.get("max_age")
+        max_class_size = request.form.get("max_class_size")
 
+        # Lấy bản ghi đầu tiên trong bảng
+        student_rule = StudentRule.query.first()
+        class_rule = ClassRule.query.first()
+
+        # Kiểm tra nếu các bản ghi tồn tại
+        if student_rule and class_rule:
+            # Cập nhật quy định
+            student_rule.minAge = int(min_age)
+            student_rule.maxAge = int(max_age)
+            class_rule.maxNoStudent = int(max_class_size)
+
+            # Lưu thay đổi vào cơ sở dữ liệu
+            db.session.commit()
+
+            flash("Quy định đã được cập nhật thành công!", "success")
+        else:
+            flash("Không thể cập nhật quy định. Vui lòng kiểm tra lại!", "error")
+
+        return redirect("/Administrator/RuleManagement")
+
+        # Xử lý GET request
+    class_rule = ClassRule.query.first()
+    student_rule = StudentRule.query.first()
+
+    return render_template(
+        "Administrator/RuleManagement.html",
+        class_rule=class_rule,
+        student_rule=student_rule,
+    )
 
 
 

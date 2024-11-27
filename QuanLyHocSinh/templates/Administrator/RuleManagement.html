@@ -9,11 +9,22 @@ Chỉnh sửa quy định
 {% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 <div class="container mt-5">
     <h2 class="text-center mb-4">Chỉnh Sửa Quy Định</h2>
 
     <!-- Form chỉnh sửa quy định -->
-    <form id="edit-regulations-form" method="POST" action="/update-regulations">
+    <form id="edit-regulations-form" method="POST" action="/Administrator/RuleManagement">
         <!-- Độ tuổi tối thiểu -->
         <div class="mb-3 row">
             <label for="min-age" class="col-md-4 col-form-label text-end">Độ tuổi tối thiểu:</label>
@@ -23,7 +34,7 @@ Chỉnh sửa quy định
                     class="form-control"
                     id="min-age"
                     name="min_age"
-                    value="{{ regulations.min_age }}"
+                    value="{{ student_rule.minAge }}"
                     required>
             </div>
         </div>
@@ -37,7 +48,7 @@ Chỉnh sửa quy định
                     class="form-control"
                     id="max-age"
                     name="max_age"
-                    value="{{ regulations.max_age }}"
+                    value="{{ student_rule.maxAge }}"
                     required>
             </div>
         </div>
@@ -51,7 +62,7 @@ Chỉnh sửa quy định
                     class="form-control"
                     id="max-class-size"
                     name="max_class_size"
-                    value="{{ regulations.max_class_size }}"
+                    value="{{ class_rule.maxNoStudent }}"
                     required>
             </div>
         </div>
@@ -60,7 +71,7 @@ Chỉnh sửa quy định
         <div class="row mt-4">
             <div class="col-md-6 offset-md-4">
                 <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                <a href="/" class="btn btn-secondary">Hủy</a>
+                <a href="/Administrator/RuleManagement" class="btn btn-secondary">Hủy</a>
             </div>
         </div>
     </form>
