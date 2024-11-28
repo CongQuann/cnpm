@@ -27,10 +27,10 @@ Quản lý môn học
     <!-- Form tìm kiếm -->
     <div class="row mb-4">
         <div class="col-md-8">
-            <input type="text" id="search-input" class="form-control" placeholder="Nhập tên môn học để tìm kiếm...">
+            <input type="text" id="search-input" class="form-control" placeholder="Nhập tên môn học để tìm kiếm..." autocomplete="off">
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-primary search-btn" id="search-btn">Tìm kiếm</button>
+            <button class="btn btn-secondary" id="reset-btn">Reset</button>
             <button class="btn btn-success add-btn" id="add-btn" data-bs-toggle="modal"
                     data-bs-target="#addSubjectModal">
                 Thêm môn học
@@ -56,8 +56,8 @@ Quản lý môn học
                 <td>{{ subject.id }}</td>
                 <td>{{ subject.subjectName }}</td>
                 <td>
-                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editSubjectModal">Cập nhật
-                    </button>
+                    <a href="/Administrator/SubjectManagement/edit/{{ subject.id }}" class="btn btn-warning">Cập
+                        nhật</a>
                     <form action="/Administrator/SubjectManagement/delete" method="POST" style="display:inline;">
                         <input type="hidden" name="subject_id" value="{{ subject.id }}">
                         <button type="submit" class="btn btn-danger"
@@ -70,6 +70,9 @@ Quản lý môn học
             </tbody>
         </table>
     </div>
+
+    <p id="no-result-message" class="text-center text-danger" style="display: none;">Không tìm thấy môn học nào!</p>
+
 </div>
 
 <!-- Modal thêm môn học -->
@@ -88,29 +91,6 @@ Quản lý môn học
                                required>
                     </div>
                     <button type="submit" class="btn btn-primary">Thêm</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<!-- Modal cập nhật môn học -->
-<div class="modal fade" id="editSubjectModal" tabindex="-1" aria-labelledby="editSubjectLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSubjectLabel">Cập nhật tên môn học</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="edit-subject-form">
-                    <div class="mb-3">
-                        <label for="edit-subject-name" class="form-label">Tên môn học</label>
-                        <input type="text" class="form-control" id="edit-subject-name" required>
-                        <input type="hidden" id="edit-subject-id">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </form>
             </div>
         </div>

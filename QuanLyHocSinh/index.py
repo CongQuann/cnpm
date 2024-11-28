@@ -209,6 +209,40 @@ def delete_subject():
     return redirect("/Administrator/SubjectManagement")
 
 
+
+#============Phần chỉnh sửa môn học
+@app.route("/Administrator/SubjectManagement/edit/<int:subject_id>") #route để gọi ra trang chỉnh sửa
+def edit_subject_page(subject_id):
+    subject = Subject.query.get(subject_id)
+    if not subject:
+        flash("Môn học không tồn tại.", "warning")
+        return redirect("/Administrator/SubjectManagement")
+    return render_template("Administrator/edit_subject.html", subject=subject)
+
+
+@app.route("/Administrator/SubjectManagement/update", methods=["POST"]) #route chứa hàm thực hiện chức năng của trang chỉnh sửa
+def update_subject():
+    subject_id = request.form.get("subject_id")
+    subject_name = request.form.get("subject_name")
+
+    # Xử lý cập nhật
+    subject = Subject.query.get(subject_id)
+    if not subject:
+        flash("Không tìm thấy môn học.", "warning")
+        return redirect("/Administrator/SubjectManagement")
+
+    try:
+        subject.subjectName = subject_name
+        db.session.commit()
+        flash("Cập nhật thành công!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("Lỗi trong quá trình cập nhật.", "danger")
+    return redirect("/Administrator/SubjectManagement")
+
+#=====================================
+
+
 @app.route("/Administrator/TeacherManagement",methods=["GET","POST"])
 def teacher_mng():
     # Dữ liệu mẫu (sau này thay bằng database)
