@@ -1,9 +1,13 @@
 
-
-from flask import render_template, request,redirect,flash,jsonify
+from flask import render_template, request, redirect, flash, jsonify, url_for
 
 from QuanLyHocSinh import app,db
+from datetime import datetime
 from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, DateField, SelectField, TelField, EmailField, SubmitField
+from wtforms.validators import DataRequired, Email, Length
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -245,9 +249,51 @@ def enter_point():
 
 
 #staff
-@app.route('/student_add')
+
+@app.route('/student_add', methods=["GET", "POST"])
 def staff():
-    return render_template('staff/staff.html')
+    # Nếu là GET request, chỉ trả về giao diện
+    classes = Class.query.all()
+    if request.method == "POST":
+        # Lấy dữ liệu từ form
+        name = request.form.get("name")
+        dob = request.form.get("dob")
+        try:
+            dob_date = datetime.strptime(dob, "%Y-%m-%d")  # Định dạng đúng: YYYY-MM-DD
+        except ValueError:
+            return "Ngày sinh không hợp lệ", 400
+        gender = request.form.get("gender")
+        address = request.form.get("address")
+        phone = request.form.get("phone")
+        email = request.form.get("email")
+        class_id = request.form.get("class")
+        # Kiểm tra dữ liệu bắt buộc
+        if not all([name, dob, gender, address, phone, class_id]):
+            flash("Vui lòng điền đầy đủ thông tin!", "error")
+            return redirect(url_for("staff"))
+
+        # Tạo một đối tượng Student
+        new_student = Student(
+            name=name,
+            DOB=dob,
+            gender=gender,
+            address=address,
+            phone=phone,
+            email=email,
+            classID=class_id,
+            stuRuleID=1
+        )
+
+        # Lưu dữ liệu vào database
+        try:
+            db.session.add(new_student)
+            db.session.commit()
+            flash("Thêm học sinh thành công!", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Có lỗi xảy ra: {str(e)}", "error")
+        return redirect(url_for("staff"))
+    return render_template('staff/staff.html', classes=classes)
 
 @app.route('/class_edit')
 def class_edit():

@@ -1,5 +1,4 @@
-<form id="student-form">
-    <label for="name">Họ và tên:</label>
+<label for="name">Họ và tên:</label>
     <input type="text" id="name" name="name" required>
 
     <label for="dob">Ngày sinh:</label>
@@ -22,16 +21,15 @@
 
     <label for="class">Lớp:</label>
     <select id="class" name="class">
-        <option value="1">10C1</option>
-        <option value="2">11C2</option>
-        <option value="3">12C3</option>
+        {%for class in classes%}
+        <option value="{{class.id}}">{{class.className}}</option>
+        {%endfor%}
     </select>
 
     <div class="btn-add-student">
         {% block buttonContent %}
-        <button type="button" id="add-student">
+        <button type="submit" id="add-student">
             <span>Hoàn Tất</span>
         </button>
         {% endblock %}
     </div>
-</form>

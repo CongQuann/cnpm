@@ -84,6 +84,9 @@ class Student(db.Model):
     name = Column(String(50),nullable=False)
     gender = Column(String(10))
     DOB = Column(DateTime)
+    address = Column(String(200))
+    phone = Column(String(11))
+    email = Column(String(70))
     classID = Column(Integer, ForeignKey(Class.id),nullable=True)
     stuRuleID = Column(Integer, ForeignKey(StudentRule.id),nullable=False)
     points = relationship('Point',backref='student_point',lazy=True,cascade="all, delete")
@@ -391,7 +394,7 @@ def generate_points():
 
 if __name__ == '__main__':
     with app.app_context():
-        #db.create_all()
+        # db.create_all()
         seed_data()
 
 

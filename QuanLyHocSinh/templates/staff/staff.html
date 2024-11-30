@@ -16,9 +16,11 @@
         <h2>Tiếp nhận học sinh</h2>
         <!-- Phần 1: Tiếp nhận học sinh -->
         <section class="input-students">
-            {%block studentform%}
-                {%include 'staff/student-form.html'%}
-            {%endblock%}
+            <form id="student-form" method="post" action="{{ url_for('staff') }}">
+                {%block studentform%}
+                    {%include 'staff/student-form.html'%}
+                {%endblock%}
+            </form>
             <form class="logo">
                 <div class="img-logo">
                     <img src="../../static/images/Logo_THPT_Chu_Van_An.jpg" alt="pic">
