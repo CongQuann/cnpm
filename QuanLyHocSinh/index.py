@@ -243,19 +243,57 @@ def update_subject():
 #=====================================
 
 
-@app.route("/Administrator/TeacherManagement",methods=["GET","POST"])
-def teacher_mng():
-    # Dữ liệu mẫu (sau này thay bằng database)
-    subjects = Subject.query.all()
 
 
 
-    return render_template('Administrator/TeacherManagement.html', subjects=subjects)
+@app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
+def create_user():
+    if request.method == 'POST':
+        # Lấy thông tin từ form
+        name = request.form['name']
+        gender = request.form['gender']
+        dob = request.form['DOB']
+        email = request.form['email']
+        phone_number = request.form['phoneNumber']
+        username = request.form['userName']
+        password = request.form['password']
+        role = request.form['role']
 
+        # Tạo User
+        new_user = User(
+            name=name,
+            gender=gender,
+            DOB=dob,
+            email=email,
+            phoneNumber=phone_number,
+            userName=username,
+            password=password
+        )
+        db.session.add(new_user)
+        db.session.commit()
 
+        # Tạo bản ghi cho Staff hoặc Teacher dựa trên phân quyền
+        if role == 'Staff':
+            staffRole = request.form['staffRole']  # Thêm thông tin cho Staff
+            new_staff = Staff(
+                staffRole=staffRole,
+                userID=new_user.id
+            )
+            db.session.add(new_staff)
 
+        elif role == 'Teacher':
+            yearExperience = request.form['yearExperience']  # Thêm kinh nghiệm giảng dạy cho Teacher
+            new_teacher = Teacher(
+                yearExperience=yearExperience,
+                userID=new_user.id
+            )
+            db.session.add(new_teacher)
 
+        db.session.commit()
+        flash('Tạo tài khoản thành công!', 'success')
+        return redirect("/Administrator/CreateUser")  # Redirect sau khi tạo thành công
 
+    return render_template('Administrator/CreateUser.html')
 
 #===================================================================================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])

@@ -3,13 +3,15 @@
     color: #fff;
     text-align: center;
     padding: 0.5rem 0;
-    position: fixed;
+    position: sticky;
     bottom: 0;
     width: 100%;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
     font-size:1.2rem;
+    margin-top: 2rem;
 }
 .logout-btn{
+
     font-size:1.2rem !important;
 }
 
@@ -19,4 +21,14 @@
     transition: ease 0.7s;
 }
 
+body{
+    margin-bottom: 6rem;
+}
 
+.container{
+    width: 50% !important;
+    background-color:#edeff0;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.6);
+}

@@ -21,3 +21,10 @@
     color: #212529 !important;
     transition: ease 0.7s;
 }
+
+.container{
+    width: 50% !important;
+}
+h2{
+      text-align: center
+}
