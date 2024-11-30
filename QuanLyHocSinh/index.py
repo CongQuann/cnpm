@@ -249,7 +249,6 @@ def update_subject():
 
 
 
-
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
 def create_user():
     if request.method == 'POST':
@@ -269,36 +268,37 @@ def create_user():
         password = request.form['password']
         role = request.form['role']
 
-        # Tạo User
-        new_user = User(
-            name=name,
-            gender=gender,
-            DOB=dob,
-            email=email,
-            phoneNumber=phone_number,
-            userName=username,
-            password=password
-        )
-        db.session.add(new_user)
-        db.session.commit()
-
-        # Tạo bản ghi cho Staff hoặc Teacher dựa trên phân quyền
+        # Tạo bản ghi dựa trên phân quyền
         if role == 'Staff':
-            staffRole = request.form['staffRole']  # Thêm thông tin cho Staff
-            new_staff = Staff(
-                staffRole=staffRole,
-                userID=new_user.id
+            staff_role = request.form['staffRole']  # Vai trò của Staff
+            new_user = Staff(
+                name=name,
+                gender=gender,
+                DOB=dob,
+                email=email,
+                phoneNumber=phone_number,
+                userName=username,
+                password=password,
+                staffRole=staff_role
             )
-            db.session.add(new_staff)
-
         elif role == 'Teacher':
-            yearExperience = request.form['yearExperience']  # Thêm kinh nghiệm giảng dạy cho Teacher
-            new_teacher = Teacher(
-                yearExperience=yearExperience,
-                userID=new_user.id
+            year_experience = request.form['yearExperience']  # Kinh nghiệm giảng dạy
+            new_user = Teacher(
+                name=name,
+                gender=gender,
+                DOB=dob,
+                email=email,
+                phoneNumber=phone_number,
+                userName=username,
+                password=password,
+                yearExperience=year_experience
             )
-            db.session.add(new_teacher)
+        else:
+            flash("Vai trò không hợp lệ!", "danger")
+            return render_template('Administrator/CreateUser.html')
 
+        # Thêm bản ghi vào cơ sở dữ liệu
+        db.session.add(new_user)
         db.session.commit()
         flash('Tạo tài khoản thành công!', 'success')
         return redirect("/Administrator/CreateUser")  # Redirect sau khi tạo thành công
