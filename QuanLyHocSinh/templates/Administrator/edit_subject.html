@@ -1,0 +1,20 @@
+{% extends 'Administrator/base.html' %}
+
+{% block css %}
+<link href="{{ url_for('static', filename='css/Administrator/edit_subject.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Chỉnh sửa Môn Học</h2>
+    <form action="/Administrator/SubjectManagement/update" method="POST">
+        <input type="hidden" name="subject_id" value="{{ subject.id }}">
+        <div class="mb-3">
+            <label for="subject_name" class="form-label">Tên Môn Học</label>
+            <input type="text" id="subject_name" name="subject_name" class="form-control"
+                   value="{{ subject.subjectName }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Cập nhật</button>
+    </form>
+</div>
+{% endblock %}
