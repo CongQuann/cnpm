@@ -17,7 +17,7 @@ class User(db.Model):
     DOB = Column(DateTime)
     email = Column(String(50))
     phoneNumber = Column(String(11))
-    userName = Column(String(30))
+    userName = Column(String(30),unique=True)
     password = Column(String(30))
     admins = relationship('Administrator',backref='user_administrator',lazy=True,cascade="all, delete")
     staffs = relationship('Staff',backref='user_staff',lazy = True,cascade="all, delete")
@@ -133,14 +133,12 @@ def seed_data():
         User(name="Trần Thị B", gender="Nữ", DOB=datetime(1990, 8, 15), email="teacher1@example.com", phoneNumber="0987654321", userName="teacher1", password="password2"),
         User(name="Lê Văn C", gender="Nam", DOB=datetime(1995, 3, 10), email="staff1@example.com", phoneNumber="0123445567", userName="staff1", password="password3"),
         User(name="Nguyễn Thị D", gender="Nữ", DOB=datetime(1980, 12, 1), email="teacher2@example.com", phoneNumber="0987651234", userName="teacher2", password="password4"),
-        User(name="Phạm Văn E", gender="Nam", DOB=datetime(1992, 7, 25), email="admin2@example.com", phoneNumber="0911223344", userName="admin2", password="password5"),
     ]
     db.session.add_all(users)
 
     # Thêm Administrator mẫu
     admins = [
         Administrator(adminRole="Principal", userID=1),
-        Administrator(adminRole="Vice Principal", userID=5),
     ]
     db.session.add_all(admins)
 

@@ -255,11 +255,17 @@ def create_user():
     if request.method == 'POST':
         # Lấy thông tin từ form
         name = request.form['name']
+        username = request.form['userName']
+        # Kiểm tra nếu tên đăng nhập đã tồn tại
+        existing_user = User.query.filter_by(userName=username).first()
+        if existing_user:
+            flash("Tên đăng nhập đã được sử dụng!", "danger")
+            return render_template('Administrator/CreateUser.html')
         gender = request.form['gender']
         dob = request.form['DOB']
         email = request.form['email']
         phone_number = request.form['phoneNumber']
-        username = request.form['userName']
+
         password = request.form['password']
         role = request.form['role']
 
