@@ -17,31 +17,42 @@ class User(db.Model):
     DOB = Column(DateTime)
     email = Column(String(50))
     phoneNumber = Column(String(11))
-    userName = Column(String(30))
+    userName = Column(String(30),unique=True)
     password = Column(String(30))
     admins = relationship('Administrator',backref='user_administrator',lazy=True,cascade="all, delete")
     staffs = relationship('Staff',backref='user_staff',lazy = True,cascade="all, delete")
     teachers = relationship('Teacher',backref='user_teacher',lazy=True,cascade="all, delete")
 
-class Administrator(db.Model):
+class Administrator(User):
     __tablename__ = 'administrator'
-    id = Column(Integer,primary_key=True,autoincrement=True)
+    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
     adminRole = Column(String(20))
-    userID = Column(Integer, ForeignKey(User.id),nullable=False)
+    # userID = Column(Integer, ForeignKey(User.id),nullable=False)
+    __mapper_args__ = {
+        'polymorphic_identity': 'administrator',
+        'inherit_condition': id == User.id
+    }
 
-class Staff(db.Model):
+class Staff(User):
     __tablename__ = 'staff'
-    id = Column(Integer,primary_key=True,autoincrement=True)
+    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
     staffRole = Column(String(20))
-    userID = Column(Integer, ForeignKey(User.id),nullable=False)
+    __mapper_args__ = {
+        'polymorphic_identity': 'staff',
+        'inherit_condition': id == User.id
+    }
 
-class Teacher(db.Model):
+class Teacher(User):
     __tablename__ = 'teacher'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
     yearExperience = Column(Integer)
-    userID = Column(Integer, ForeignKey(User.id),nullable=False)
     subjectID = Column(Integer,ForeignKey('subject.id'),nullable=True)
     teaches = relationship('Teach',backref='teacher_teach',lazy=True,cascade="all, delete")
+    __mapper_args__ = {
+        'polymorphic_identity': 'teacher',
+        'inherit_condition': id == User.id
+    }
+
 
 class Grade(db.Model):
     __tablename__ = 'grade'
@@ -127,36 +138,46 @@ def seed_data():
     db.drop_all()
     db.create_all()
 
-    # Thêm User mẫu
-    users = [
-        User(name="Nguyễn Văn A", gender="Nam", DOB=datetime(1985, 5, 20), email="admin1@example.com", phoneNumber="0123456789", userName="admin1", password="password1"),
-        User(name="Trần Thị B", gender="Nữ", DOB=datetime(1990, 8, 15), email="teacher1@example.com", phoneNumber="0987654321", userName="teacher1", password="password2"),
-        User(name="Lê Văn C", gender="Nam", DOB=datetime(1995, 3, 10), email="staff1@example.com", phoneNumber="0123445567", userName="staff1", password="password3"),
-        User(name="Nguyễn Thị D", gender="Nữ", DOB=datetime(1980, 12, 1), email="teacher2@example.com", phoneNumber="0987651234", userName="teacher2", password="password4"),
-        User(name="Phạm Văn E", gender="Nam", DOB=datetime(1992, 7, 25), email="admin2@example.com", phoneNumber="0911223344", userName="admin2", password="password5"),
-    ]
-    db.session.add_all(users)
 
-    # Thêm Administrator mẫu
-    admins = [
-        Administrator(adminRole="Principal", userID=1),
-        Administrator(adminRole="Vice Principal", userID=5),
-    ]
-    db.session.add_all(admins)
+    # Thêm dữ liệu cho Administrator
+    admin1 = Administrator(
+        name="Admin User",
+        gender="Male",
+        DOB=datetime(1985, 3, 15),
+        email="admin@example.com",
+        phoneNumber="0911122233",
+        userName="adminuser",
+        password="adminpass",
+        adminRole="System Administrator"
+    )
 
-    # Thêm Staff mẫu
-    staffs = [
-        Staff(staffRole="Clerk", userID=3),
-        Staff(staffRole="Counselor", userID=3),
-    ]
-    db.session.add_all(staffs)
+    # Thêm dữ liệu cho Staff
+    staff1 = Staff(
+        name="Staff User",
+        gender="Female",
+        DOB=datetime(1988, 8, 8),
+        email="staff@example.com",
+        phoneNumber="0912233445",
+        userName="staffuser",
+        password="staffpass",
+        staffRole="HR"
+    )
 
-    # Thêm Teacher mẫu
-    teachers = [
-        Teacher(yearExperience=10, userID=2, subjectID=1),
-        Teacher(yearExperience=8, userID=4, subjectID=2),
-    ]
-    db.session.add_all(teachers)
+    # Thêm dữ liệu cho Teacher
+    teacher1 = Teacher(
+        name="Teacher User",
+        gender="Male",
+        DOB=datetime(1995, 7, 7),
+        email="teacher@example.com",
+        phoneNumber="0913344556",
+        userName="teacheruser",
+        password="teacherpass",
+        yearExperience=5,
+        subjectID=None
+    )
+
+    # Thêm dữ liệu vào session
+    db.session.add_all([admin1, staff1, teacher1])
 
     # Thêm Grade mẫu
     grades = [Grade(gradeName=f"Lớp {i}") for i in range(10, 13)]
@@ -394,7 +415,7 @@ def generate_points():
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()
+        db.create_all()
         seed_data()
 
 
