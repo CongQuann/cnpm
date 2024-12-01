@@ -19,15 +19,18 @@ class User(db.Model):
     phoneNumber = Column(String(11))
     userName = Column(String(30),unique=True)
     password = Column(String(30))
-    admins = relationship('Administrator',backref='user_administrator',lazy=True,cascade="all, delete")
-    staffs = relationship('Staff',backref='user_staff',lazy = True,cascade="all, delete")
-    teachers = relationship('Teacher',backref='user_teacher',lazy=True,cascade="all, delete")
-
+    type = Column(String(50))  # Trường để phân biệt loại người dùng
+    staffs = relationship('Staff', backref='user_staff', lazy=True, cascade="all, delete")
+    teachers = relationship('Teacher', backref='user_teacher', lazy=True, cascade="all, delete")
+    admins = relationship('Administrator', backref='user_administrator', lazy=True, cascade="all, delete")
+    __mapper_args__ = {
+        'polymorphic_identity': 'user',  # Định danh mặc định cho bảng cha
+        'polymorphic_on': type  # Phân biệt dựa trên trường `type`
+    }
 class Administrator(User):
     __tablename__ = 'administrator'
     id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
     adminRole = Column(String(20))
-    # userID = Column(Integer, ForeignKey(User.id),nullable=False)
     __mapper_args__ = {
         'polymorphic_identity': 'administrator',
         'inherit_condition': id == User.id
@@ -131,6 +134,26 @@ class Point(db.Model):
     subjectID = Column(Integer, ForeignKey(Subject.id),nullable=False)
     studentID = Column(Integer, ForeignKey(Student.id),nullable=False)
 
+def delete_user_by_id(user_id):
+    try:
+         # Tạo session
+        session = db.session()
+
+        # Lấy người dùng theo ID
+        user = session.query(User).get(user_id)
+
+        if not user:
+            return None  # Người dùng không tồn tại
+
+        # Xóa người dùng
+        session.delete(user)
+        session.commit()
+        return user  # Trả về người dùng đã xóa
+    except Exception as e:
+        session.rollback()  # Rollback nếu có lỗi
+        raise e
+    finally:
+        session.close()  # Đảm bảo đóng session sau khi xóa
 
 #=================================Hàm thêm dữ liệu mẫu vào bảng=============================================
 def seed_data():
@@ -142,7 +165,7 @@ def seed_data():
     # Thêm dữ liệu cho Administrator
     admin1 = Administrator(
         name="Admin User",
-        gender="Male",
+        gender="Nam",
         DOB=datetime(1985, 3, 15),
         email="admin@example.com",
         phoneNumber="0911122233",
@@ -154,7 +177,7 @@ def seed_data():
     # Thêm dữ liệu cho Staff
     staff1 = Staff(
         name="Staff User",
-        gender="Female",
+        gender="Nữ",
         DOB=datetime(1988, 8, 8),
         email="staff@example.com",
         phoneNumber="0912233445",
@@ -166,7 +189,7 @@ def seed_data():
     # Thêm dữ liệu cho Teacher
     teacher1 = Teacher(
         name="Teacher User",
-        gender="Male",
+        gender="Nam",
         DOB=datetime(1995, 7, 7),
         email="teacher@example.com",
         phoneNumber="0913344556",
@@ -417,5 +440,6 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         seed_data()
+
 
 

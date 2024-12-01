@@ -1,20 +1,18 @@
-
-from flask import render_template, request, redirect, flash, jsonify, url_for
-
-from QuanLyHocSinh import app,db
 from datetime import datetime
-from QuanLyHocSinh.models import Class,Student,User,Administrator,Staff,Subject,Semester,StudentRule,ClassRule,Point,PointType,Teach,Teacher,Grade
 
-from flask_wtf import FlaskForm
-from wtforms import StringField, DateField, SelectField, TelField, EmailField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+from flask import render_template, request, redirect, flash, url_for
+from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import SQLAlchemyError
+from QuanLyHocSinh import app, db
+from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule,Point, Teacher
 
 
 @app.route("/", methods=["GET", "POST"])
 def home():
     return render_template('index.html')
 
-#===========================================================ADMINISTRATOR================================================
+
+# ===========================================================ADMINISTRATOR================================================
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Dữ liệu mẫu bạn muốn hiển thị trong bảng
@@ -24,8 +22,8 @@ def report():
 
     return render_template('Administrator/Report.html',
                            classes=class_list,
-                           subjects = subject_list,
-                           semesters = semester_list,)
+                           subjects=subject_list,
+                           semesters=semester_list, )
 
 
 @app.route('/generate_report', methods=['GET'])
@@ -66,10 +64,10 @@ def generate_report():
                            subjects=Subject.query.all(),
                            semesters=Semester.query.all(),
                            subject_name=subject_name,
-                           semester_name=semester_name,)
+                           semester_name=semester_name, )
 
 
-def calculate_average(student_id, subject_id,semester_id):
+def calculate_average(student_id, subject_id, semester_id):
     # Lấy tất cả các điểm của học sinh trong môn học cụ thể
     points = Point.query.filter_by(studentID=student_id, subjectID=subject_id, semesterID=semester_id).all()
 
@@ -99,7 +97,6 @@ def calculate_average(student_id, subject_id,semester_id):
     return average
 
 
-
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
     average = calculate_average(student_id, subject_id, semester_id)
@@ -109,8 +106,6 @@ def is_student_passed(student_id, subject_id, semester_id):
         return True  # Học sinh đạt môn
     else:
         return False  # Học sinh không đạt môn
-
-
 
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
@@ -152,7 +147,6 @@ def rule():
     )
 
 
-
 @app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
 def subject_mng():
     if request.method == "POST":
@@ -186,7 +180,7 @@ def subject_mng():
     return render_template('Administrator/SubjectManagement.html', subjects=subjects)
 
 
-#======Thêm route xử lý để xóa môn học=======
+# ======Thêm route xử lý để xóa môn học=======
 @app.route("/Administrator/SubjectManagement/delete", methods=["POST"])
 def delete_subject():
     subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
@@ -213,9 +207,8 @@ def delete_subject():
     return redirect("/Administrator/SubjectManagement")
 
 
-
-#============Phần chỉnh sửa môn học
-@app.route("/Administrator/SubjectManagement/edit/<int:subject_id>") #route để gọi ra trang chỉnh sửa
+# ============Phần chỉnh sửa môn học
+@app.route("/Administrator/SubjectManagement/edit/<int:subject_id>")  # route để gọi ra trang chỉnh sửa
 def edit_subject_page(subject_id):
     subject = Subject.query.get(subject_id)
     if not subject:
@@ -224,7 +217,8 @@ def edit_subject_page(subject_id):
     return render_template("Administrator/edit_subject.html", subject=subject)
 
 
-@app.route("/Administrator/SubjectManagement/update", methods=["POST"]) #route chứa hàm thực hiện chức năng của trang chỉnh sửa
+@app.route("/Administrator/SubjectManagement/update",
+           methods=["POST"])  # route chứa hàm thực hiện chức năng của trang chỉnh sửa
 def update_subject():
     subject_id = request.form.get("subject_id")
     subject_name = request.form.get("subject_name")
@@ -244,9 +238,8 @@ def update_subject():
         flash("Lỗi trong quá trình cập nhật.", "danger")
     return redirect("/Administrator/SubjectManagement")
 
-#=====================================
 
-
+# =====================================
 
 
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
@@ -305,16 +298,107 @@ def create_user():
 
     return render_template('Administrator/CreateUser.html')
 
-#===================================================================================================================
+
+# ============Quản lý người dùng
+@app.route("/Administrator/UserManagement", methods=["GET", "POST"])
+def user_mng():
+    users = db.session.query(User).options(
+        joinedload(User.staffs),
+        joinedload(User.teachers),
+        joinedload(User.admins)
+    ).all()
+
+    # Xử lý thông tin vai trò người dùng
+    user_data = []
+    for user in users:
+        role = None
+        additional_info = None
+
+        # Kiểm tra vai trò và lấy thông tin từ các mối quan hệ
+        if user.staffs:
+            role = "Staff"
+            additional_info = f"Role: {user.staffs[0].staffRole}"
+        elif user.teachers:
+            role = "Teacher"
+            additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
+        elif user.admins:
+            role = "Administrator"
+            additional_info = f"Role: {user.admins[0].adminRole}"
+
+        user_data.append({
+            "id": user.id,
+            "name": user.name,
+            "gender": user.gender,
+            "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
+            "email": user.email,
+            "phoneNumber": user.phoneNumber,
+            "userName": user.userName,
+            "role": role,
+            "additional_info": additional_info
+        })
+
+    return render_template('Administrator/UserManagement.html', users=user_data)
+
+
+@app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
+def edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        user.name = request.form.get('name')
+        user.gender = request.form.get('gender')
+        user.DOB = request.form.get('DOB')
+        user.email = request.form.get('email')
+        user.phoneNumber = request.form.get('phoneNumber')
+
+        # Cập nhật thông tin vào cơ sở dữ liệu
+        db.session.commit()
+
+        # Quay lại trang quản lý người dùng sau khi cập nhật
+        return redirect(url_for('user_mng'))
+
+    return render_template('Administrator/edit_user.html', user=user)
+
+
+@app.route("/Administrator/UserManagement/delete", methods=["POST"])
+def delete_user():
+    user_id = request.form.get("user_id")  # Lấy user_id từ form
+
+    if not user_id:
+        flash("Không tìm thấy người dùng cần xóa.", "danger")
+        return redirect("/Administrator/UserManagement")
+
+    try:
+        # Tìm người dùng trong database
+        user = db.session.get(User, user_id)
+        if not user:
+            flash("Người dùng không tồn tại.", "warning")
+            return redirect("/Administrator/UserManagement")
+
+        # Xóa người dùng (bao gồm cả các bản ghi kế thừa)
+        db.session.delete(user)
+        db.session.commit()
+        flash("Xóa người dùng thành công!", "success")
+    except SQLAlchemyError as e:
+        db.session.rollback()  # Rollback nếu có lỗi
+        flash(f"Có lỗi xảy ra khi xóa người dùng: {str(e)}", "danger")
+
+    return redirect("/Administrator/UserManagement")
+
+
+
+
+# ===================================================================================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     regulations = {
 
     }
-    return render_template('Teacher/EnterPoints.html',regulations=regulations)
+    return render_template('Teacher/EnterPoints.html', regulations=regulations)
 
 
-#staff
+# staff
 
 @app.route('/student_add', methods=["GET", "POST"])
 def staff():
@@ -361,13 +445,16 @@ def staff():
         return redirect(url_for("staff"))
     return render_template('staff/staff.html', classes=classes)
 
+
 @app.route('/class_edit')
 def class_edit():
     return render_template('staff/ClassList.html')
 
+
 @app.route('/student_edit')
 def student_edit():
     return render_template('staff/StudentEdit.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
