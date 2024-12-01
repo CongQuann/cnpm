@@ -321,7 +321,21 @@ def staff():
         try:
             dob_date = datetime.strptime(dob, "%Y-%m-%d")  # Định dạng đúng: YYYY-MM-DD
         except ValueError:
-            return "Ngày sinh không hợp lệ", 400
+            flash("Ngày sinh không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+
+        student_rule = StudentRule.query.first()
+        print(student_rule.minAge)
+        # Kiểm tra tuổi học sinh
+        today = datetime.today()
+        print(today)
+        age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+        print(age)
+        if not (student_rule.minAge <= age <= student_rule.maxAge):
+            flash(f"Tuổi học sinh phải nằm trong khoảng {student_rule.minAge} đến {student_rule.maxAge} tuổi.",
+                      "error")
+            return redirect(url_for("staff"))
+
         gender = request.form.get("gender")
         address = request.form.get("address")
         phone = request.form.get("phone")
@@ -355,9 +369,14 @@ def staff():
         return redirect(url_for("staff"))
     return render_template('staff/staff.html', classes=classes)
 
-@app.route('/class_edit')
+@app.route('/class_edit', methods=['GET'])
 def class_edit():
-    return render_template('staff/ClassList.html')
+    class_list = Class.query.all()
+    class_id = request.args.get("class_id")
+    print(class_id)
+    students = Student.query.filter_by(classID=class_id).all()
+
+    return render_template('staff/ClassList.html', class_list=class_list)
 
 @app.route('/student_edit')
 def student_edit():
