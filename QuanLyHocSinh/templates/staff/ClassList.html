@@ -17,16 +17,18 @@
         {% block content %}
         <!-- Tìm kiếm và reset -->
         <div class="search-container">
-            <label for="class">Lớp:</label>
+            <form method="GET" action="{{ url_for('class_edit') }}">
+                <label for="class">Lớp:</label>
                 <select id="class" name="class">
-                    <option value="1">10C1</option>
-                    <option value="2">11C2</option>
-                    <option value="3">12C3</option>
+                    {% for classes in class_list %}
+                        <option value="{{ classes.id }}">{{ classes.className }}</option>
+                    {% endfor %}
                 </select>
                 <label for="student-name">Tên:</label>
-            <input type="text" id="searchLocation" placeholder="Nhập tên học sinh">  
-            <button id="searchBtn" class="btn btn-primary">Tìm kiếm</button>
-            <button id="resetBtn" class="btn btn-secondary">Reset</button>
+                <input type="text" id="searchLocation" placeholder="Nhập tên học sinh">
+                <button id="searchBtn" class="btn btn-primary">Tìm kiếm</button>
+                <button id="resetBtn" class="btn btn-secondary">Reset</button>
+            </form>
         </div>
 
         <div id="main">
@@ -42,25 +44,15 @@
                     </tr>
                 </thead>
                 <tbody id="tour-data">
-                    <tr>
-                        <td>1</td>
-                        <td>Nguyen Van A</td>
-                        <td>Nam</td>
-                        <td>10/10/2007</td>
-                        <td>105/72, Lý Thái Tổ, Bình Thạnh, HCM</td>
-                        <td>
-                            <a class="edit-btn" href="{{url_for('student_edit')}}">Sửa</a>
-                            <a class="delete-btn" href="#">Xóa</a>
-                        </td>
-                    </tr>
+
                 </tbody>
             </table>
         </div>
         <div class="title">
             <h2>Học Sinh Chưa Có Lớp</h2>
         </div>
-        <div id="main">
-            <table id="tour-table">
+        <div id="main-no-class">
+            <table id="tour-table-no-class">
                 <thead>
                     <tr>
                         <th>STT</th>
@@ -72,7 +64,7 @@
                         <th>Hành Động</th>
                     </tr>
                 </thead>
-                <tbody id="tour-data">
+                <tbody id="tour-data-no-class">
                     <tr>
                         <td>1</td>
                         <td>Nguyen Van A</td>
