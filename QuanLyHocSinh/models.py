@@ -1,142 +1,156 @@
-
-from sqlalchemy import Column, Integer, String, Double, DateTime, Float, Boolean, ForeignKey, column,Enum
-import enum
 import random
-from wtforms.fields.numeric import IntegerField
-from sqlalchemy.exc import IntegrityError
-from QuanLyHocSinh import db, app
-from sqlalchemy.orm import relationship, backref
 from datetime import datetime
+
+from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship
+
+from QuanLyHocSinh import db, app
+
 
 class User(db.Model):
     __tablename__ = 'user'
 
-    id = Column(Integer,primary_key=True,autoincrement=True)
-    name = Column(String(50),nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
     gender = Column(String(10))
     DOB = Column(DateTime)
     email = Column(String(50))
     phoneNumber = Column(String(11))
-    userName = Column(String(30),unique=True)
+    userName = Column(String(30), unique=True)
     password = Column(String(30))
-    type = Column(String(50))  # Trường để phân biệt loại người dùng
-    staffs = relationship('Staff', backref='user_staff', lazy=True, cascade="all, delete")
-    teachers = relationship('Teacher', backref='user_teacher', lazy=True, cascade="all, delete")
-    admins = relationship('Administrator', backref='user_administrator', lazy=True, cascade="all, delete")
+    type = Column(String(50))  # Phân biệt loại người dùng
+    staffs = relationship('Staff', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
+    teachers = relationship('Teacher', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
+    admins = relationship('Administrator', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
+
     __mapper_args__ = {
-        'polymorphic_identity': 'user',  # Định danh mặc định cho bảng cha
-        'polymorphic_on': type  # Phân biệt dựa trên trường `type`
+        'polymorphic_identity': 'user',
+        'polymorphic_on': type
     }
+
 class Administrator(User):
     __tablename__ = 'administrator'
-    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
+    id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)  # ForeignKey với ondelete
     adminRole = Column(String(20))
     __mapper_args__ = {
         'polymorphic_identity': 'administrator',
         'inherit_condition': id == User.id
     }
 
+
 class Staff(User):
     __tablename__ = 'staff'
-    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
+    id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
     staffRole = Column(String(20))
     __mapper_args__ = {
         'polymorphic_identity': 'staff',
         'inherit_condition': id == User.id
     }
 
+
 class Teacher(User):
     __tablename__ = 'teacher'
-    id = Column(Integer, ForeignKey('user.id'), primary_key=True)  # Thiết lập ForeignKey
+    id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
     yearExperience = Column(Integer)
-    subjectID = Column(Integer,ForeignKey('subject.id'),nullable=True)
-    teaches = relationship('Teach',backref='teacher_teach',lazy=True,cascade="all, delete")
+    subjectID = Column(Integer, ForeignKey('subject.id'), nullable=True)  # Đặt nullable tại đây
+    teaches = relationship('Teach', backref='teacher_teach', lazy=True)
     __mapper_args__ = {
         'polymorphic_identity': 'teacher',
         'inherit_condition': id == User.id
     }
 
 
+
 class Grade(db.Model):
     __tablename__ = 'grade'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    gradeName = Column(String(20),nullable=False)
-    classes = relationship('Class',backref='grade_class',lazy=True,cascade="all, delete")
+    gradeName = Column(String(20), nullable=False)
+    classes = relationship('Class', backref='grade_class', lazy=True, cascade="all, delete")
+
 
 class ClassRule(db.Model):
     __tablename__ = 'classRule'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    maxNoStudent = Column(Integer,nullable=False)
-    classes = relationship('Class',backref='classRule_class',lazy=True,cascade="all, delete")
+    maxNoStudent = Column(Integer, nullable=False)
+    classes = relationship('Class', backref='classRule_class', lazy=True, cascade="all, delete")
 
 
 class Class(db.Model):
     __tablename__ = 'class'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    className = Column(String(20),nullable=False)
-    classRuleID = Column(Integer, ForeignKey(ClassRule.id),nullable=False)
-    gradeID = Column(Integer, ForeignKey(Grade.id),nullable=False)
-    teaches = relationship('Teach',backref='class_teach',lazy=False,cascade="all, delete")
-    students = relationship('Student', backref='class_student',lazy=False,cascade="all, delete")
+    className = Column(String(20), nullable=False)
+    classRuleID = Column(Integer, ForeignKey(ClassRule.id), nullable=False)
+    gradeID = Column(Integer, ForeignKey(Grade.id), nullable=False)
+    teaches = relationship('Teach', backref='class_teach', lazy=False, cascade="all, delete")
+    students = relationship('Student', backref='class_student', lazy=False, cascade="all, delete")
+
 
 class Teach(db.Model):
     __tablename__ = 'teach'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    teacherID = Column(Integer, ForeignKey(Teacher.id),nullable=False)
-    classID = Column(Integer, ForeignKey(Class.id),nullable=False)
+    teacherID = Column(Integer, ForeignKey(Teacher.id), nullable=False)
+    classID = Column(Integer, ForeignKey(Class.id), nullable=False)
+
 
 class StudentRule(db.Model):
     __tablename__ = 'studentRule'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    maxAge = Column(Integer,nullable=False)
-    minAge = Column(Integer,nullable=False)
-    students = relationship('Student',backref='studentRule_student',lazy=True,cascade="all, delete")
+    maxAge = Column(Integer, nullable=False)
+    minAge = Column(Integer, nullable=False)
+    students = relationship('Student', backref='studentRule_student', lazy=True, cascade="all, delete")
+
 
 class Student(db.Model):
     __tablename__ = 'student'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50),nullable=False)
+    name = Column(String(50), nullable=False)
     gender = Column(String(10))
     DOB = Column(DateTime)
     address = Column(String(200))
     phone = Column(String(11))
     email = Column(String(70))
-    classID = Column(Integer, ForeignKey(Class.id),nullable=True)
-    stuRuleID = Column(Integer, ForeignKey(StudentRule.id),nullable=False)
-    points = relationship('Point',backref='student_point',lazy=True,cascade="all, delete")
+    classID = Column(Integer, ForeignKey(Class.id), nullable=True)
+    stuRuleID = Column(Integer, ForeignKey(StudentRule.id), nullable=False)
+    points = relationship('Point', backref='student_point', lazy=True, cascade="all, delete")
+
 
 class Subject(db.Model):
     __tablename__ = 'subject'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    subjectName = Column(String(50),nullable=False)
-    teachers = relationship('Teacher', backref='subject_teacher', lazy=True,cascade="all, delete")
-    points = relationship('Point',backref='subject_point',lazy=True,cascade="all, delete")
+    subjectName = Column(String(50), nullable=False)
+    teachers = relationship('Teacher', backref='subject_teacher', lazy=True, cascade="all, delete")
+    points = relationship('Point', backref='subject_point', lazy=True, cascade="all, delete")
+
 
 class Semester(db.Model):
     __tablename__ = 'semester'
     id = Column(Integer, primary_key=True, autoincrement=True)
     semesterName = Column(String(15), nullable=False)
-    year = Column(String(30),nullable=False)
-    points = relationship('Point',backref='semester_point',lazy=True,cascade="all, delete")
+    year = Column(String(30), nullable=False)
+    points = relationship('Point', backref='semester_point', lazy=True, cascade="all, delete")
+
 
 class PointType(db.Model):
     __tablename__ = 'pointtype'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    type = Column(String(30),nullable=False)
-    points = relationship('Point', backref='pointType_point',lazy=True,cascade="all, delete")
+    type = Column(String(30), nullable=False)
+    points = relationship('Point', backref='pointType_point', lazy=True, cascade="all, delete")
+
 
 class Point(db.Model):
-    __tablename__='point'
+    __tablename__ = 'point'
     id = Column(Integer, primary_key=True, autoincrement=True)
     pointValue = Column(Float, nullable=False)
     pointTypeID = Column(Integer, ForeignKey(PointType.id), nullable=False)
-    semesterID = Column(Integer, ForeignKey(Semester.id),nullable=False)
-    subjectID = Column(Integer, ForeignKey(Subject.id),nullable=False)
-    studentID = Column(Integer, ForeignKey(Student.id),nullable=False)
+    semesterID = Column(Integer, ForeignKey(Semester.id), nullable=False)
+    subjectID = Column(Integer, ForeignKey(Subject.id), nullable=False)
+    studentID = Column(Integer, ForeignKey(Student.id), nullable=False)
+
 
 def delete_user_by_id(user_id):
     try:
-         # Tạo session
+        # Tạo session
         session = db.session()
 
         # Lấy người dùng theo ID
@@ -155,12 +169,12 @@ def delete_user_by_id(user_id):
     finally:
         session.close()  # Đảm bảo đóng session sau khi xóa
 
-#=================================Hàm thêm dữ liệu mẫu vào bảng=============================================
+
+# =================================Hàm thêm dữ liệu mẫu vào bảng=============================================
 def seed_data():
     # Xóa dữ liệu cũ
     db.drop_all()
     db.create_all()
-
 
     # Thêm dữ liệu cho Administrator
     admin1 = Administrator(
@@ -384,8 +398,8 @@ def seed_data():
         db.session.rollback()
         print(f"Data seeding failed: {e}")
 
-#===================================Hàm chứa các thao tác thêm sửa xóa một phần tử trong bảng=============================
 
+# ===================================Hàm chứa các thao tác thêm sửa xóa một phần tử trong bảng=============================
 
 
 # Hàm tạo dữ liệu điểm cho học sinh
@@ -432,7 +446,6 @@ def generate_points():
     return points
 
 
-
 # Tạo dữ liệu điểm cho tất cả học sinh
 
 
@@ -440,6 +453,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         seed_data()
-
-
-

@@ -2,9 +2,9 @@ from datetime import datetime
 
 from flask import render_template, request, redirect, flash, url_for
 from sqlalchemy.orm import joinedload
-from sqlalchemy.exc import SQLAlchemyError
+
 from QuanLyHocSinh import app, db
-from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule,Point, Teacher
+from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -361,7 +361,7 @@ def edit_user(user_id):
     return render_template('Administrator/edit_user.html', user=user)
 
 
-@app.route("/Administrator/UserManagement/delete", methods=["POST"])
+@app.route('/delete_user', methods=['POST'])
 def delete_user():
     user_id = request.form.get("user_id")  # Lấy user_id từ form
 
@@ -369,23 +369,35 @@ def delete_user():
         flash("Không tìm thấy người dùng cần xóa.", "danger")
         return redirect("/Administrator/UserManagement")
 
-    try:
-        # Tìm người dùng trong database
-        user = db.session.get(User, user_id)
-        if not user:
-            flash("Người dùng không tồn tại.", "warning")
-            return redirect("/Administrator/UserManagement")
+    # Lấy thông tin người dùng từ bảng User
+    user = db.session.get(User, user_id)
+    if not user:
+        flash("Người dùng không tồn tại.", "warning")
+        return redirect("/Administrator/UserManagement")
 
-        # Xóa người dùng (bao gồm cả các bản ghi kế thừa)
-        db.session.delete(user)
+    try:
+        # Xóa bản ghi trong bảng con theo loại người dùng
+        if user.type == "administrator":
+            db.session.query(Administrator).filter_by(id=user_id).delete(synchronize_session=False)
+
+        elif user.type == "staff":
+            db.session.query(Staff).filter_by(id=user_id).delete(synchronize_session=False)
+
+        elif user.type == "teacher":
+            # Xóa các bản ghi liên quan trong bảng `Teach` trước
+            db.session.query(Teach).filter_by(teacher_id=user_id).delete(synchronize_session=False)
+            db.session.query(Teacher).filter_by(id=user_id).delete(synchronize_session=False)
+
+        # Xóa bản ghi cha `User`
+        db.session.query(User).filter_by(id=user_id).delete(synchronize_session=False)
+
         db.session.commit()
         flash("Xóa người dùng thành công!", "success")
-    except SQLAlchemyError as e:
-        db.session.rollback()  # Rollback nếu có lỗi
-        flash(f"Có lỗi xảy ra khi xóa người dùng: {str(e)}", "danger")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Đã xảy ra lỗi khi xóa người dùng: {str(e)}", "danger")
 
     return redirect("/Administrator/UserManagement")
-
 
 
 
