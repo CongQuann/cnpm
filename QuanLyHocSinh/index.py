@@ -1,11 +1,18 @@
 from datetime import datetime
-
-from flask import render_template, request, redirect, flash, url_for
+from flask import render_template, request, redirect, flash, url_for,Flask
 from sqlalchemy.orm import joinedload
-
+from flask_mail import Mail, Message
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
+app.config['MAIL_PORT'] = 465  # Cổng SMTP cho Gmail
+app.config['MAIL_USE_SSL'] = True  # Sử dụng SSL
+app.config['MAIL_USERNAME'] = 'haungao44@gmail.com'  # Thay bằng email của bạn
+app.config['MAIL_PASSWORD'] = 'lnabwzzmdwqltzrz'
+app.config['MAIL_DEFAULT_SENDER'] = 'haungao44@gmail.com'  # Địa chỉ email người gửi
+
+mail = Mail(app)
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -241,6 +248,18 @@ def update_subject():
 
 # =====================================
 
+@app.route('/confirm/<username>')
+def confirm_account(username):
+    user = User.query.filter_by(userName=username).first()
+    if user:
+        # Cập nhật trạng thái tài khoản thành đã xác nhận
+        user.is_confirmed = True
+        db.session.commit()
+        flash('Tài khoản của bạn đã được xác nhận!', 'success')
+    else:
+        flash('Không tìm thấy người dùng!', 'danger')
+
+    return redirect('/login')  # Chuyển hướng đến trang đăng nhập
 
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
 def create_user():
@@ -248,22 +267,23 @@ def create_user():
         # Lấy thông tin từ form
         name = request.form['name']
         username = request.form['userName']
+
         # Kiểm tra nếu tên đăng nhập đã tồn tại
         existing_user = User.query.filter_by(userName=username).first()
         if existing_user:
             flash("Tên đăng nhập đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
+
         gender = request.form['gender']
         dob = request.form['DOB']
         email = request.form['email']
         phone_number = request.form['phoneNumber']
-
         password = request.form['password']
         role = request.form['role']
 
         # Tạo bản ghi dựa trên phân quyền
         if role == 'Staff':
-            staff_role = request.form['staffRole']  # Vai trò của Staff
+            staff_role = request.form['staffRole']
             new_user = Staff(
                 name=name,
                 gender=gender,
@@ -275,7 +295,7 @@ def create_user():
                 staffRole=staff_role
             )
         elif role == 'Teacher':
-            year_experience = request.form['yearExperience']  # Kinh nghiệm giảng dạy
+            year_experience = request.form['yearExperience']
             new_user = Teacher(
                 name=name,
                 gender=gender,
@@ -293,7 +313,21 @@ def create_user():
         # Thêm bản ghi vào cơ sở dữ liệu
         db.session.add(new_user)
         db.session.commit()
-        flash('Tạo tài khoản thành công!', 'success')
+
+        # Gửi email xác nhận
+        try:
+            # Tạo đối tượng email
+            msg = Message(
+                subject="Xác nhận đăng ký tài khoản hệ thống quản lý học sinh",  # Tiêu đề email
+                recipients=[email],  # Người nhận
+                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {username}\nPassword: {password}\n\nChúc bạn một ngày tốt lành!"
+                # Nội dung email
+            )
+            mail.send(msg)  # Gửi email
+            flash('Tạo tài khoản thành công và email xác nhận đã được gửi!', 'success')
+        except Exception as e:
+            flash(f'Đã xảy ra lỗi khi gửi email xác nhận: {str(e)}', 'danger')
+
         return redirect("/Administrator/CreateUser")  # Redirect sau khi tạo thành công
 
     return render_template('Administrator/CreateUser.html')
@@ -311,6 +345,10 @@ def user_mng():
     # Xử lý thông tin vai trò người dùng
     user_data = []
     for user in users:
+        # Bỏ qua người dùng có vai trò là Administrator
+        if user.admins:
+            continue
+
         role = None
         additional_info = None
 
@@ -321,9 +359,6 @@ def user_mng():
         elif user.teachers:
             role = "Teacher"
             additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
-        elif user.admins:
-            role = "Administrator"
-            additional_info = f"Role: {user.admins[0].adminRole}"
 
         user_data.append({
             "id": user.id,
@@ -377,15 +412,15 @@ def delete_user():
 
     try:
         # Xóa bản ghi trong bảng con theo loại người dùng
-        if user.type == "administrator":
-            db.session.query(Administrator).filter_by(id=user_id).delete(synchronize_session=False)
+        # if user.type == "administrator":
+        #     db.session.query(Administrator).filter_by(id=user_id).delete(synchronize_session=False)
 
-        elif user.type == "staff":
+        if user.type == "staff":
             db.session.query(Staff).filter_by(id=user_id).delete(synchronize_session=False)
 
         elif user.type == "teacher":
             # Xóa các bản ghi liên quan trong bảng `Teach` trước
-            db.session.query(Teach).filter_by(teacher_id=user_id).delete(synchronize_session=False)
+            # db.session.query(Teach).filter_by(teacher_id=user_id).delete(synchronize_session=False)
             db.session.query(Teacher).filter_by(id=user_id).delete(synchronize_session=False)
 
         # Xóa bản ghi cha `User`

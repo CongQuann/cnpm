@@ -29,3 +29,8 @@ table th {
 .div-table{
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
 }
+
+.text-white {
+    text-decoration: none;
+    margin-bottom: 7px;
+}

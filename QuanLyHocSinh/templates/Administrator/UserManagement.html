@@ -57,7 +57,7 @@ Quản lý người dùng
                     <td>{{ user.userName or '' }}</td>
                     <td>{{ user.role or '' }}</td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-2">
+                        <button class="btn btn-sm btn-primary me-2 mb-1">
                             <a href="{{ url_for('edit_user', user_id=user.id) }}" class="text-white">Chỉnh sửa</a>
                         </button>
                         <!-- Form xóa người dùng -->
