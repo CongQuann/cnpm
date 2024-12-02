@@ -217,7 +217,7 @@ td {
 
 
 th {
-    background-color: var(--main_color);
+    background-color: var(--main_color) !important;
     color: #f2f2f2;
     position: sticky;
     /* Dính vào phần trên */
@@ -229,6 +229,9 @@ th {
     padding: 10px;
 }
 
+#resetBtn a{
+    color: white;
+}
 .edit-btn,
 .delete-btn,
 .more-info-btn {
