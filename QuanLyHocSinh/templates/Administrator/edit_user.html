@@ -1,0 +1,45 @@
+{% extends 'Administrator/base.html' %}
+
+{% block title %}
+Chỉnh sửa Người Dùng
+{% endblock %}
+
+{% block css %}
+<link href="{{ url_for('static', filename='css/Administrator/edit_user.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Chỉnh sửa thông tin người dùng</h1>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Họ Tên</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="gender" class="form-label">Giới tính</label>
+            <select class="form-select" id="gender" name="gender" required>
+                <option value="Nam" {% if user.gender =='Nam' %}selected{% endif %}>Nam</option>
+                <option value="Nữ" {% if user.gender =='Nữ' %}selected{% endif %}>Nữ</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="DOB" class="form-label">Ngày sinh</label>
+            <input type="date" class="form-control" id="DOB" name="DOB" value="{{ user.DOB.strftime('%Y-%m-%d') }}"
+                   required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="phoneNumber" class="form-label">Số điện thoại</label>
+            <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" value="{{ user.phoneNumber }}"
+                   required>
+        </div>
+        <button type="submit" class="btn btn-success">Cập nhật</button>
+    </form>
+</div>
+
+{% endblock %}
