@@ -1,35 +1,29 @@
 <label for="name">Họ và tên:</label>
-    <input type="text" id="name" name="name" required>
+<input type="text" id="name" name="name" value="{{ student.name if student else '' }}" required>
 
-    <label for="dob">Ngày sinh:</label>
-    <input type="date" id="dob" name="dob" required>
+<label for="dob">Ngày sinh:</label>
+<input type="date" id="dob" name="dob" value="{{ student.DOB.strftime('%Y-%m-%d') if student and student.DOB else '' }}" required>
 
-    <label for="gender">Giới tính:</label>
-    <select id="gender" name="gender">
-        <option value="Nam">Nam</option>
-        <option value="Nữ">Nữ</option>
-    </select>
+<label for="gender">Giới tính:</label>
+<select id="gender" name="gender">
+    <option value="Nam" {% if student and student.gender == 'Nam' %}selected{% endif %}>Nam</option>
+    <option value="Nữ" {% if student and student.gender == 'Nữ' %}selected{% endif %}>Nữ</option>
+</select>
 
-    <label for="address">Địa chỉ:</label>
-    <input type="text" id="address" name="address" required>
+<label for="address">Địa chỉ:</label>
+<input type="text" id="address" name="address" value="{{ student.address if student else '' }}" required>
 
-    <label for="phone">Số điện thoại:</label>
-    <input type="tel" id="phone" name="phone" required>
+<label for="phone">Số điện thoại:</label>
+<input type="tel" id="phone" name="phone" value="{{ student.phone if student else '' }}" required>
 
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email">
+<label for="email">Email:</label>
+<input type="email" id="email" name="email" value="{{ student.email if student else '' }}">
 
-    <label for="class">Lớp:</label>
-    <select id="class" name="class">
-        {%for class in classes%}
-        <option value="{{class.id}}">{{class.className}}</option>
-        {%endfor%}
-    </select>
-
-    <div class="btn-add-student">
-        {% block buttonContent %}
-        <button type="submit" id="add-student">
-            <span>Hoàn Tất</span>
-        </button>
-        {% endblock %}
-    </div>
+<label for="class">Lớp:</label>
+<select id="class" name="class">
+    {% for class in classes %}
+    <option value="{{ class.id }}" {% if student and class.id == student.classID %}selected{% endif %}>
+        {{ class.className }}
+    </option>
+    {% endfor %}
+</select>

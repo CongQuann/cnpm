@@ -13,14 +13,17 @@
     {% endblock %}
     {% block content %}
     <div class="container">
-    <h2>Nguyễn Văn A</h2>
+    <h2>{{ student.name }}</h2>
     <section class="input-students">
-        <form id="student-form">
-        {%block studentform%}
-                {%include 'staff/student-form.html'%}
-            {%endblock%}
-        </form>
-    </section>
+    <form id="student-form" action="{{ url_for('update_student', student_id=student.id) }}" method="POST">
+        {% include 'staff/student-form.html' %}
+        <div class="btn-add-student">
+            <button type="submit" id="add-student">
+                <span>Hoàn Tất</span>
+            </button>
+        </div>
+    </form>
+</section>
 </div>
 {% endblock %}
 </body>
