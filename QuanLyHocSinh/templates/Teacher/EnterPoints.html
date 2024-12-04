@@ -13,62 +13,68 @@ Báo cáo thống kê
     <h2 class="text-center">Báo Cáo Thống Kê Điểm</h2>
 
     <!-- Bộ lọc -->
-    <div id="scoreboard-container">
-        <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
-        <div id="class-info">
-            <!-- Lớp -->
-            <p>
-                <strong>Lớp:</strong>
-                <input type="text" id="class-input" class="input-field" placeholder="Nhập lớp (vd: 10A1)" list="class-list">
-                <datalist id="class-list">
-                    <option value="10A1">
-                    <option value="10A2">
-                    <option value="11A1">
-                    <option value="12A1">
-                </datalist>
-            </p>
-            <p id="class-display"><strong>Lớp đã nhập/chọn: </strong></p>
+    <form action="{{ url_for('class_filter') }}" method="POST">
+        <div id="scoreboard-container">
+            <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
+            <div id="class-info">
+                <!-- Lớp -->
+                <p>
+                    <strong>Lớp:</strong>
+                    <input type="text" id="class-input" class="input-field" placeholder="Nhập lớp (vd: 10A1)"
+                           list="class-list">
+                    <datalist id="class-list">
+                        <option value="10A1">
+                        <option value="10A2">
+                        <option value="11A1">
+                        <option value="12A1">
+                    </datalist>
+                </p>
+                <p id="class-display"><strong>Lớp đã nhập/chọn: </strong></p>
 
-            <!-- Môn -->
-            <p>
-                <strong>Môn:</strong>
-                <input type="text" id="subject-input" class="input-field" placeholder="Nhập môn học" list="subject-list">
-                <datalist id="subject-list">
-                    <option value="Toán">
-                    <option value="Lý">
-                    <option value="Hóa">
-                    <option value="Anh">
-                </datalist>
-            </p>
-            <p id="subject-display"><strong>Môn đã nhập/chọn: </strong></p>
+                <!-- Môn -->
+                <p>
+                    <strong>Môn:</strong>
+                    <input type="text" id="subject-input" class="input-field" placeholder="Nhập môn học"
+                           list="subject-list">
+                    <datalist id="subject-list">
+                        <option value="Toán">
+                        <option value="Lý">
+                        <option value="Hóa">
+                        <option value="Anh">
+                    </datalist>
+                </p>
+                <p id="subject-display"><strong>Môn đã nhập/chọn: </strong></p>
 
-            <!-- Học kỳ -->
-            <p>
-                <strong>Học kỳ:</strong>
-                <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2)" list="semester-list">
-                <datalist id="semester-list">
-                    <option value="Học kỳ 1"></option>
-                    <option value="Học kỳ 2"></option>
-                </datalist>
-            </p>
-            <p id="semester-display"><strong>Học kỳ đã nhập/chọn: </strong></p>
+                <!-- Học kỳ -->
+                <p>
+                    <strong>Học kỳ:</strong>
+                    <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2)"
+                           list="semester-list">
+                    <datalist id="semester-list">
+                        <option value="Học kỳ 1"></option>
+                        <option value="Học kỳ 2"></option>
+                    </datalist>
+                </p>
+                <p id="semester-display"><strong>Học kỳ đã nhập/chọn: </strong></p>
 
-            <!-- Năm học -->
-            <p>
-                <strong>Năm học:</strong>
-                <input type="text" id="academic-year-input" class="input-field" placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list">
-                <datalist id="academic-year-list">
-                    <option value="2024-2025">
-                    <option value="2025-2026">
-                    <option value="2026-2027">
-                </datalist>
-            </p>
-            <p id="academic-year-display"><strong>Năm học đã nhập/chọn: </strong></p>
-        </div>
+                <!-- Năm học -->
+                <p>
+                    <strong>Năm học:</strong>
+                    <input type="text" id="academic-year-input" class="input-field"
+                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list">
+                    <datalist id="academic-year-list">
+                        <option value="2024-2025">
+                        <option value="2025-2026">
+                        <option value="2026-2027">
+                    </datalist>
+                </p>
+                <p id="academic-year-display"><strong>Năm học đã nhập/chọn: </strong></p>
+            </div>
 
-        <!-- Bảng điểm -->
-        <table id="scoreboard-table">
-            <thead>
+            <!-- Bảng điểm -->
+
+            <table id="scoreboard-table">
+                <thead>
                 <tr>
                     <th class="table-header">STT</th>
                     <th class="table-header">Mã học sinh</th>
@@ -83,26 +89,36 @@ Báo cáo thống kê
                     </th>
                     <th class="table-header">Điểm thi</th>
                 </tr>
-            </thead>
-            <tbody id="student-rows">
+                </thead>
+
+                <tbody id="student-rows">
                 <tr>
+                    {% for class in classes %}
+                    <td>{{class.name}}</td>
+                    {% endfor %}
                     <td class="table-cell">1</td>
-                    <td class="table-cell"><input type="text" class="input-cell student-id small-input" placeholder="Mã học sinh"></td>
-                    <td class="table-cell"><input type="text" class="input-cell student-name" placeholder="Họ tên học sinh"></td>
+                    <td class="table-cell"><input type="text" class="input-cell student-id small-input"
+                                                  placeholder="Mã học sinh"></td>
+                    <td class="table-cell"><input type="text" class="input-cell student-name"
+                                                  placeholder="Họ tên học sinh"></td>
                     <td class="table-cell score-15min-container">
-                        <input type="number" class="input-cell " id="score-15min" placeholder="Điểm 15’" min="0" max="10">
+                        <input type="number" class="input-cell " id="score-15min" placeholder="Điểm 15’" min="0"
+                               max="10">
                     </td>
                     <td class="table-cell test-container">
                         <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
                     </td>
-                    <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi" min="0" max="10"></td>
+                    <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
+                                                  min="0" max="10"></td>
                 </tr>
-            </tbody>
-        </table>
-        <button id="save-score-btn" class="btn btn-success mt-3">Lưu bảng điểm</button>
-    </div>
+                </tbody>
+            </table>
+            <button id="save-score-btn" class="btn btn-success mt-3">Lưu bảng điểm</button>
+        </div>
+    </form>
+
 </div>
-<script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"> </script>
+<script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"></script>
 {% endblock %}
 
 
