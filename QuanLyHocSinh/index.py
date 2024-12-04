@@ -1,9 +1,9 @@
 from datetime import datetime
-from flask import render_template, request, redirect, flash, url_for,Flask
+from flask import render_template, request, redirect, flash, url_for, Flask, jsonify
 from sqlalchemy.orm import joinedload
 from flask_mail import Mail, Message
 from QuanLyHocSinh import app, db
-from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator
+from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator,StudentClass
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
 app.config['MAIL_PORT'] = 465  # Cổng SMTP cho Gmail
@@ -20,41 +20,65 @@ def home():
 
 
 # ===========================================================ADMINISTRATOR================================================
+
+
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
-    # Dữ liệu mẫu bạn muốn hiển thị trong bảng
-    class_list = Class.query.all()
+    # Lấy tất cả các môn học và học kỳ
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
+    # Xử lý form khi người dùng chọn môn học và học kỳ
+    if request.method == "POST":
+        selected_subject = request.form.get('subject')
+        selected_semester = request.form.get('semester')
+
+        # Chuyển hướng tới route generate_report với query params
+        return redirect(url_for('generate_report', subject=selected_subject, semester=selected_semester))
+
+    # Render lại form khi trang đầu tiên hoặc sau khi tải lại
     return render_template('Administrator/Report.html',
-                           classes=class_list,
                            subjects=subject_list,
-                           semesters=semester_list, )
+                           semesters=semester_list,
+                           selected_subject=None,
+                           selected_semester=None)
 
 
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
-    # Lấy dữ liệu từ request
     subject_id = request.args.get('subject')  # ID môn học
     semester_id = request.args.get('semester')  # ID học kỳ
 
-    subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
-    semester_name = Semester.query.with_entities(Semester.semesterName).filter_by(id=semester_id).scalar()
+    # Kiểm tra nếu subject_id và semester_id có tồn tại trong request
+    if not subject_id or not semester_id:
+        return redirect(url_for('report'))  # Nếu thiếu tham số, chuyển hướng về form lọc báo cáo
 
-    # Lấy thông tin từ cơ sở dữ liệu
+    # Lấy thông tin học kỳ
+    semester = Semester.query.get(semester_id)
+    subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
+    semester_name = semester.semesterName
+    year = semester.year
+
+    # Lấy thông tin lớp học (Class)
     classes = Class.query.all()
 
     # Thống kê số lượng học sinh đạt theo lớp
     statistics = []
     for cls in classes:
-        students = Student.query.filter_by(classID=cls.id).all()
-        num_students = len(students)
+        # Lọc các học sinh theo lớp và học kỳ
+        student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
+
+        num_students = len(student_classes)
         num_passed = 0
-        for student in students:
-            average = calculate_average(student.id, subject_id, semester_id)
-            if is_student_passed(student.id, subject_id, semester_id):  # Gọi đủ tham số
-                num_passed += 1
+
+        for student_class in student_classes:
+            # Lấy học sinh từ StudentClass
+            student = Student.query.get(student_class.student_id)
+            if student:
+                # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
+                average = calculate_average(student.id, subject_id, semester_id)
+                if is_student_passed(student.id, subject_id, semester_id):
+                    num_passed += 1
 
         # Tính tỷ lệ đạt
         pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
@@ -67,42 +91,44 @@ def generate_report():
 
     # Render template với dữ liệu thống kê
     return render_template('Administrator/Report.html',
+                           semester_name=semester_name,
+                           year=year,
                            statistics=statistics,
+                           subject_name=subject_name,
                            subjects=Subject.query.all(),
                            semesters=Semester.query.all(),
-                           subject_name=subject_name,
-                           semester_name=semester_name, )
+                           selected_subject=subject_id,
+                           selected_semester=semester_id)
+
+
 
 
 def calculate_average(student_id, subject_id, semester_id):
-    # Lấy tất cả các điểm của học sinh trong môn học cụ thể
     points = Point.query.filter_by(studentID=student_id, subjectID=subject_id, semesterID=semester_id).all()
-
-    # Khởi tạo các biến để tính toán tổng điểm và số lượng cột
     total_points = 0
     total_weight = 0
 
-    # Duyệt qua tất cả các điểm để tính tổng và trọng số
     for point in points:
-        point_type = point.pointType_point.type  # Lấy loại điểm (15p, 1 tiết, cuối kỳ)
-
+        point_type = point.pointType_point.type
+        print(f"Điểm: {point.pointValue}, Loại điểm: {point_type}")  # In thông tin điểm
         if point_type == "15 phút":
             total_points += point.pointValue
-            total_weight += 1  # Trọng số 1 cho điểm 15p
+            total_weight += 1
         elif point_type == "1 tiết":
             total_points += 2 * point.pointValue
-            total_weight += 2  # Trọng số 2 cho điểm 1 tiết
+            total_weight += 2
         elif point_type == "Cuối kỳ":
             total_points += 3 * point.pointValue
-            total_weight += 3  # Trọng số 3 cho điểm cuối kỳ
+            total_weight += 3
 
-    # Tính điểm trung bình
-    if total_weight == 0:  # Tránh trường hợp chia cho 0 nếu không có điểm nào
+    print(f"Tổng điểm: {total_points}, Tổng trọng số: {total_weight}")  # In tổng điểm và trọng số
+
+    if total_weight == 0:
         return 0
 
     average = total_points / total_weight
+    print(f"Điểm trung bình: {average}")  # In điểm trung bình
     return average
-
 
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
@@ -114,6 +140,8 @@ def is_student_passed(student_id, subject_id, semester_id):
     else:
         return False  # Học sinh không đạt môn
 
+
+#========================================
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
