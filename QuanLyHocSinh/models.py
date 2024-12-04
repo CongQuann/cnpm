@@ -95,7 +95,7 @@ class StudentClass(db.Model):
     class_id = Column(Integer, ForeignKey('class.id'), nullable=False)
     semester_id = Column(Integer, ForeignKey('semester.id'),nullable=False)
     # Đảm bảo rằng mỗi học sinh chỉ có thể tham gia một lớp một lần
-    __table_args__ = (db.UniqueConstraint('student_id', 'class_id','semester_id', name='unique_student_class'),)
+    __table_args__ = (db.UniqueConstraint('student_id','semester_id', name='unique_student_class'),)
 
 
 class Teach(db.Model):
@@ -332,12 +332,19 @@ def seed_data():
             student_count = random.randint(10, 15)  # Mỗi lớp có từ 10 đến 15 học sinh
             selected_students = random.sample(students, student_count)  # Chọn ngẫu nhiên học sinh cho lớp
             for student in selected_students:
-                student_class = StudentClass(
+                # Kiểm tra xem bản ghi đã tồn tại chưa
+                existing_record = db.session.query(StudentClass).filter_by(
                     student_id=student.id,
-                    class_id=class_id,
                     semester_id=semester_id
-                )
-                db.session.add(student_class)
+                ).first()
+
+                if not existing_record:  # Nếu chưa tồn tại thì thêm mới
+                    student_class = StudentClass(
+                        student_id=student.id,
+                        class_id=class_id,
+                        semester_id=semester_id
+                    )
+                    db.session.add(student_class)
     db.session.commit()
     # Thêm PointType mẫu
     point_types = [
@@ -413,6 +420,5 @@ def generate_points():
 
 if __name__ == '__main__':
     with app.app_context():
-        #db.create_all()
+        db.create_all()
         seed_data()
-

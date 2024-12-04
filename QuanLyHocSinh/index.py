@@ -110,7 +110,7 @@ def calculate_average(student_id, subject_id, semester_id):
 
     for point in points:
         point_type = point.pointType_point.type
-        print(f"Điểm: {point.pointValue}, Loại điểm: {point_type}")  # In thông tin điểm
+
         if point_type == "15 phút":
             total_points += point.pointValue
             total_weight += 1
@@ -121,13 +121,13 @@ def calculate_average(student_id, subject_id, semester_id):
             total_points += 3 * point.pointValue
             total_weight += 3
 
-    print(f"Tổng điểm: {total_points}, Tổng trọng số: {total_weight}")  # In tổng điểm và trọng số
+
 
     if total_weight == 0:
         return 0
 
     average = total_points / total_weight
-    print(f"Điểm trung bình: {average}")  # In điểm trung bình
+
     return average
 
 def is_student_passed(student_id, subject_id, semester_id):
