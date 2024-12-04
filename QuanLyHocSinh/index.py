@@ -555,7 +555,7 @@ def class_edit():
 
     return render_template('staff/ClassList.html', class_list=class_list, students=students)
 
-@app.route('/student_delete/<int:student_id>', methods=['POST'])
+@app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)

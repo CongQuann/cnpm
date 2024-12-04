@@ -69,6 +69,7 @@ Báo cáo thống kê
                     </datalist>
                 </p>
                 <p id="academic-year-display"><strong>Năm học đã nhập/chọn: </strong></p>
+                <button id="class_filter" type="submit">Lọc</button>
             </div>
 
             <!-- Bảng điểm -->
@@ -92,17 +93,13 @@ Báo cáo thống kê
                 </thead>
 
                 <tbody id="student-rows">
+                {% for s in classes %}
                 <tr>
-                    {% for class in classes %}
-                    <td>{{class.name}}</td>
-                    {% endfor %}
-                    <td class="table-cell">1</td>
-                    <td class="table-cell"><input type="text" class="input-cell student-id small-input"
-                                                  placeholder="Mã học sinh"></td>
-                    <td class="table-cell"><input type="text" class="input-cell student-name"
-                                                  placeholder="Họ tên học sinh"></td>
+                    <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
+                    <td class="table-cell">{{ s.id }}</td>
+                    <td class="table-cell">{{ s.name }}</td>
                     <td class="table-cell score-15min-container">
-                        <input type="number" class="input-cell " id="score-15min" placeholder="Điểm 15’" min="0"
+                        <input type="number" class="input-cell" id="score-15min" placeholder="Điểm 15’" min="0"
                                max="10">
                     </td>
                     <td class="table-cell test-container">
@@ -111,9 +108,11 @@ Báo cáo thống kê
                     <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
                                                   min="0" max="10"></td>
                 </tr>
+                {% endfor %}
                 </tbody>
+
             </table>
-            <button id="save-score-btn" class="btn btn-success mt-3">Lưu bảng điểm</button>
+
         </div>
     </form>
 
