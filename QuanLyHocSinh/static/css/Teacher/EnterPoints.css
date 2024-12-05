@@ -35,7 +35,7 @@
 }
 
 .input-field {
-    width: 100%;
+  width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -83,7 +83,7 @@
     gap: 10px;
 }
 .score-15min-container .input-cell {
-    width: 170px; /* Chiều rộng lớn hơn cho ô điểm 15 phút */
+    width: 80%px; /* Chiều rộng lớn hơn cho ô điểm 15 phút */
 }
 /* Hiệu ứng hover cho hàng */
 #scoreboard-table tbody tr:hover {
@@ -126,8 +126,26 @@
 #score-15min{
     position: sticky;
 }
+#test-score{
+    width: 80%;
+    position: sticky;
+}
+.score-test-header{
+    width:200px;
+}
 .input-cell input-cell{
      width: 15%;
 
     box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước */
+}
+
+#class_filter{
+    background-color: #3579f6; /* Màu nền */
+    color: white; /* Màu chữ */
+    border: none; /* Loại bỏ viền */
+    border-radius: 5px; /* Bo góc */
+    padding: 10px 15px; /* Khoảng cách bên trong */
+    font-size: 14px; /* Cỡ chữ */
+    cursor: pointer; /* Trỏ chuột */
+    transition: background-color 0.3s ease; /* Hiệu ứng hover */
 }

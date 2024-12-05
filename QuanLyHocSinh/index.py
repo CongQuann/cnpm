@@ -627,12 +627,30 @@ def update_student(student_id):
     return redirect(url_for('class_edit', student_id=student_id))
 
 
-@app.route('/Teacher/EnterPoints/class_filter', methods = ['POST'])
+@app.route('/Teacher/EnterPoints/class_filter', methods=['POST'])
 def class_filter():
-    classes = Student.query.all()
-    for c in classes:
-        print(c.name)
-    return render_template('Teacher/EnterPoints.html', classes = classes)
+    class_name = request.form.get('class-input')
+    semester_name = request.form.get('semester-input')
+    year = request.form.get('academic-year-input')
+
+    if not class_name or not semester_name or not year:
+        return render_template('Teacher/EnterPoints.html', error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!")
+
+    _class = db.session.query(Class).filter(Class.className == class_name).first()
+    _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name, Semester.year == year).first()
+
+    if not _class or not _semester:
+        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy lớp hoặc học kỳ phù hợp!")
+
+    students = db.session.query(Student).join(StudentClass).filter(
+        StudentClass.class_id == _class.id, StudentClass.semester_id == _semester.id)
+
+    if not students:
+        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
+
+
+    return render_template('Teacher/EnterPoints.html', students=students)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
