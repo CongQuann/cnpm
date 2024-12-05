@@ -17,8 +17,8 @@ class User(db.Model):
     DOB = Column(DateTime)
     email = Column(String(50))
     phoneNumber = Column(String(11))
-    userName = Column(String(30), unique=True)
-    password = Column(String(30))
+    userName = Column(String(500), unique=True)
+    password = Column(String(500))
     type = Column(String(50))  # Phân biệt loại người dùng
     staffs = relationship('Staff', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
     teachers = relationship('Teacher', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
@@ -204,33 +204,10 @@ def seed_data():
         adminRole="System Administrator"
     )
 
-    # Thêm dữ liệu cho Staff
-    staff1 = Staff(
-        name="Staff User",
-        gender="Nữ",
-        DOB=datetime(1988, 8, 8),
-        email="staff@example.com",
-        phoneNumber="0912233445",
-        userName="staffuser",
-        password="staffpass",
-        staffRole="HR"
-    )
 
-    # Thêm dữ liệu cho Teacher
-    teacher1 = Teacher(
-        name="Teacher User",
-        gender="Nam",
-        DOB=datetime(1995, 7, 7),
-        email="teacher@example.com",
-        phoneNumber="0913344556",
-        userName="teacheruser",
-        password="teacherpass",
-        yearExperience=5,
-        subjectID=None
-    )
 
     # Thêm dữ liệu vào session
-    db.session.add_all([admin1, staff1, teacher1])
+    db.session.add_all([admin1])
 
     # Thêm Grade mẫu
     grades = [Grade(gradeName=f"Lớp {i}") for i in range(10, 13)]

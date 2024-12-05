@@ -3,6 +3,8 @@ from flask import render_template, request, redirect, flash, url_for, Flask, jso
 from sqlalchemy.orm import joinedload
 from flask_mail import Mail, Message
 from QuanLyHocSinh import app, db
+import os, base64
+from cryptography.fernet import Fernet
 from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator,StudentClass
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
@@ -27,6 +29,7 @@ def report():
     # Lấy tất cả các môn học và học kỳ
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
+
 
     # Xử lý form khi người dùng chọn môn học và học kỳ
     if request.method == "POST":
@@ -294,7 +297,7 @@ def create_user():
     if request.method == 'POST':
         # Lấy thông tin từ form
         name = request.form['name']
-        username = request.form['userName']
+        username = encrypt_data(request.form['userName'])
 
         # Kiểm tra nếu tên đăng nhập đã tồn tại
         existing_user = User.query.filter_by(userName=username).first()
@@ -306,7 +309,7 @@ def create_user():
         dob = request.form['DOB']
         email = request.form['email']
         phone_number = request.form['phoneNumber']
-        password = request.form['password']
+        password = encrypt_data(request.form['password'])
         role = request.form['role']
 
         # Tạo bản ghi dựa trên phân quyền
@@ -346,10 +349,10 @@ def create_user():
         try:
             # Tạo đối tượng email
             msg = Message(
-                subject="Xác nhận đăng ký tài khoản hệ thống quản lý học sinh",  # Tiêu đề email
+                subject="Xác nhận đăng ký hệ thống quản lý học sinh!",  # Tiêu đề email
                 recipients=[email],  # Người nhận
-                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {username}\nPassword: {password}\n\nChúc bạn một ngày tốt lành!"
                 # Nội dung email
+                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {decrypt_data(username)}\nPassword: {decrypt_data(password)}\n\nChúc bạn một ngày tốt lành!"
             )
             mail.send(msg)  # Gửi email
             flash('Tạo tài khoản thành công và email xác nhận đã được gửi!', 'success')
@@ -388,14 +391,16 @@ def user_mng():
             role = "Teacher"
             additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
 
+        decrypted_username = decrypt_data(user.userName)
+
         user_data.append({
             "id": user.id,
-            "name": user.name,
+            "name":   user.name,
             "gender": user.gender,
             "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
             "email": user.email,
             "phoneNumber": user.phoneNumber,
-            "userName": user.userName,
+            "userName": decrypted_username,
             "role": role,
             "additional_info": additional_info
         })
@@ -462,6 +467,37 @@ def delete_user():
 
     return redirect("/Administrator/UserManagement")
 
+
+#============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
+# Tạo và lưu khóa vào tệp
+
+# Tải khóa từ tệp
+def load_key():
+    with open("secret.key", "rb") as key_file:
+        return key_file.read()
+
+
+#Hàm mã hóa
+def encrypt_data(data):
+    key = load_key()
+    fernet = Fernet(key)
+    encrypted_data = fernet.encrypt(data.encode())
+    encrypted_data_base64 = base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
+    return encrypted_data_base64
+
+
+def decrypt_data(encrypted_data_base64):
+    try:
+        # Giải mã base64 thành dữ liệu mã hóa gốc
+        encrypted_data = base64.urlsafe_b64decode(encrypted_data_base64.encode('utf-8'))
+
+        key = load_key()
+        fernet = Fernet(key)
+        decrypted = fernet.decrypt(encrypted_data)  # Giải mã dữ liệu
+        return decrypted.decode()  # Chuyển về chuỗi ban đầu
+    except Exception as e:
+        print(f"Error during decryption: {e}")
+        return None
 
 
 # ===================================================================================================================
