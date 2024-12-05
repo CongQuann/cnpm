@@ -7,6 +7,7 @@ import os, base64
 from cryptography.fernet import Fernet
 from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator,StudentClass
 
+
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
 app.config['MAIL_PORT'] = 465  # Cổng SMTP cho Gmail
 app.config['MAIL_USE_SSL'] = True  # Sử dụng SSL
@@ -219,7 +220,7 @@ def subject_mng():
 
 
 # ======Thêm route xử lý để xóa môn học=======
-@app.route("/Administrator/SubjectManagement/delete", methods=["POST"])
+@app.route("/Administrator/SubjectManagement/delete", methods=["GET"])
 def delete_subject():
     subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
 
@@ -590,7 +591,7 @@ def class_edit():
 
     return render_template('staff/ClassList.html', class_list=class_list, students=students)
 
-@app.route('/student_delete/<int:student_id>', methods=['POST'])
+@app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)
@@ -628,6 +629,14 @@ def update_student(student_id):
 
     # Điều hướng trở lại trang quản lý học sinh
     return redirect(url_for('class_edit', student_id=student_id))
+
+
+@app.route('/Teacher/EnterPoints/class_filter', methods = ['POST'])
+def class_filter():
+    classes = Student.query.all()
+    for c in classes:
+        print(c.name)
+    return render_template('Teacher/EnterPoints.html', classes = classes)
 
 if __name__ == '__main__':
     app.run(debug=True)
