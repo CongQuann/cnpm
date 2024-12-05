@@ -1,0 +1,22 @@
+.custom-footer {
+    background-color: #212529;
+    color: #fff;
+    text-align: center;
+    padding: 0.5rem 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+    font-size:1.2rem;
+}
+
+
+.logout-btn{
+    font-size:1.2rem !important;
+}
+
+.logout-btn:hover{
+    background-color:#fff !important;
+    color: #212529 !important;
+    transition: ease 0.7s;
+}

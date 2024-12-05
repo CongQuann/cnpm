@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from flask import render_template, request, redirect, flash, url_for, Flask, jsonify
 from sqlalchemy.orm import joinedload
@@ -31,78 +32,67 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
+    # Khởi tạo biến statistics để giữ dữ liệu nếu có chọn môn học và học kỳ
+    statistics = []
+    subject_name = None
+    semester_name = None
+    year = None
 
     # Xử lý form khi người dùng chọn môn học và học kỳ
     if request.method == "POST":
         selected_subject = request.form.get('subject')
         selected_semester = request.form.get('semester')
 
-        # Chuyển hướng tới route generate_report với query params
-        return redirect(url_for('generate_report', subject=selected_subject, semester=selected_semester))
+        # Tính toán thống kê cho môn học và học kỳ đã chọn
+        if selected_subject and selected_semester:
+            subject_id = selected_subject
+            semester_id = selected_semester
 
-    # Render lại form khi trang đầu tiên hoặc sau khi tải lại
+            # Lấy thông tin học kỳ và môn học
+            semester = Semester.query.get(semester_id)
+            subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
+            semester_name = semester.semesterName
+            year = semester.year
+
+            # Lấy thông tin lớp học (Class)
+            classes = Class.query.all()
+
+            # Thống kê số lượng học sinh đạt theo lớp
+            for cls in classes:
+                # Lọc các học sinh theo lớp và học kỳ
+                student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
+
+                num_students = len(student_classes)
+                num_passed = 0
+
+                for student_class in student_classes:
+                    # Lấy học sinh từ StudentClass
+                    student = Student.query.get(student_class.student_id)
+                    if student:
+                        # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
+                        if is_student_passed(student.id, subject_id, semester_id):
+                            num_passed += 1
+
+                # Tính tỷ lệ đạt
+                pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
+                statistics.append({
+                    "class_name": cls.className,
+                    "total_students": num_students,
+                    "num_passed": num_passed,
+                    "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
+                })
+
+    # Render lại form và dữ liệu thống kê khi trang đầu tiên hoặc sau khi người dùng chọn môn học và học kỳ
     return render_template('Administrator/Report.html',
                            subjects=subject_list,
                            semesters=semester_list,
-                           selected_subject=None,
-                           selected_semester=None)
-
-
-@app.route('/generate_report', methods=['GET'])
-def generate_report():
-    subject_id = request.args.get('subject')  # ID môn học
-    semester_id = request.args.get('semester')  # ID học kỳ
-
-    # Kiểm tra nếu subject_id và semester_id có tồn tại trong request
-    if not subject_id or not semester_id:
-        return redirect(url_for('report'))  # Nếu thiếu tham số, chuyển hướng về form lọc báo cáo
-
-    # Lấy thông tin học kỳ
-    semester = Semester.query.get(semester_id)
-    subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
-    semester_name = semester.semesterName
-    year = semester.year
-
-    # Lấy thông tin lớp học (Class)
-    classes = Class.query.all()
-
-    # Thống kê số lượng học sinh đạt theo lớp
-    statistics = []
-    for cls in classes:
-        # Lọc các học sinh theo lớp và học kỳ
-        student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
-
-        num_students = len(student_classes)
-        num_passed = 0
-
-        for student_class in student_classes:
-            # Lấy học sinh từ StudentClass
-            student = Student.query.get(student_class.student_id)
-            if student:
-                # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
-                average = calculate_average(student.id, subject_id, semester_id)
-                if is_student_passed(student.id, subject_id, semester_id):
-                    num_passed += 1
-
-        # Tính tỷ lệ đạt
-        pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
-        statistics.append({
-            "class_name": cls.className,
-            "total_students": num_students,
-            "num_passed": num_passed,
-            "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
-        })
-
-    # Render template với dữ liệu thống kê
-    return render_template('Administrator/Report.html',
-                           semester_name=semester_name,
-                           year=year,
+                           selected_subject=request.form.get('subject', None),
+                           selected_semester=request.form.get('semester', None),
                            statistics=statistics,
                            subject_name=subject_name,
-                           subjects=Subject.query.all(),
-                           semesters=Semester.query.all(),
-                           selected_subject=subject_id,
-                           selected_semester=semester_id)
+                           semester_name=semester_name,
+                           year=year)
+
 
 
 
@@ -500,8 +490,14 @@ def decrypt_data(encrypted_data_base64):
         print(f"Error during decryption: {e}")
         return None
 
+#=================================================
+@app.route("/Administrator/TeacherManagement", methods=["GET","POST"])
+def teacher_mng():
+    return render_template('Administrator/TeacherManagement.html')
 
-# ===================================================================================================================
+
+
+# ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     regulations = {
