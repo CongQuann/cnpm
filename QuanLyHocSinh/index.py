@@ -1,25 +1,49 @@
-
+import base64
 from datetime import datetime
-from flask import render_template, request, redirect, flash, url_for, Flask, jsonify
-from sqlalchemy.orm import joinedload
-from flask_mail import Mail, Message
-from QuanLyHocSinh import app, db
-import os, base64
+
 from cryptography.fernet import Fernet
-from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator,StudentClass
+from flask import render_template, request, redirect, flash, url_for
+from flask_login import login_user, LoginManager
+from flask_mail import Mail, Message
+from sqlalchemy.orm import joinedload
 
+from QuanLyHocSinh import app, db
+from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
+    Teacher, Administrator, StudentClass
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
-app.config['MAIL_PORT'] = 465  # Cổng SMTP cho Gmail
-app.config['MAIL_USE_SSL'] = True  # Sử dụng SSL
-app.config['MAIL_USERNAME'] = 'haungao44@gmail.com'  # Thay bằng email của bạn
-app.config['MAIL_PASSWORD'] = 'lnabwzzmdwqltzrz'
-app.config['MAIL_DEFAULT_SENDER'] = 'haungao44@gmail.com'  # Địa chỉ email người gửi
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = '/'
 
 mail = Mail(app)
 
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
 @app.route("/", methods=["GET", "POST"])
-def home():
+def login():
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        # Lấy danh sách tất cả người dùng
+        users = User.query.all()
+
+        # Duyệt qua tất cả người dùng để tìm người dùng khớp với username đã giải mã
+        for user in users:
+            decrypted_username = decrypt_data(user.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+            if decrypted_username == username:  # Nếu username khớp
+                decrypted_password = decrypt_data(user.password)  # Giải mã mật khẩu
+
+                if decrypted_password == password:  # Nếu mật khẩu đúng
+                    login_user(user)
+                    return redirect("/Administrator/Report")
+
+        flash('Tên đăng nhập hoặc mật khẩu không đúng!')
     return render_template('index.html')
 
 
@@ -94,9 +118,6 @@ def report():
                            year=year)
 
 
-
-
-
 def calculate_average(student_id, subject_id, semester_id):
     points = Point.query.filter_by(studentID=student_id, subjectID=subject_id, semesterID=semester_id).all()
     total_points = 0
@@ -115,14 +136,13 @@ def calculate_average(student_id, subject_id, semester_id):
             total_points += 3 * point.pointValue
             total_weight += 3
 
-
-
     if total_weight == 0:
         return 0
 
     average = total_points / total_weight
 
     return average
+
 
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
@@ -135,7 +155,7 @@ def is_student_passed(student_id, subject_id, semester_id):
         return False  # Học sinh không đạt môn
 
 
-#========================================
+# ========================================
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
@@ -210,7 +230,7 @@ def subject_mng():
 
 
 # ======Thêm route xử lý để xóa môn học=======
-@app.route("/Administrator/SubjectManagement/delete", methods=["GET"])
+@app.route("/Administrator/SubjectManagement/delete", methods=["GET", "POST"])
 def delete_subject():
     subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
 
@@ -283,6 +303,7 @@ def confirm_account(username):
 
     return redirect('/login')  # Chuyển hướng đến trang đăng nhập
 
+
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
 def create_user():
     if request.method == 'POST':
@@ -327,6 +348,18 @@ def create_user():
                 userName=username,
                 password=password,
                 yearExperience=year_experience
+            )
+        elif role == 'Administrator':
+            admin_role = request.form['adminRole']
+            new_user = Administrator(
+                name=name,
+                gender=gender,
+                DOB=dob,
+                email=email,
+                phoneNumber=phone_number,
+                userName=username,
+                password=password,
+                adminRole=admin_role
             )
         else:
             flash("Vai trò không hợp lệ!", "danger")
@@ -386,7 +419,7 @@ def user_mng():
 
         user_data.append({
             "id": user.id,
-            "name":   user.name,
+            "name": user.name,
             "gender": user.gender,
             "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
             "email": user.email,
@@ -459,7 +492,7 @@ def delete_user():
     return redirect("/Administrator/UserManagement")
 
 
-#============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
+# ============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
 # Tạo và lưu khóa vào tệp
 
 # Tải khóa từ tệp
@@ -468,7 +501,7 @@ def load_key():
         return key_file.read()
 
 
-#Hàm mã hóa
+# Hàm mã hóa
 def encrypt_data(data):
     key = load_key()
     fernet = Fernet(key)
@@ -490,11 +523,11 @@ def decrypt_data(encrypted_data_base64):
         print(f"Error during decryption: {e}")
         return None
 
-#=================================================
-@app.route("/Administrator/TeacherManagement", methods=["GET","POST"])
+
+# =================================================
+@app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
     return render_template('Administrator/TeacherManagement.html')
-
 
 
 # ===========================================END ADMINISTRATOR===============================================================
@@ -528,7 +561,7 @@ def staff():
         age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
         if not (student_rule.minAge <= age <= student_rule.maxAge):
             flash(f"Tuổi học sinh phải nằm trong khoảng {student_rule.minAge} đến {student_rule.maxAge} tuổi.",
-                      "error")
+                  "error")
             return redirect(url_for("staff"))
 
         gender = request.form.get("gender")
@@ -564,6 +597,7 @@ def staff():
         return redirect(url_for("staff"))
     return render_template('staff/staff.html', classes=classes)
 
+
 @app.route('/class_edit', methods=['GET', 'POST'])
 def class_edit():
     class_list = Class.query.all()  # Lấy danh sách tất cả các lớp học
@@ -587,12 +621,14 @@ def class_edit():
 
     return render_template('staff/ClassList.html', class_list=class_list, students=students)
 
-@app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
+
+@app.route('/student_delete/<int:student_id>', methods=['GET', 'POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)
     db.session.commit()
     return redirect(url_for('class_edit'))
+
 
 @app.route('/student_edit/<int:student_id>')
 def student_edit(student_id):
@@ -647,7 +683,6 @@ def class_filter():
 
     if not students:
         return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
-
 
     return render_template('Teacher/EnterPoints.html', students=students)
 

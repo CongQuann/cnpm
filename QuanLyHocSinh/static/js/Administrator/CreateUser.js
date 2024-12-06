@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const roleSelect = document.getElementById("role");
     const staffRoleDiv = document.getElementById("staff-role");
     const teacherInfoDiv = document.getElementById("teacher-info");
+    const adminRoleDiv = document.getElementById("admin-role");
 
     // Hiển thị mặc định cho Staff
     staffRoleDiv.style.display = "block";
@@ -12,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedRole = roleSelect.value;
         staffRoleDiv.style.display = selectedRole === "Staff" ? "block" : "none";
         teacherInfoDiv.style.display = selectedRole === "Teacher" ? "block" : "none";
+        adminRoleDiv.style.display = selectedRole === "Administrator" ? "block" : "none";
     });
 
     // Kiểm tra xác nhận mật khẩu
