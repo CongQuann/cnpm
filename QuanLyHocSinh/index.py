@@ -1,11 +1,16 @@
 import base64
+import string
 from datetime import datetime
+from importlib.metadata import requires
+import random
+
 
 from cryptography.fernet import Fernet
 from flask import render_template, request, redirect, flash, url_for
-from flask_login import login_user, LoginManager
+from flask_login import login_user, LoginManager, login_required, logout_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
+from wtforms.validators import email
 
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
@@ -46,7 +51,111 @@ def login():
         flash('Tên đăng nhập hoặc mật khẩu không đúng!')
     return render_template('index.html')
 
+@app.route("/logout")
+@login_required #phải đảm bảo người dùng đã đăng nhập trước khi đăng xuất
+def logout():
+    logout_user() #Thực hiện đăng xuất người dùng
+    return redirect("/") #thực hiện điều hướng về trang đăng nhập
 
+
+# Route lấy lại mật khẩu
+@app.route('/forgot-password/<int:step>', methods=['GET', 'POST'])
+def forgot_password(step):
+    if step == 1:
+        if request.method == 'POST':
+            username = request.form['username']
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+
+
+            if not user:
+                flash("Tên tài khoản không tồn tại!", "danger")
+                return render_template('Administrator/forgot_password.html', step=1)
+
+            # Tạo mã xác nhận
+            verification_code = ''.join(random.choices(string.digits, k=6))
+            user.verification_code = verification_code
+            db.session.commit()
+
+            # Gửi mã xác nhận qua email (giả sử có hàm send_email)
+            try:
+                # Tạo đối tượng email
+                msg = Message(
+                    subject="Xác nhận đặt lại mật khẩu hệ thống quản lý học sinh!",  # Tiêu đề email
+                    recipients=[user.email],  # Người nhận
+                    # Nội dung email
+                    body=f"Chào {user.name},\n\nMã xác nhận của bạn là: {user.verification_code}"
+                )
+                mail.send(msg)  # Gửi email
+                flash('Đã gửi mã xác nhận!', 'success')
+            except Exception as e:
+                flash(f'Đã xảy ra lỗi khi gửi mã xác nhận: {str(e)}', 'danger')
+
+            print(f"Mã xác nhận đã được gửi đến email {user.email}: {verification_code}")
+            return redirect(url_for('forgot_password', step=2, username=username))
+
+        return render_template('Administrator/forgot_password.html', step=1)
+
+    elif step == 2:
+        username = request.args.get('username')
+        if not username:
+            flash("Vui lòng bắt đầu lại quy trình!", "danger")
+            return redirect(url_for('forgot_password', step=1))
+
+        if request.method == 'POST':
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+            input_code = request.form['verification_code']
+            if not user or input_code != user.verification_code:
+                flash("Mã xác nhận không đúng!", "danger")
+                return render_template('Administrator/forgot_password.html', step=2, username=username)
+
+            flash("Mã xác nhận hợp lệ! Hãy đặt lại mật khẩu.", "success")
+            return redirect(url_for('forgot_password', step=3, username=username))
+
+        return render_template('Administrator/forgot_password.html', step=2, username=username)
+
+    elif step == 3:
+        username = request.args.get('username')
+        if not username:
+            flash("Vui lòng bắt đầu lại quy trình!", "danger")
+            return redirect(url_for('forgot_password', step=1))
+
+        if request.method == 'POST':
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+            new_password = request.form['new_password']
+            confirm_password = request.form['confirm_password']
+            if not user:
+                flash("Người dùng không tồn tại!", "danger")
+                return redirect(url_for('forgot_password', step=1))
+            if new_password != confirm_password:
+                flash("Mật khẩu xác nhận không trùng khớp!", "danger")
+                return render_template('Administrator/forgot_password.html', step=3, username=username)
+
+            # Cập nhật mật khẩu
+            user.password = encrypt_data(new_password)
+            user.verification_code = None  # Xóa mã xác nhận
+            db.session.commit()
+            flash("Đặt lại mật khẩu thành công!", "success")
+            return redirect("/")
+
+        return render_template('Administrator/forgot_password.html', step=3, username=username)
 # ===========================================================ADMINISTRATOR================================================
 
 
@@ -310,17 +419,25 @@ def create_user():
         # Lấy thông tin từ form
         name = request.form['name']
         username = encrypt_data(request.form['userName'])
-
+        email = request.form['email']
+        phone_number = request.form['phoneNumber']
         # Kiểm tra nếu tên đăng nhập đã tồn tại
         existing_user = User.query.filter_by(userName=username).first()
+        existing_email = User.query.filter_by(email=email).first()
+        existing_phone_number = User.query.filter_by(phoneNumber=phone_number).first()
         if existing_user:
             flash("Tên đăng nhập đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
-
+        if existing_email:
+            flash("Email đã được sử dụng!", "danger")
+            return render_template('Administrator/CreateUser.html')
+        if existing_phone_number:
+            flash("Số điện thoại đã được sử dụng!", "danger")
+            return render_template('Administrator/CreateUser.html')
         gender = request.form['gender']
         dob = request.form['DOB']
-        email = request.form['email']
-        phone_number = request.form['phoneNumber']
+
+
         password = encrypt_data(request.form['password'])
         role = request.form['role']
 
@@ -539,7 +656,7 @@ def enter_point():
     return render_template('Teacher/EnterPoints.html', regulations=regulations)
 
 
-# staff
+# =============================staff
 
 @app.route('/student_add', methods=["GET", "POST"])
 def staff():
