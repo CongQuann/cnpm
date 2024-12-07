@@ -44,11 +44,16 @@ def login():
             if decrypted_username == username:  # Nếu username khớp
                 decrypted_password = decrypt_data(user.password)  # Giải mã mật khẩu
 
-                if decrypted_password == password:  # Nếu mật khẩu đúng
+                if decrypted_password == password and user.type == 'administrator':
                     login_user(user)
                     return redirect("/Administrator/Report")
+                elif decrypted_password == password and user.type == 'teacher':
+                    login_user(user)
+                    return redirect("/Teacher/EnterPoints")
+                elif decrypted_password ==password and user.type == 'staff':
+                    return redirect("/class_edit")
 
-        flash('Tên đăng nhập hoặc mật khẩu không đúng!')
+        flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
     return render_template('index.html')
 
 @app.route("/logout")
