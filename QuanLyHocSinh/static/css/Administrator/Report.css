@@ -23,7 +23,7 @@ main {
     color: #fff;
     text-align: center;
     padding: 0.5rem 0;
-    position: fixed;
+    position: static;
     bottom: 0;
     width: 100%;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
@@ -41,5 +41,24 @@ main {
     transition: ease 0.7s;
 }
 
+
+#pieChartsContainer {
+    display: flex;
+    flex-wrap: wrap; /* Cho phép các biểu đồ tròn cuộn xuống nếu không đủ chỗ */
+    gap: 20px; /* Khoảng cách giữa các biểu đồ */
+    justify-content: space-between;
+}
+
+#pieChartsContainer canvas {
+    width: 300px !important;  /* Điều chỉnh kích thước biểu đồ */
+    height: 300px !important; /* Điều chỉnh kích thước biểu đồ */
+}
+
+.class-name-label {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+    width: 100%;
+}
 
 

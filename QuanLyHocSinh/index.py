@@ -1,27 +1,166 @@
+import base64
+import string
 from datetime import datetime
-from flask import render_template, request, redirect, flash, url_for, Flask, jsonify
-from sqlalchemy.orm import joinedload
-from flask_mail import Mail, Message
-from QuanLyHocSinh import app, db
-import os, base64
+from importlib.metadata import requires
+import random
+
+
 from cryptography.fernet import Fernet
-from QuanLyHocSinh.models import Class,Teach ,Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, Teacher,Administrator,StudentClass
+from flask import render_template, request, redirect, flash, url_for
+from flask_login import login_user, LoginManager, login_required, logout_user
+from flask_mail import Mail, Message
+from sqlalchemy.orm import joinedload
+from wtforms.validators import email
 
+from QuanLyHocSinh import app, db
+from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
+    Teacher, Administrator, StudentClass
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Địa chỉ SMTP của Gmail
-app.config['MAIL_PORT'] = 465  # Cổng SMTP cho Gmail
-app.config['MAIL_USE_SSL'] = True  # Sử dụng SSL
-app.config['MAIL_USERNAME'] = 'haungao44@gmail.com'  # Thay bằng email của bạn
-app.config['MAIL_PASSWORD'] = 'lnabwzzmdwqltzrz'
-app.config['MAIL_DEFAULT_SENDER'] = 'haungao44@gmail.com'  # Địa chỉ email người gửi
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = '/'
 
 mail = Mail(app)
 
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
 @app.route("/", methods=["GET", "POST"])
-def home():
+def login():
+    if request.method == "POST":
+        username = request.form['username']
+        password = request.form['password']
+
+        # Lấy danh sách tất cả người dùng
+        users = User.query.all()
+
+        # Duyệt qua tất cả người dùng để tìm người dùng khớp với username đã giải mã
+        for user in users:
+            decrypted_username = decrypt_data(user.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+            if decrypted_username == username:  # Nếu username khớp
+                decrypted_password = decrypt_data(user.password)  # Giải mã mật khẩu
+
+                if decrypted_password == password and user.type == 'administrator':
+                    login_user(user)
+                    return redirect("/Administrator/Report")
+                elif decrypted_password == password and user.type == 'teacher':
+                    login_user(user)
+                    return redirect("/Teacher/EnterPoints")
+                elif decrypted_password ==password and user.type == 'staff':
+                    return redirect("/class_edit")
+
+        flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
     return render_template('index.html')
 
+@app.route("/logout")
+@login_required #phải đảm bảo người dùng đã đăng nhập trước khi đăng xuất
+def logout():
+    logout_user() #Thực hiện đăng xuất người dùng
+    return redirect("/") #thực hiện điều hướng về trang đăng nhập
 
+
+# Route lấy lại mật khẩu
+@app.route('/forgot-password/<int:step>', methods=['GET', 'POST'])
+def forgot_password(step):
+    if step == 1:
+        if request.method == 'POST':
+            username = request.form['username']
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+
+
+            if not user:
+                flash("Tên tài khoản không tồn tại!", "danger")
+                return render_template('Administrator/forgot_password.html', step=1)
+
+            # Tạo mã xác nhận
+            verification_code = ''.join(random.choices(string.digits, k=6))
+            user.verification_code = verification_code
+            db.session.commit()
+
+            # Gửi mã xác nhận qua email (giả sử có hàm send_email)
+            try:
+                # Tạo đối tượng email
+                msg = Message(
+                    subject="Xác nhận đặt lại mật khẩu hệ thống quản lý học sinh!",  # Tiêu đề email
+                    recipients=[user.email],  # Người nhận
+                    # Nội dung email
+                    body=f"Chào {user.name},\n\nMã xác nhận của bạn là: {user.verification_code}"
+                )
+                mail.send(msg)  # Gửi email
+                flash('Đã gửi mã xác nhận!', 'success')
+            except Exception as e:
+                flash(f'Đã xảy ra lỗi khi gửi mã xác nhận: {str(e)}', 'danger')
+
+            print(f"Mã xác nhận đã được gửi đến email {user.email}: {verification_code}")
+            return redirect(url_for('forgot_password', step=2, username=username))
+
+        return render_template('Administrator/forgot_password.html', step=1)
+
+    elif step == 2:
+        username = request.args.get('username')
+        if not username:
+            flash("Vui lòng bắt đầu lại quy trình!", "danger")
+            return redirect(url_for('forgot_password', step=1))
+
+        if request.method == 'POST':
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+            input_code = request.form['verification_code']
+            if not user or input_code != user.verification_code:
+                flash("Mã xác nhận không đúng!", "danger")
+                return render_template('Administrator/forgot_password.html', step=2, username=username)
+
+            flash("Mã xác nhận hợp lệ! Hãy đặt lại mật khẩu.", "success")
+            return redirect(url_for('forgot_password', step=3, username=username))
+
+        return render_template('Administrator/forgot_password.html', step=2, username=username)
+
+    elif step == 3:
+        username = request.args.get('username')
+        if not username:
+            flash("Vui lòng bắt đầu lại quy trình!", "danger")
+            return redirect(url_for('forgot_password', step=1))
+
+        if request.method == 'POST':
+            user = None
+            users = User.query.all()
+            for i in users:
+                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+
+                if decrypted_username == username:  # Nếu username khớp
+                    user = i
+            new_password = request.form['new_password']
+            confirm_password = request.form['confirm_password']
+            if not user:
+                flash("Người dùng không tồn tại!", "danger")
+                return redirect(url_for('forgot_password', step=1))
+            if new_password != confirm_password:
+                flash("Mật khẩu xác nhận không trùng khớp!", "danger")
+                return render_template('Administrator/forgot_password.html', step=3, username=username)
+
+            # Cập nhật mật khẩu
+            user.password = encrypt_data(new_password)
+            user.verification_code = None  # Xóa mã xác nhận
+            db.session.commit()
+            flash("Đặt lại mật khẩu thành công!", "success")
+            return redirect("/")
+
+        return render_template('Administrator/forgot_password.html', step=3, username=username)
 # ===========================================================ADMINISTRATOR================================================
 
 
@@ -31,80 +170,66 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
+    # Khởi tạo biến statistics để giữ dữ liệu nếu có chọn môn học và học kỳ
+    statistics = []
+    subject_name = None
+    semester_name = None
+    year = None
 
     # Xử lý form khi người dùng chọn môn học và học kỳ
     if request.method == "POST":
         selected_subject = request.form.get('subject')
         selected_semester = request.form.get('semester')
 
-        # Chuyển hướng tới route generate_report với query params
-        return redirect(url_for('generate_report', subject=selected_subject, semester=selected_semester))
+        # Tính toán thống kê cho môn học và học kỳ đã chọn
+        if selected_subject and selected_semester:
+            subject_id = selected_subject
+            semester_id = selected_semester
 
-    # Render lại form khi trang đầu tiên hoặc sau khi tải lại
+            # Lấy thông tin học kỳ và môn học
+            semester = Semester.query.get(semester_id)
+            subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
+            semester_name = semester.semesterName
+            year = semester.year
+
+            # Lấy thông tin lớp học (Class)
+            classes = Class.query.all()
+
+            # Thống kê số lượng học sinh đạt theo lớp
+            for cls in classes:
+                # Lọc các học sinh theo lớp và học kỳ
+                student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
+
+                num_students = len(student_classes)
+                num_passed = 0
+
+                for student_class in student_classes:
+                    # Lấy học sinh từ StudentClass
+                    student = Student.query.get(student_class.student_id)
+                    if student:
+                        # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
+                        if is_student_passed(student.id, subject_id, semester_id):
+                            num_passed += 1
+
+                # Tính tỷ lệ đạt
+                pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
+                statistics.append({
+                    "class_name": cls.className,
+                    "total_students": num_students,
+                    "num_passed": num_passed,
+                    "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
+                })
+
+    # Render lại form và dữ liệu thống kê khi trang đầu tiên hoặc sau khi người dùng chọn môn học và học kỳ
     return render_template('Administrator/Report.html',
                            subjects=subject_list,
                            semesters=semester_list,
-                           selected_subject=None,
-                           selected_semester=None)
-
-
-@app.route('/generate_report', methods=['GET'])
-def generate_report():
-    subject_id = request.args.get('subject')  # ID môn học
-    semester_id = request.args.get('semester')  # ID học kỳ
-
-    # Kiểm tra nếu subject_id và semester_id có tồn tại trong request
-    if not subject_id or not semester_id:
-        return redirect(url_for('report'))  # Nếu thiếu tham số, chuyển hướng về form lọc báo cáo
-
-    # Lấy thông tin học kỳ
-    semester = Semester.query.get(semester_id)
-    subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
-    semester_name = semester.semesterName
-    year = semester.year
-
-    # Lấy thông tin lớp học (Class)
-    classes = Class.query.all()
-
-    # Thống kê số lượng học sinh đạt theo lớp
-    statistics = []
-    for cls in classes:
-        # Lọc các học sinh theo lớp và học kỳ
-        student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
-
-        num_students = len(student_classes)
-        num_passed = 0
-
-        for student_class in student_classes:
-            # Lấy học sinh từ StudentClass
-            student = Student.query.get(student_class.student_id)
-            if student:
-                # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
-                average = calculate_average(student.id, subject_id, semester_id)
-                if is_student_passed(student.id, subject_id, semester_id):
-                    num_passed += 1
-
-        # Tính tỷ lệ đạt
-        pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
-        statistics.append({
-            "class_name": cls.className,
-            "total_students": num_students,
-            "num_passed": num_passed,
-            "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
-        })
-
-    # Render template với dữ liệu thống kê
-    return render_template('Administrator/Report.html',
-                           semester_name=semester_name,
-                           year=year,
+                           selected_subject=request.form.get('subject', None),
+                           selected_semester=request.form.get('semester', None),
                            statistics=statistics,
                            subject_name=subject_name,
-                           subjects=Subject.query.all(),
-                           semesters=Semester.query.all(),
-                           selected_subject=subject_id,
-                           selected_semester=semester_id)
-
-
+                           semester_name=semester_name,
+                           year=year)
 
 
 def calculate_average(student_id, subject_id, semester_id):
@@ -125,14 +250,13 @@ def calculate_average(student_id, subject_id, semester_id):
             total_points += 3 * point.pointValue
             total_weight += 3
 
-
-
     if total_weight == 0:
         return 0
 
     average = total_points / total_weight
 
     return average
+
 
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
@@ -145,7 +269,7 @@ def is_student_passed(student_id, subject_id, semester_id):
         return False  # Học sinh không đạt môn
 
 
-#========================================
+# ========================================
 
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
@@ -220,7 +344,7 @@ def subject_mng():
 
 
 # ======Thêm route xử lý để xóa môn học=======
-@app.route("/Administrator/SubjectManagement/delete", methods=["GET"])
+@app.route("/Administrator/SubjectManagement/delete", methods=["GET", "POST"])
 def delete_subject():
     subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
 
@@ -293,23 +417,32 @@ def confirm_account(username):
 
     return redirect('/login')  # Chuyển hướng đến trang đăng nhập
 
+
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
 def create_user():
     if request.method == 'POST':
         # Lấy thông tin từ form
         name = request.form['name']
         username = encrypt_data(request.form['userName'])
-
+        email = request.form['email']
+        phone_number = request.form['phoneNumber']
         # Kiểm tra nếu tên đăng nhập đã tồn tại
         existing_user = User.query.filter_by(userName=username).first()
+        existing_email = User.query.filter_by(email=email).first()
+        existing_phone_number = User.query.filter_by(phoneNumber=phone_number).first()
         if existing_user:
             flash("Tên đăng nhập đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
-
+        if existing_email:
+            flash("Email đã được sử dụng!", "danger")
+            return render_template('Administrator/CreateUser.html')
+        if existing_phone_number:
+            flash("Số điện thoại đã được sử dụng!", "danger")
+            return render_template('Administrator/CreateUser.html')
         gender = request.form['gender']
         dob = request.form['DOB']
-        email = request.form['email']
-        phone_number = request.form['phoneNumber']
+
+
         password = encrypt_data(request.form['password'])
         role = request.form['role']
 
@@ -337,6 +470,18 @@ def create_user():
                 userName=username,
                 password=password,
                 yearExperience=year_experience
+            )
+        elif role == 'Administrator':
+            admin_role = request.form['adminRole']
+            new_user = Administrator(
+                name=name,
+                gender=gender,
+                DOB=dob,
+                email=email,
+                phoneNumber=phone_number,
+                userName=username,
+                password=password,
+                adminRole=admin_role
             )
         else:
             flash("Vai trò không hợp lệ!", "danger")
@@ -396,7 +541,7 @@ def user_mng():
 
         user_data.append({
             "id": user.id,
-            "name":   user.name,
+            "name": user.name,
             "gender": user.gender,
             "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
             "email": user.email,
@@ -469,7 +614,7 @@ def delete_user():
     return redirect("/Administrator/UserManagement")
 
 
-#============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
+# ============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
 # Tạo và lưu khóa vào tệp
 
 # Tải khóa từ tệp
@@ -478,7 +623,7 @@ def load_key():
         return key_file.read()
 
 
-#Hàm mã hóa
+# Hàm mã hóa
 def encrypt_data(data):
     key = load_key()
     fernet = Fernet(key)
@@ -501,7 +646,13 @@ def decrypt_data(encrypted_data_base64):
         return None
 
 
-# ===================================================================================================================
+# =================================================
+@app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
+def teacher_mng():
+    return render_template('Administrator/TeacherManagement.html')
+
+
+# ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     regulations = {
@@ -811,12 +962,29 @@ def update_student(student_id):
 
 
 
-@app.route('/Teacher/EnterPoints/class_filter', methods = ['POST'])
+@app.route('/Teacher/EnterPoints/class_filter', methods=['POST'])
 def class_filter():
-    classes = Student.query.all()
-    for c in classes:
-        print(c.name)
-    return render_template('Teacher/EnterPoints.html', classes = classes)
+    class_name = request.form.get('class-input')
+    semester_name = request.form.get('semester-input')
+    year = request.form.get('academic-year-input')
+
+    if not class_name or not semester_name or not year:
+        return render_template('Teacher/EnterPoints.html', error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!")
+
+    _class = db.session.query(Class).filter(Class.className == class_name).first()
+    _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name, Semester.year == year).first()
+
+    if not _class or not _semester:
+        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy lớp hoặc học kỳ phù hợp!")
+
+    students = db.session.query(Student).join(StudentClass).filter(
+        StudentClass.class_id == _class.id, StudentClass.semester_id == _semester.id)
+
+    if not students:
+        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
+
+    return render_template('Teacher/EnterPoints.html', students=students)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,11 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Trang chu</title>
-  <link href="{{ url_for('static', filename='css/index_styles.css')}}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Administrator/Login.css')}}">
+    <!-- Liên kết đến file CSS tùy chỉnh -->
+    <title>Trang Đăng Nhập</title>
 </head>
 <body>
-  <h1>Hay tien hanh dang nhap trang web</h1>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 login-div">
+            <form class="mt-5 p-4 border rounded shadow" action="/" method="POST">
+                <h2 class="text-center">Đăng Nhập</h2>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="form-floating mb-3 mt-3">
+                    <input type="text" class="form-control" id="username" placeholder="Nhập tên tài khoản"
+                           name="username" required autocomplete="off">
+                    <label for="username">Tên đăng nhập</label>
+                </div>
+
+                <div class="form-floating mt-3 mb-3">
+                    <input type="password" class="form-control" id="password" placeholder="Nhập mật khẩu"
+                           name="password" required autocomplete="off">
+                    <label for="password">Mật khẩu</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
+                <!-- Dòng "Quên mật khẩu?" -->
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('forgot_password', step=1) }}" class="text-decoration-none">Quên mật khẩu?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/Administrator/Login.js')}}"></script>
 </body>
 </html>

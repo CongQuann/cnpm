@@ -31,14 +31,18 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('subject_mng')}}">Quản lý môn học</a>
                     </li>
-                     <li class="nav-item">
+                    <li class="nav-item">
                         <a class="nav-link" href="{{url_for('user_mng')}}">Quản lý người dùng</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('teacher_mng')}}">Quản lý giáo viên</a>
+                    </li>
+
                 </ul>
                   <!-- Chuyển Đăng xuất qua phải -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link logout-btn" href="javascript:void(0)">Đăng xuất</a>
+                        <a class="nav-link logout-btn" href="{{url_for('logout')}}">Đăng xuất</a>
                     </li>
                 </ul>
             </div>

@@ -4,21 +4,23 @@ from datetime import datetime, timedelta
 from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
-
+from flask_login import UserMixin, LoginManager
 from QuanLyHocSinh import db, app
+from cryptography.fernet import Fernet
+import base64
 
-
-class User(db.Model):
+class User(db.Model,UserMixin):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     gender = Column(String(10))
     DOB = Column(DateTime)
-    email = Column(String(50))
-    phoneNumber = Column(String(11))
+    email = Column(String(50),unique=True)
+    phoneNumber = Column(String(11),unique=True)
     userName = Column(String(500), unique=True)
     password = Column(String(500))
+    verification_code = Column(String(10), nullable=True)
     type = Column(String(50))  # Phân biệt loại người dùng
     staffs = relationship('Staff', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
     teachers = relationship('Teacher', backref='user', cascade="all, delete-orphan", lazy=True, passive_deletes=True)
@@ -120,8 +122,8 @@ class Student(db.Model):
     gender = Column(String(10))
     DOB = Column(DateTime)
     address = Column(String(200))
-    phone = Column(String(11))
-    email = Column(String(70))
+    phone = Column(String(11),unique=True)
+    email = Column(String(70),unique=True)
     stuRuleID = Column(Integer, ForeignKey(StudentRule.id), nullable=False)
     points = relationship('Point', backref='student_point', lazy=True, cascade="all, delete")
 
@@ -191,23 +193,6 @@ def seed_data():
     # Xóa dữ liệu cũ
     db.drop_all()
     db.create_all()
-
-    # Thêm dữ liệu cho Administrator
-    admin1 = Administrator(
-        name="Admin User",
-        gender="Nam",
-        DOB=datetime(1985, 3, 15),
-        email="admin@example.com",
-        phoneNumber="0911122233",
-        userName="adminuser",
-        password="adminpass",
-        adminRole="System Administrator"
-    )
-
-
-
-    # Thêm dữ liệu vào session
-    db.session.add_all([admin1])
 
     # Thêm Grade mẫu
     grades = [Grade(gradeName=f"Lớp {i}") for i in range(10, 13)]
@@ -392,10 +377,62 @@ def generate_points():
     return points
 
 
-# Tạo dữ liệu điểm cho tất cả học sinh
+# Tải khóa từ tệp
+def load_key():
+    with open("secret.key", "rb") as key_file:
+        return key_file.read()
+
+# Hàm mã hóa
+def encrypt_data(data):
+    key = load_key()
+    fernet = Fernet(key)
+    encrypted_data = fernet.encrypt(data.encode())
+    encrypted_data_base64 = base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
+    return encrypted_data_base64
+
+# Hàm giải mã
+def decrypt_data(encrypted_data_base64):
+    try:
+        # Giải mã base64 thành dữ liệu mã hóa gốc
+        encrypted_data = base64.urlsafe_b64decode(encrypted_data_base64.encode('utf-8'))
+
+        key = load_key()
+        fernet = Fernet(key)
+        decrypted = fernet.decrypt(encrypted_data)  # Giải mã dữ liệu
+        return decrypted.decode()  # Chuyển về chuỗi ban đầu
+    except Exception as e:
+        print(f"Error during decryption: {e}")
+        return None
+
+
+
+
+def create_admin():
+    # Mã hóa thông tin
+    encrypted_username = encrypt_data("admin")  # Mã hóa tên đăng nhập "admin"
+    encrypted_password = encrypt_data("123")  # Mã hóa mật khẩu "adminpassword"
+
+    # Tạo đối tượng User và Administrator
+    admin_user = Administrator(
+        name="Administrator",
+        gender="Nam",
+        DOB="1980-01-01",  # Ví dụ ngày sinh
+        email="admin@example.com",
+        phoneNumber="1234567890",
+        userName=encrypted_username,
+        password=encrypted_password,
+        type="administrator",
+        adminRole="Super Admin"  # Ví dụ vai trò admin
+    )
+
+    # Thêm vào cơ sở dữ liệu
+    db.session.add(admin_user)
+    db.session.commit()
+    print("Admin user created successfully")
 
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         seed_data()
+        create_admin()

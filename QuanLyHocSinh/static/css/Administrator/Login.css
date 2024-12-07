@@ -1,0 +1,28 @@
+body {
+    background-image: url('https://images.pexels.com/photos/289737/pexels-photo-289737.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); /* Đường dẫn đến ảnh nền */
+    background-size: cover; /* Đảm bảo ảnh phủ kín toàn bộ */
+    background-position: center; /* Căn giữa ảnh */
+    background-repeat: no-repeat; /* Không lặp lại ảnh */
+    height: 100vh; /* Chiều cao 100% viewport */
+    display: flex; /* Sử dụng flexbox để căn giữa nội dung */
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+}
+
+form {
+    background: #ffffffd1;
+}
+
+h2 {
+    color: #007bff; /* Màu tiêu đề */
+}
+
+.btn-primary {
+    background-color: #007bff; /* Màu nút */
+    border: none; /* Bỏ viền */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Màu khi hover */
+}
+

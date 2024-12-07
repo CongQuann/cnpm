@@ -87,13 +87,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Xóa ô nhập điểm 1 tiết cuối cùng
+
         removeTestBtn.addEventListener('click', () => {
             const rows = studentRows.querySelectorAll('tr');
             rows.forEach(row => {
                 const container = row.querySelector('.test-container');
                 const inputs = container.querySelectorAll('.test-score');
-                if (inputs.length > 0) {
+                if (inputs.length > 1) {
                     container.removeChild(inputs[inputs.length - 1]);
                 }
             });

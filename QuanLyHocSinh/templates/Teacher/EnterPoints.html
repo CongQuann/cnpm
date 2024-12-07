@@ -1,7 +1,7 @@
 {% extends 'Teacher/base.html' %}
 
 {% block title %}
-Báo cáo thống kê
+Nhập điểm
 {% endblock %}
 
 {% block css %}
@@ -10,31 +10,33 @@ Báo cáo thống kê
 
 {% block content %}
 <div class="container mt-4 container-div">
-    <h2 class="text-center">Báo Cáo Thống Kê Điểm</h2>
+    <h2 class="text-center">Nhập điểm </h2>
 
     <!-- Bộ lọc -->
-    <form action="{{ url_for('class_filter') }}" method="POST">
-        <div id="scoreboard-container">
+
+    <div id="scoreboard-container">
+        <form action="{{ url_for('class_filter') }}" method="POST">
             <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
             <div id="class-info">
                 <!-- Lớp -->
                 <p>
                     <strong>Lớp:</strong>
-                    <input type="text" id="class-input" class="input-field" placeholder="Nhập lớp (vd: 10A1)"
+                    <input type="text" id="class-input" name="class-input" class="input-field"
+                           placeholder="Nhập lớp (vd: 10A1)"
                            list="class-list">
                     <datalist id="class-list">
-                        <option value="10A1">
-                        <option value="10A2">
-                        <option value="11A1">
-                        <option value="12A1">
+                        <option value="10A">
+                        <option value="10B">
+                        <option value="10C">
+                        <option value="12A">
                     </datalist>
                 </p>
-                <p id="class-display"><strong>Lớp đã nhập/chọn: </strong></p>
 
                 <!-- Môn -->
                 <p>
                     <strong>Môn:</strong>
-                    <input type="text" id="subject-input" class="input-field" placeholder="Nhập môn học"
+                    <input type="text" id="subject-input" name="subject-input" class="input-field"
+                           placeholder="Nhập môn học"
                            list="subject-list">
                     <datalist id="subject-list">
                         <option value="Toán">
@@ -43,78 +45,82 @@ Báo cáo thống kê
                         <option value="Anh">
                     </datalist>
                 </p>
-                <p id="subject-display"><strong>Môn đã nhập/chọn: </strong></p>
 
                 <!-- Học kỳ -->
                 <p>
                     <strong>Học kỳ:</strong>
-                    <input type="text" id="semester-input" class="input-field" placeholder="Nhập học kỳ (vd: 1, 2)"
+                    <input type="text" id="semester-input" name="semester-input" class="input-field"
+                           placeholder="Nhập học kỳ (vd: 1, 2)"
                            list="semester-list">
                     <datalist id="semester-list">
                         <option value="Học kỳ 1"></option>
                         <option value="Học kỳ 2"></option>
                     </datalist>
                 </p>
-                <p id="semester-display"><strong>Học kỳ đã nhập/chọn: </strong></p>
 
                 <!-- Năm học -->
                 <p>
                     <strong>Năm học:</strong>
-                    <input type="text" id="academic-year-input" class="input-field"
+                    <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
                            placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list">
                     <datalist id="academic-year-list">
-                        <option value="2024-2025">
-                        <option value="2025-2026">
-                        <option value="2026-2027">
+                        <option value="2022-2023">
+                        <option value="2023-2024">
+
                     </datalist>
                 </p>
-                <p id="academic-year-display"><strong>Năm học đã nhập/chọn: </strong></p>
                 <button id="class_filter" type="submit">Lọc</button>
             </div>
+        </form>
 
-            <!-- Bảng điểm -->
+        <!-- Bảng điểm -->
 
-            <table id="scoreboard-table">
-                <thead>
-                <tr>
-                    <th class="table-header">STT</th>
-                    <th class="table-header">Mã học sinh</th>
-                    <th class="table-header">Họ tên</th>
-                    <th class="table-header score-15min-header">Điểm 15’
-                        <button id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
-                        <button id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
-                    </th>
-                    <th class="table-header">Điểm 1 tiết
-                        <button id="add-test-btn" class="btn btn-sm btn-primary">+</button>
-                        <button id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
-                    </th>
-                    <th class="table-header">Điểm thi</th>
-                </tr>
-                </thead>
+        <table id="scoreboard-table">
+            <thead>
+            <tr>
+                <th class="table-header">STT</th>
+                <th class="table-header">Mã học sinh</th>
+                <th class="table-header">Họ tên</th>
+                <th class="table-header score-15min-header">Điểm 15’
+                    <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
+                    <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
+                </th>
+                <th class="table-header score-test-header">Điểm 1 tiết
+                    <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
+                    <button type="button" id="remove-test-bt    `n" class="btn btn-sm btn-danger">-</button>
+                </th>
+                <th class="table-header">Điểm thi</th>
+            </tr>
+            </thead>
 
-                <tbody id="student-rows">
-                {% for s in classes %}
-                <tr>
-                    <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
-                    <td class="table-cell">{{ s.id }}</td>
-                    <td class="table-cell">{{ s.name }}</td>
-                    <td class="table-cell score-15min-container">
-                        <input type="number" class="input-cell" id="score-15min" placeholder="Điểm 15’" min="0"
-                               max="10">
-                    </td>
-                    <td class="table-cell test-container">
-                        <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
-                    </td>
-                    <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
-                                                  min="0" max="10"></td>
-                </tr>
-                {% endfor %}
-                </tbody>
+            <tbody id="student-rows">
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+            {% for s in students %}
+            <tr>
+                <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
+                <td class="table-cell">{{ s.id }}</td>
+                <td class="table-cell">{{ s.name }}</td>
+                <td class="table-cell score-15min-container">
+                    <input type="number" class="input-cell" id="score-15min" placeholder="Điểm 15’" min="0"
+                           max="10">
+                </td>
+                <td class="table-cell test-container">
+                    <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
+                </td>
+                <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
+                                              min="0" max="10"></td>
+            </tr>
+            {% endfor %}
+            </tbody>
 
-            </table>
+        </table>
 
-        </div>
-    </form>
+    </div>
+
 
 </div>
 <script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"></script>

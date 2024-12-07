@@ -15,71 +15,177 @@ Báo cáo thống kê
 
     <!-- Bộ lọc -->
     <form id="filter-form" class="row g-3 my-4" method="POST" action="{{ url_for('report') }}">
-    <div class="col-md-4">
-        <label for="subject" class="form-label">Môn học</label>
-        <select class="form-select" id="subject" name="subject">
-            <option value="">Chọn môn học</option>
-            {% for subject in subjects %}
-            <option value="{{ subject.id }}">
-                {{ subject.subjectName }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="col-md-4">
+            <label for="subject" class="form-label">Môn học</label>
+            <select class="form-select" id="subject" name="subject">
+                <option value="">Chọn môn học</option>
+                {% for subject in subjects %}
+                <option value="{{ subject.id }}">
+                    {{ subject.subjectName }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="col-md-4">
-        <label for="semester" class="form-label">Học kỳ</label>
-        <select class="form-select" id="semester" name="semester">
-            <option value="">Chọn học kỳ</option>
-            {% for semester in semesters %}
-            <option value="{{ semester.id }}">
-                {{ semester.semesterName }} ({{ semester.year }})
-            </option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="col-md-4">
+            <label for="semester" class="form-label">Học kỳ</label>
+            <select class="form-select" id="semester" name="semester">
+                <option value="">Chọn học kỳ</option>
+                {% for semester in semesters %}
+                <option value="{{ semester.id }}">
+                    {{ semester.semesterName }} ({{ semester.year }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div class="col-md-12 text-center">
-        <button type="submit" class="btn btn-primary">Xem báo cáo</button>
-    </div>
-</form>
+        <div class="col-md-12 text-center">
+            <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+        </div>
+    </form>
 
 
     <!-- Bảng thống kê -->
     {% if statistics %}
     <div id="report-section" class="mt-4">
-        <h4 class="text-center">Thống kê điểm môn <strong>{{ subject_name }}</strong> - Học kỳ <strong>{{ semester_name }} ({{ year }})</strong></h4>
+        <h4 class="text-center">Thống kê điểm môn <strong>{{ subject_name }}</strong> - Học kỳ <strong>{{ semester_name
+            }} ({{ year }})</strong></h4>
 
         <div style="max-height: 280px; overflow-y: auto;">
             <table class="table table-bordered table-striped">
                 <thead>
-                    <tr class="table-primary">
-                        <th>STT</th>
-                        <th>Lớp</th>
-                        <th>Sĩ số</th>
-                        <th>Số lượng đạt</th>
-                        <th>Tỷ lệ</th>
-                    </tr>
+                <tr class="table-primary">
+                    <th>STT</th>
+                    <th>Lớp</th>
+                    <th>Sĩ số</th>
+                    <th>Số lượng đạt</th>
+                    <th>Tỷ lệ</th>
+                </tr>
                 </thead>
                 <tbody class="table-data">
-                    {% for stat in statistics %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ stat.class_name }}</td>
-                        <td>{{ stat.total_students }}</td>
-                        <td>{{ stat.num_passed }}</td>
-                        <td>{{ stat.pass_rate }}</td>
-                    </tr>
-                    {% endfor %}
+                {% for stat in statistics %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ stat.class_name }}</td>
+                    <td>{{ stat.total_students }}</td>
+                    <td>{{ stat.num_passed }}</td>
+                    <td>{{ stat.pass_rate }}</td>
+                </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
+        <!-- Nút vẽ biểu đồ -->
+        <button id="drawChart" class="btn btn-primary mt-3">Vẽ biểu đồ</button>
+        <div class="mt-4">
+            <canvas id="reportChart" width="400" height="200"></canvas>
+        </div>
+        <div class="mt-4">
+            <canvas id="passRateChart" width="400" height="200"></canvas>
+        </div>
     </div>
     {% else %}
-        <p class="text-center">Không có dữ liệu báo cáo.</p>
+    <p class="text-center">Không có dữ liệu báo cáo.</p>
     {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.getElementById('drawChart').addEventListener('click', function () {
+        // Dữ liệu từ bảng
+        const classNames = {{ statistics | tojson | safe }};
+        const totalStudents = classNames.map(stat => stat.total_students);
+        const numPassed = classNames.map(stat => stat.num_passed);
+        const numFailed = classNames.map(stat => stat.total_students - stat.num_passed);
+
+        // Tính tỷ lệ phần trăm đạt và không đạt cho mỗi lớp
+        const passRates = classNames.map(stat => (stat.num_passed / stat.total_students) * 100);
+        const failRates = classNames.map(stat => (stat.total_students - stat.num_passed) / stat.total_students * 100);
+
+        // Vẽ biểu đồ cột
+        const ctxBar = document.getElementById('reportChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: classNames.map(stat => stat.class_name),
+                datasets: [
+                    {
+                        label: 'Tổng số học sinh',
+                        data: totalStudents,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Số học sinh đạt',
+                        data: numPassed,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Vẽ biểu đồ cột chồng thể hiện tỷ lệ đạt
+        const ctxStackedBar = document.getElementById('passRateChart').getContext('2d');
+        new Chart(ctxStackedBar, {
+            type: 'bar',
+            data: {
+                labels: classNames.map(stat => stat.class_name),
+                datasets: [
+                    {
+                        label: 'Tỷ lệ đạt (%)',
+                        data: passRates,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Tỷ lệ chưa đạt (%)',
+                        data: failRates,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        stacked: true  // Kích hoạt xếp chồng cho trục x
+                    },
+                    y: {
+                        stacked: true,  // Kích hoạt xếp chồng cho trục y
+                        beginAtZero: true,
+                        max: 100  // Đặt giới hạn tối đa là 100 để tỷ lệ đạt là phần trăm
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+
 
 {% endblock %}
