@@ -438,7 +438,7 @@ footer {
 }
 
 .offcanvas {
-    transition: 0.7s ease-in-out;
+    transition: 0.7s ease-in-out !important;
     width: 20% !important;
 }
 
@@ -459,18 +459,42 @@ footer {
     color: #00d4ff;
 }
 
+#flash-messages .alert {
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    #flash-messages .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    #flash-messages .alert-error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+
 /* Tạo bố cục căn giữa và khoảng cách giữa các phần tử trong container */
 .search-container {
+    width: 100%;
+    height: 80px;
+}
+.search-container form{
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap:15px;
+    height: 100%;
     margin: 20px 0;
 }
-
 /* Thiết kế cho các trường nhập */
-.search-container #class, .search-container input{
-    padding: 10px;
+.search-container #class, .search-container input, .search-container #semester{
+    padding: 15px 20px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -478,7 +502,7 @@ footer {
     transition: border-color 0.3s ease;
 }
 
-.search-container #class:focus, .search-container input:focus{
+.search-container #class:focus, .search-container input:focus, .search-container #semester{
     border-color: #007bff;
     outline: none;
 }

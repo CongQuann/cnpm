@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% extends "staff/base.html" %}
+<html lang="vi">
+<head>
+    {% block privateCss %}
+        <title>Quản Lý Học Sinh</title>
+        <link href="{{ url_for('static', filename='css/staff/Student-manage.css') }}" rel="stylesheet">
+    {% endblock %}
+</head>
+<body>
+    {% block menu %}
+        {% include 'staff/menu.html' %}
+    {% endblock %}
+    {% block content %}
+    <div class="container">
+        <h2>{{ student.name }}</h2>
+        <section class="input-students">
+            <form id="student-form" action="{{ url_for('update_student', student_id=student.id) }}" method="POST">
+                {% include 'staff/student-form.html' %}
+                <label for="class">Lớp:</label>
+                <select id="class" name="class">
+                    {% if not current_class_id %}
+                        <option value="none" selected>chưa có</option>
+                    {% endif %}
+                    {% for class in classes %}
+                        <option value="{{ class.id }}" {% if class.id == current_class_id %}selected{% endif %}>
+                            {{ class.className }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="semester">Học Kỳ:</label>
+                <select id="semester" name="semester">
+                    {% if not current_semester_id %}
+                        <option value="none" selected>chưa có</option>
+                    {% endif %}
+                    {% for semester in semesters %}
+                        <option value="{{ semester.id }}" {% if semester.id == current_semester_id %}selected{% endif %}>
+                            {{ semester.semesterName }} ({{ semester.year }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="btn-add-student">
+                    <button type="submit" id="add-student">
+                        <span>Hoàn Tất</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+{% endblock %}
+</body>
+</html>

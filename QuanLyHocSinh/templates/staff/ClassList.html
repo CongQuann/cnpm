@@ -15,14 +15,33 @@
 {%endblock%}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <div id="flash-messages">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 <!-- Tìm kiếm và reset -->
 <div class="search-container">
     <form method="POST" action="{{ url_for('class_edit') }}">
         <label for="class">Lớp:</label>
         <select id="class" name="class">
-            <option value="All">Tất Cả</option>
+            <option value="none">Chưa Có Lớp Học</option>
             {% for classes in class_list %}
                 <option value="{{ classes.id }}">{{ classes.className }}</option>
+            {% endfor %}
+        </select>
+        <label for="semester">Học Kỳ:</label>
+        <select id="semester" name="semester">
+            <option value="none">Chưa Có Học Kỳ</option>
+            {% for semesters in semester_list %}
+                <option value="{{ semesters.id }}">{{ semesters.semesterName }} ({{semesters.year}})</option>
             {% endfor %}
         </select>
         <label for="student-name">Tên:</label>
@@ -55,10 +74,13 @@
                     <td>
                         <!-- Nút để mở modal chỉnh sửa học sinh -->
                         <a class="edit-btn btn btn-primary"
-                           href="{{ url_for('student_edit', student_id=student.id) }}">
+                        href="{{ url_for('student_class_info', student_id=student.id, class_id=class_id, semester_id=semester_id) }}">
                             Sửa
-                            </a>
-                        <form action="{{ url_for('student_delete', student_id=student.id) }}" method="POST" style="display:inline;">
+                        </a>
+                        <form action="{{ url_for('student_delete_class') }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="student_id" value="{{ student.id }}">
+                            <input type="hidden" name="class_id" value="{{ class_id }}">
+                            <input type="hidden" name="semester_id" value="{{ semester_id }}">
                             <button type="submit" class="delete-btn btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa học sinh này?');">Xóa</button>
                         </form>
                     </td>
