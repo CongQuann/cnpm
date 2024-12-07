@@ -1,30 +1,116 @@
 <!DOCTYPE html>
 {% extends "staff/base.html" %}
 <html lang="vi">
+
 <head>
     {% block privateCss %}
-        <title>Quản Lý Học Sinh</title>
-        <link href="{{ url_for('static', filename='css/staff/Student-manage.css') }}" rel="stylesheet">
-    {% endblock %}
+    <title>Quản lý học sinh</title>
+    <link href="{{ url_for('static', filename='css/staff/Class-list.css') }}" rel="stylesheet">
+    {%endblock%}
 </head>
+
 <body>
-    {% block menu %}
-        {% include 'staff/menu.html' %}
-    {% endblock %}
-    {% block content %}
-    <div class="container">
-    <h2>{{ student.name }}</h2>
-    <section class="input-students">
-    <form id="student-form" action="{{ url_for('update_student', student_id=student.id) }}" method="POST">
-        {% include 'staff/student-form.html' %}
-        <div class="btn-add-student">
-            <button type="submit" id="add-student">
-                <span>Hoàn Tất</span>
-            </button>
-        </div>
+{%block menu%}
+{%include 'staff/menu.html'%}
+{%endblock%}
+
+{% block content %}
+<!-- Tìm kiếm và reset -->
+<div class="search-container">
+    <form method="POST" action="{{ url_for('class_add') }}">
+        <label for="student-name">Tên:</label>
+        <input type="text" id="searchStudent" name="searchStudent" placeholder="Nhập tên học sinh">
+        <button type="submit" id="searchBtn" class="btn btn-primary">Tìm kiếm</button>
+        <button type="reset" id="resetBtn" class="btn btn-secondary"><a href="{{ url_for('class_add') }}">Reset</a></button>
     </form>
-</section>
 </div>
-{% endblock %}
+
+<div id="main">
+    <table id="tour-table" class="table table-striped">
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Họ và tên</th>
+                <th>Giới tính</th>
+                <th>Năm sinh</th>
+                <th>Địa chỉ</th>
+                <th>Hành Động</th>
+            </tr>
+        </thead>
+        <tbody id="tour-data">
+            {% for student in students %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.gender }}</td>
+                    <td>{{ student.DOB.strftime('%d/%m/%Y') if student.DOB else '' }}</td>
+                    <td>{{ student.address }}</td>
+                    <td>
+                        <!-- Nút để mở modal chỉnh sửa học sinh -->
+                        <a class="edit-btn btn btn-primary"
+                           href="{{ url_for('add_class', student_id=student.id) }}">
+                            Sửa
+                            </a>
+                        <form action="{{ url_for('student_delete', student_id=student.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="delete-btn btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa học sinh này?');">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{%endblock%}
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Chức năng tìm kiếm
+        document.getElementById('searchBtn').addEventListener('click', function () {
+            const locationValue = document.getElementById('searchLocation').value.toLowerCase();
+            const seatsValue = document.getElementById('searchSeats').value;
+            const priceValue = document.getElementById('searchPrice').value;
+
+            document.querySelectorAll('#tour-data tr').forEach(row => {
+                const locationText = row.cells[0].textContent.toLowerCase();
+                const seatsText = row.cells[3].textContent;
+                const priceText = row.cells[5].textContent;
+
+                const isMatch = (!locationValue || locationText.includes(locationValue)) &&
+                    (!seatsValue || seatsText == seatsValue) &&
+                    (!priceValue || priceText == priceValue);
+
+                row.style.display = isMatch ? '' : 'none';
+            });
+        });
+
+        // Chức năng reset
+        document.getElementById('resetBtn').addEventListener('click', function () {
+            document.getElementById('searchLocation').value = '';
+            document.getElementById('searchSeats').value = '';
+            document.getElementById('searchPrice').value = '';
+
+            document.querySelectorAll('#tour-data tr').forEach(row => {
+                row.style.display = '';
+            });
+        });
+
+        // Xác nhận xóa tour
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Ngăn chặn hành động mặc định để xử lý xác nhận xóa
+                const confirmDelete = confirm("Bạn có chắc chắn muốn xóa tour này không?");
+                if (confirmDelete) {
+                    window.location.href = this.href; // Chuyển đến URL xóa nếu xác nhận
+                }
+            });
+        });
+    });
+
+</script>
+
+
 </body>
+
 </html>
