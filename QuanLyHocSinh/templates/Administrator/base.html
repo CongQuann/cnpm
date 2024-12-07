@@ -42,6 +42,9 @@
                   <!-- Chuyển Đăng xuất qua phải -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <a class="nav-link" style="font-size: 1.2rem; ">Chào mừng, {{current_user.name}}</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link logout-btn" href="{{url_for('logout')}}">Đăng xuất</a>
                     </li>
                 </ul>
