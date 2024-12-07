@@ -7,7 +7,7 @@ import random
 
 from cryptography.fernet import Fernet
 from flask import render_template, request, redirect, flash, url_for
-from flask_login import login_user, LoginManager, login_required, logout_user
+from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
 from wtforms.validators import email
