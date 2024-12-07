@@ -5,7 +5,8 @@ body {
     box-sizing: border-box;
 }
 .offcanvas{
-    width: 200px;
+    transition: 0.7s ease-in-out !important;
+    width: 20% !important;
 }
 .offcanvas-body {
     padding: 0 !important;
@@ -85,10 +86,6 @@ body {
     transition: ease-in-out 0.3s;
 }
 
-.offcanvas {
-    transition: 0.7s ease-in-out !important;
-    width: 20% !important;
-}
 
 .offcanvas-title {
     color: #5bb4d7;
@@ -118,6 +115,8 @@ body {
     transition: all 0.5s ease-in-out;
     box-shadow: 5px 5px 4px 0px rgba(46, 46, 46, 0.482); /*left right blur scale color*/
 }
+
+
 .input-students{
     width: 100%;
     justify-content: center;

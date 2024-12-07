@@ -539,9 +539,8 @@ def staff():
         address = request.form.get("address")
         phone = request.form.get("phone")
         email = request.form.get("email")
-        class_id = request.form.get("class")
         # Kiểm tra dữ liệu bắt buộc
-        if not all([name, dob, gender, address, phone, class_id]):
+        if not all([name, dob, gender, address, phone]):
             flash("Vui lòng điền đầy đủ thông tin!", "error")
             return redirect(url_for("staff"))
 
@@ -553,7 +552,6 @@ def staff():
             address=address,
             phone=phone,
             email=email,
-            classID=class_id,
             stuRuleID=1
         )
 
@@ -566,48 +564,184 @@ def staff():
             db.session.rollback()
             flash(f"Có lỗi xảy ra: {str(e)}", "error")
         return redirect(url_for("staff"))
-    return render_template('staff/staff.html', classes=classes)
+    return render_template('staff/staff.html')
 
-@app.route('/class_edit', methods=['GET', 'POST'])
-def class_edit():
-    class_list = Class.query.all()  # Lấy danh sách tất cả các lớp học
-    students = []  # Mặc định danh sách học sinh là rỗng
-
+@app.route('/student_edit', methods=["GET", "POST"])
+def student_edit():
+    students = []
+    students_query = Student.query
     if request.method == 'POST':
-        class_id = request.form.get('class')
         student_name = request.form.get('searchStudent', '').strip()
-
-        # Truy vấn danh sách học sinh
-        if class_id == "All":
-            students_query = Student.query
-        else:
-            students_query = Student.query.filter(Student.classID == class_id)
-
         if student_name:
             # Tìm kiếm theo tên học sinh (không phân biệt chữ hoa/chữ thường)
             students_query = students_query.filter(Student.name.ilike(f'%{student_name}%'))
+    students = students_query.all()
+    return render_template('staff/StudentEdit.html', students= students)
 
-        students = students_query.all()  # Thực thi truy vấn
 
-    return render_template('staff/ClassList.html', class_list=class_list, students=students)
+@app.route('/update_student_NoClass/<int:student_id>', methods=['POST'])
+def update_student_NoClass(student_id):
+    # Lấy thông tin học sinh
+    student = Student.query.get_or_404(student_id)
+
+    # Lấy dữ liệu từ form và cập nhật thông tin học sinh
+    student.name = request.form.get('name', student.name)
+    student.gender = request.form.get('gender', student.gender)
+    student.DOB = request.form.get('dob', student.DOB)
+    student.address = request.form.get('address', student.address)
+    student.phone = request.form.get('phone', student.phone)
+    student.email = request.form.get('email', student.email)
+
+
+    try:
+        dob_date = datetime.strptime(student.DOB, "%Y-%m-%d")  # Định dạng đúng: YYYY-MM-DD
+    except ValueError:
+        flash("Ngày sinh không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+
+    student_rule = StudentRule.query.first()
+    # Kiểm tra tuổi học sinh
+    today = datetime.today()
+    age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+    if not (student_rule.minAge <= age <= student_rule.maxAge):
+        flash(f"Tuổi học sinh phải nằm trong khoảng {student_rule.minAge} đến {student_rule.maxAge} tuổi.",
+              "error")
+        return redirect(url_for("student_edit"))
+
+
+    # Lưu thay đổi vào cơ sở dữ liệu
+    try:
+        db.session.commit()
+        flash('Cập nhật thành công!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Lỗi: {e}', 'danger')
+
+    # Điều hướng về trang phù hợp
+    return redirect(url_for('student_edit', student_id=student_id))
+
 
 @app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)
     db.session.commit()
-    return redirect(url_for('class_edit'))
+    return redirect(url_for('student_edit'))
 
-@app.route('/student_edit/<int:student_id>')
-def student_edit(student_id):
+@app.route('/student_info/<int:student_id>')
+def student_info(student_id):
     student = Student.query.get_or_404(student_id)  # Lấy thông tin học sinh
-    classes = Class.query.all()  # Lấy danh sách lớp
-    return render_template('staff/StudentEdit.html', student=student, classes=classes)
+    return render_template('staff/StudentInfo.html', student=student)
 
 
+@app.route('/class_edit', methods=['GET', 'POST'])
+def class_edit():
+    class_list = Class.query.all()
+    semester_list = Semester.query.all()
+    students = []
+
+    # Lấy các tham số từ query string hoặc form
+    class_id = request.args.get('Class') or request.form.get('class')
+    semester_id = request.args.get('semester') or request.form.get('semester')
+    student_name = request.form.get('searchStudent', '').strip()
+
+
+    if request.method == 'POST' or class_id:
+        # Xử lý tìm kiếm theo lựa chọn
+        if class_id == "none" and semester_id == "none":
+            # Lấy danh sách học sinh không có trong bảng StudentClass
+            students_query = Student.query.filter(
+                ~Student.id.in_(
+                    db.session.query(StudentClass.student_id).distinct()
+                )
+            )
+        elif class_id == "none" or semester_id == "none":
+            flash("Không Có Dữ Liệu Nào!", "error")
+            return redirect(url_for("class_edit"))
+        else:
+            # Lấy học sinh thuộc lớp được chọn
+            students_query = Student.query.join(StudentClass).filter(StudentClass.class_id == class_id)
+
+        if student_name:
+            # Tìm kiếm theo tên học sinh (không phân biệt chữ hoa/chữ thường)
+            students_query = students_query.filter(Student.name.ilike(f'%{student_name}%'))
+
+        students = students_query.all()
+
+    return render_template(
+        'staff/ClassList.html',
+        class_list=class_list,
+        students=students,
+        semester_list=semester_list,
+        class_id=class_id,
+        semester_id=semester_id
+    )
+@app.route('/student_delete_class', methods=['POST'])
+def student_delete_class():
+    student_id = request.form.get('student_id')
+    class_id = request.form.get('class_id')
+    semester_id = request.form.get('semester_id')
+    student_class = None
+    if not student_id or not class_id or not semester_id:
+        flash("Thông tin không đầy đủ!", "error")
+        return redirect(url_for('class_edit'))
+    if class_id == "none" and semester_id == "none":
+        student_class = Student.query.get_or_404(student_id)
+    else:
+        student_class = StudentClass.query.filter_by(
+            student_id=student_id,
+            class_id=class_id,
+            semester_id=semester_id
+        ).first()
+
+    if not student_class:
+        flash("Không tìm thấy học sinh trong lớp!", "error")
+        return redirect(url_for('class_edit'))
+
+    db.session.delete(student_class)
+    db.session.commit()
+
+    flash("Học sinh đã được xóa khỏi lớp thành công!", "success")
+
+    return redirect(url_for('class_edit', Class=class_id, semester=semester_id))
+
+@app.route('/student_class_info/<int:student_id>', methods=['GET', 'POST'])
+def student_class_info(student_id):
+    # Lấy tham số class_id và semester_id từ request arguments (GET/POST)
+    class_id = request.args.get('class_id', None)
+    semester_id = request.args.get('semester_id', None)
+
+    # Lấy thông tin sinh viên
+    student = Student.query.get_or_404(student_id)
+
+    # Truy vấn thông tin lớp và học kỳ hiện tại
+    if class_id and semester_id:
+        student_class = StudentClass.query.filter_by(
+            student_id=student_id,
+            class_id=class_id,
+            semester_id=semester_id
+        ).first()
+    else:
+        student_class = None
+
+    current_class_id = student_class.class_id if student_class else None
+    current_semester_id = student_class.semester_id if student_class else None
+
+    # Lấy danh sách tất cả các lớp và học kỳ
+    all_classes = Class.query.all()
+    all_semesters = Semester.query.all()
+
+    return render_template(
+        'staff/StudentClassInfo.html',
+        student=student,
+        classes=all_classes,
+        semesters=all_semesters,
+        current_class_id=current_class_id,
+        current_semester_id=current_semester_id
+    )
 @app.route('/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
-    # Lấy thông tin học sinh dựa trên ID
+    # Lấy thông tin học sinh
     student = Student.query.get_or_404(student_id)
 
     # Lấy dữ liệu từ form
@@ -617,18 +751,64 @@ def update_student(student_id):
     student.address = request.form.get('address', student.address)
     student.phone = request.form.get('phone', student.phone)
     student.email = request.form.get('email', student.email)
-    student.classID = request.form.get('class', student.classID)
 
+    # Kiểm tra ngày sinh
     try:
-        # Cập nhật dữ liệu vào CSDL
+        dob_date = datetime.strptime(student.DOB, "%Y-%m-%d")
+    except ValueError:
+        flash("Ngày sinh không hợp lệ! Định dạng phải là YYYY-MM-DD.", "error")
+        return redirect(url_for("class_edit", student_id=student_id))
+
+    # Kiểm tra tuổi học sinh
+    student_rule = StudentRule.query.first()
+    today = datetime.today()
+    age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+    if not (student_rule.minAge <= age <= student_rule.maxAge):
+        flash(f"Tuổi học sinh phải nằm trong khoảng {student_rule.minAge} đến {student_rule.maxAge}.", "error")
+        return redirect(url_for("class_edit", student_id=student_id))
+
+    # Lấy thông tin lớp và học kỳ từ form
+    class_id = request.form.get('class')
+    semester_id = request.form.get('semester')
+
+    if class_id == "none" or semester_id == "none":
+        flash("Không được để trống lớp hoặc học kỳ!", "error")
+        return redirect(url_for("class_edit", student_id=student_id))
+
+    # Kiểm tra số lượng học sinh trong lớp và học kỳ
+    current_class = Class.query.get_or_404(class_id)
+    current_students_count = StudentClass.query.filter_by(class_id=class_id, semester_id=semester_id).count()
+
+    if current_students_count >= current_class.classRule_class.maxNoStudent:
+        flash(f"Lớp {current_class.className} đã đạt tối đa số lượng học sinh ({current_class.classRule_class.maxNoStudent}).", "error")
+        return redirect(url_for("class_edit", student_id=student_id))
+
+    # Kiểm tra và xử lý StudentClass
+    student_class = StudentClass.query.filter_by(student_id=student_id, semester_id=semester_id).first()
+
+    if student_class:
+        # Nếu tồn tại, cập nhật thông tin lớp
+        student_class.class_id = class_id
+    else:
+        # Nếu không tồn tại, tạo mới StudentClass
+        student_class = StudentClass(
+            student_id=student_id,
+            class_id=class_id,
+            semester_id=semester_id,
+        )
+        db.session.add(student_class)
+
+    # Lưu thay đổi vào cơ sở dữ liệu
+    try:
         db.session.commit()
         flash('Cập nhật thành công!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Lỗi: {e}', 'danger')
+        flash(f'Lỗi khi cập nhật: {e}', 'danger')
 
     # Điều hướng trở lại trang quản lý học sinh
     return redirect(url_for('class_edit', student_id=student_id))
+
 
 
 @app.route('/Teacher/EnterPoints/class_filter', methods = ['POST'])

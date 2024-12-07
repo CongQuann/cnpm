@@ -18,12 +18,3 @@
 
 <label for="email">Email:</label>
 <input type="email" id="email" name="email" value="{{ student.email if student else '' }}">
-
-<label for="class">Lớp:</label>
-<select id="class" name="class">
-    {% for class in classes %}
-    <option value="{{ class.id }}" {% if student and class.id == student.classID %}selected{% endif %}>
-        {{ class.className }}
-    </option>
-    {% endfor %}
-</select>

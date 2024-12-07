@@ -5,7 +5,8 @@ body {
     box-sizing: border-box;
 }
 .offcanvas{
-    width: 200px;
+    transition: 0.7s ease-in-out !important;
+    width: 20% !important;
 }
 .offcanvas-body {
     padding: 0 !important;
@@ -85,10 +86,6 @@ body {
     transition: ease-in-out 0.3s;
 }
 
-.offcanvas {
-    transition: 0.7s ease-in-out !important;
-    width: 20% !important;
-}
 
 .offcanvas-title {
     color: #5bb4d7;
@@ -118,6 +115,24 @@ body {
     transition: all 0.5s ease-in-out;
     box-shadow: 5px 5px 4px 0px rgba(46, 46, 46, 0.482); /*left right blur scale color*/
 }
+#flash-messages .alert {
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    #flash-messages .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    #flash-messages .alert-error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
 .title{
     width: 100%;
 }

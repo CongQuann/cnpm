@@ -13,8 +13,19 @@
     {%endblock%}
     {% block content %}
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <h2>Tiếp nhận học sinh</h2>
-        <!-- Phần 1: Tiếp nhận học sinh -->
         <section class="input-students">
             <form id="student-form" method="post" action="{{ url_for('staff') }}">
                 {%block studentform%}

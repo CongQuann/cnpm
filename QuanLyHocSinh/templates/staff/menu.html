@@ -7,14 +7,13 @@
         </div>
     </nav>
     <div class="sub_head_div">
-        <h1>Chỉnh Sửa Học Sinh</h1> 
+        <h1>Nhân Viên Quản Lý</h1>
     </div>
     <!-- Offcanvas Sidebar -->
     <div class="offcanvas offcanvas-start" id="demo">
         <div class="offcanvas-header">
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
-            <a href="#" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></a>
-            <span class="offcanvas-title" id="offcanvas-title-1" >Trung Học Phổ Thông</span>
+            <a class="nav-link logout-btn" href="{{url_for('logout')}}"><i class="fa-solid fa-right-from-bracket"></i></a>
             <h1 class="staff-name">staff1</h1>
             <h1 class="staff-mail">staff1@gmail.com</h1>
 
@@ -22,6 +21,9 @@
         <div class="offcanvas-body">
             <a href="{{url_for('staff')}}">
                 Tiếp Nhận Học Sinh
+            </a>
+            <a href="{{url_for('student_edit')}}">
+                Chỉnh Sửa Thông Tin Học Sinh
             </a>
             <a href="{{url_for('class_edit')}}">
                 Quản Lý Lớp Học
