@@ -1,0 +1,194 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+}
+
+.container {
+    display: flex;
+    width: 80%;
+    height: 80%;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.flash {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.flash.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.flash.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.sidebar {
+    width: 200px;
+    background-color: #f0f3ff;
+    padding: 20px;
+    float: left;
+    height: 100%;
+}
+
+.sidebar a {
+    display: block;
+    color: #333;
+    padding: 10px 0;
+    text-decoration: none;
+    font-weight: bold;
+}
+.sidebar a span{
+    font-family: Arial, sans-serif;
+}
+.sidebar a:hover {
+    color: #007bff;
+}
+
+.content {
+    width: 70%;
+    padding: 20px;
+    margin-left: 20px;
+}
+.content .log_out{
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+.content .log_out:hover{
+    color: #007bff;
+}
+.content h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.info-section, .tour-section {
+    margin-bottom: 10px;
+}
+
+.info-section label, .tour-section label {
+    display: block;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.info-section .value, .tour-section .value {
+    font-size: 18px;
+    color: #333;
+}
+
+.change-link {
+    color: #007bff;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.change-link:hover {
+    text-decoration: underline;
+}
+
+.account-id {
+    float: right;
+    font-size: 14px;
+    color: #555;
+    padding: 10px;
+}
+
+/* Modal styling */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.modal-content input {
+    width: 90%;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.modal-content button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-content button:hover {
+    background-color: #0056b3;
+}
+
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+.table-wrapper {
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Giữ độ rộng cố định cho các cột */
+}
+
+.title-booking th {
+    padding: 8px;
+    background-color: #f3f3f3;
+    text-align: center;
+    font-weight: bold;
+}
+
+.table-scroll {
+    max-height: 300px; /* Đặt chiều cao tối đa cho phần cuộn của tbody */
+    overflow-y: auto;
+}
+
+#transactionList td {
+    text-align: center;
+    padding: 8px;
+    border-top: 1px solid #ddd;
+}
