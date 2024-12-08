@@ -790,31 +790,36 @@ def class_edit():
     class_list = Class.query.all()
     semester_list = Semester.query.all()
     students = []
+    class_id = None
+    semester_id = None
 
-    # Lấy các tham số từ query string hoặc form
-    class_id = request.args.get('Class') or request.form.get('class')
-    semester_id = request.args.get('semester') or request.form.get('semester')
-    student_name = request.form.get('searchStudent', '').strip()
+    if request.method == 'POST':
+        # Lấy các tham số từ form
+        class_id = request.form.get('class')
+        semester_id = request.form.get('semester')
+        student_name = request.form.get('searchStudent', '').strip()
 
-
-    if request.method == 'POST' or class_id:
-        # Xử lý tìm kiếm theo lựa chọn
-        if class_id == "none" and semester_id == "none":
+        # Truy vấn lại danh sách học sinh
+        if class_id and semester_id and class_id != "none" and semester_id != "none":
+            students_query = (
+                Student.query.join(StudentClass)
+                .filter(
+                    StudentClass.class_id == class_id,
+                    StudentClass.semester_id == semester_id,
+                )
+            )
+        elif class_id == "none" and semester_id == "none":
             # Lấy danh sách học sinh không có trong bảng StudentClass
             students_query = Student.query.filter(
                 ~Student.id.in_(
                     db.session.query(StudentClass.student_id).distinct()
                 )
             )
-        elif class_id == "none" or semester_id == "none":
+        else:
             flash("Không Có Dữ Liệu Nào!", "error")
             return redirect(url_for("class_edit"))
-        else:
-            # Lấy học sinh thuộc lớp được chọn
-            students_query = Student.query.join(StudentClass).filter(StudentClass.class_id == class_id)
 
         if student_name:
-            # Tìm kiếm theo tên học sinh (không phân biệt chữ hoa/chữ thường)
             students_query = students_query.filter(Student.name.ilike(f'%{student_name}%'))
 
         students = students_query.all()
@@ -854,7 +859,7 @@ def student_delete_class():
 
     flash("Học sinh đã được xóa khỏi lớp thành công!", "success")
 
-    return redirect(url_for('class_edit', Class=class_id, semester=semester_id))
+    return redirect(url_for('class_edit'))
 
 @app.route('/student_class_info/<int:student_id>', methods=['GET', 'POST'])
 def student_class_info(student_id):
