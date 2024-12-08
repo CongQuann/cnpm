@@ -29,14 +29,22 @@ body {
     font-size: 0.8rem;
 }
 
+.offcanvas-header a{
+    font-size: 1rem;
+    text-decoration:none;
+    color: #fff;
+}
+
 .staff-name {
     position: absolute;
     bottom: 20%;
+    left:35%;
 }
 
 .staff-mail {
     position: absolute;
     bottom: 10%;
+    left:35%;
 }
 
 .offcanvas-header span {
