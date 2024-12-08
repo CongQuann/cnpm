@@ -649,9 +649,23 @@ def decrypt_data(encrypted_data_base64):
 # =================================================
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
+    if request.method == 'POST':
+        # Lặp qua tất cả giáo viên và cập nhật môn học của họ
+        for teacher in Teacher.query.all():
+            subject_id = request.form.get(f"subject_{teacher.id}")  # Lấy môn học từ form
+            # Nếu subject_id không phải là rỗng, gán giá trị môn học cho giáo viên
+            if subject_id:
+                teacher.subjectID = subject_id
+            else:
+                teacher.subjectID = None  # Nếu không có môn học, gán là None (Chưa có chuyên môn)
 
-    return render_template('Administrator/TeacherManagement.html')
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+        flash('Cập nhật thành công!', 'success')
 
+    teachers = Teacher.query.all()
+    subjects = Subject.query.all()
+    return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
 # ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
