@@ -14,7 +14,7 @@ from wtforms.validators import email
 
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
-    Teacher, Administrator, StudentClass
+    Teacher, Administrator, StudentClass, Teach
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -649,8 +649,8 @@ def decrypt_data(encrypted_data_base64):
 # =================================================
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
-    return render_template('Administrator/TeacherManagement.html')
 
+    return render_template('Administrator/TeacherManagement.html')
 
 # ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
