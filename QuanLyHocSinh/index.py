@@ -12,6 +12,7 @@ from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
 from flask_login import current_user
 from wtforms.validators import email
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
@@ -663,6 +664,64 @@ def enter_point():
 
 
 # staff
+
+@app.route('/InfoUser')
+@login_required
+def info_user():
+    try:
+        # Giải mã User Name và Password
+        decrypted_username = decrypt_data(current_user.userName)
+        decrypted_password = decrypt_data(current_user.password)
+    except Exception as e:
+        decrypted_username = None
+        decrypted_password = None
+        print(f"Lỗi khi giải mã dữ liệu: {e}")
+    return render_template(
+        'staff/InfoUser.html',
+        Cuser=current_user,
+        decrypted_password = decrypted_password,
+        decrypted_username = decrypted_username
+    )
+
+@app.route('/password_info', methods=['GET'])
+@login_required
+def password_info():
+    return render_template('staff/PasswordChange.html')
+
+
+@app.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    try:
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Giải mã mật khẩu hiện tại
+        decrypted_password = decrypt_data(current_user.password)
+
+        # Kiểm tra mật khẩu hiện tại
+        if decrypted_password != current_password:
+            flash("Mật khẩu hiện tại không đúng!", "error")
+            return redirect(url_for('password_info'))
+
+        # Kiểm tra mật khẩu mới và xác nhận mật khẩu
+        if new_password != confirm_password:
+            flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "error")
+            return redirect(url_for('password_info'))
+
+        # Cập nhật mật khẩu mới (băm trước khi lưu)
+        current_user.password = encrypt_data(new_password)  # Lưu mật khẩu đã mã hóa
+        db.session.commit()
+
+        flash("Thay đổi mật khẩu thành công!", "success")
+        return redirect(url_for('info_user'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Lỗi không mong muốn: {e}", "error")
+        return redirect(url_for('password_info'))
+
 
 @app.route('/student_add', methods=["GET", "POST"])
 def staff():
