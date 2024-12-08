@@ -10,6 +10,7 @@ from flask import render_template, request, redirect, flash, url_for
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
+from flask_login import current_user
 from wtforms.validators import email
 
 from QuanLyHocSinh import app, db
@@ -988,7 +989,11 @@ def class_filter():
     if not students:
         return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
 
+
+
     return render_template('Teacher/EnterPoints.html', students=students)
+
+
 
 
 if __name__ == '__main__':
