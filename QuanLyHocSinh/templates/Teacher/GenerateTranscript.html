@@ -10,9 +10,10 @@ Nhập điểm
 
 {% block content %}
 <div class="container mt-4 container-div">
-    <h2 class="text-center">Nhập điểm cho môn {{subjectName}} </h2>
+    <h2 class="text-center">Nhập điểm cho môn {{subject_name}}</h2>
+
     <!-- Bộ lọc -->
-    <form action="{{ url_for('class_filter') }}" method="POST">
+    <form action="{{ url_for('generate_transcript') }}" method="POST">
         <div id="scoreboard-container">
             <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
             <div id="class-info">
@@ -21,7 +22,7 @@ Nhập điểm
                     <strong>Lớp:</strong>
                     <input type="text" id="class-input" name="class-input" class="input-field"
                            placeholder="Nhập lớp (vd: 10A1)"
-                           list="class-list">
+                           list="class-list" required>
                     <datalist id="class-list">
                         <option value="10A">
                         <option value="10B">
@@ -35,7 +36,7 @@ Nhập điểm
                     <strong>Học kỳ:</strong>
                     <input type="text" id="semester-input" name="semester-input" class="input-field"
                            placeholder="Nhập học kỳ (vd: 1, 2)"
-                           list="semester-list">
+                           list="semester-list" required>
                     <datalist id="semester-list">
                         <option value="Học kỳ 1"></option>
                         <option value="Học kỳ 2"></option>
@@ -46,37 +47,31 @@ Nhập điểm
                 <p>
                     <strong>Năm học:</strong>
                     <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
-                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list">
+                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" required>
                     <datalist id="academic-year-list">
                         <option value="2022-2023">
                         <option value="2023-2024">
-
                     </datalist>
                 </p>
-                <button id="class_filter" type="submit">Lọc</button>
+                <button id="generate_transcript" type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </div>
     </form>
-    <!-- Bảng điểm -->
+
     <table id="scoreboard-table">
-        <thead>
+    <thead>
         <tr>
             <th class="table-header">STT</th>
             <th class="table-header">Mã học sinh</th>
             <th class="table-header">Họ tên</th>
-            <th class="table-header score-15min-header">Điểm 15’
-                <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
-                <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
-            </th>
-            <th class="table-header score-test-header">Điểm 1 tiết
-                <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
-                <button type="button" id="remove-test-bt    `n" class="btn btn-sm btn-danger">-</button>
-            </th>
+            <th class="table-header score-15min-header">Điểm 15’</th>
+            <th class="table-header score-test-header">Điểm 1 tiết</th>
             <th class="table-header">Điểm thi</th>
+            <th class="table-header">Điểm trung bình</th>
         </tr>
-        </thead>
+    </thead>
 
-        <tbody id="student-rows">
+    <tbody id="student-rows">
         {% if error %}
         <div class="alert alert-danger">
             {{ error }}
@@ -87,28 +82,53 @@ Nhập điểm
             <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
             <td class="table-cell">{{ s.id }}</td>
             <td class="table-cell">{{ s.name }}</td>
+
+            <!-- Điểm 15 phút -->
             <td class="table-cell score-15min-container">
-                <input type="number" class="input-cell" id="score-15min" placeholder="Điểm 15’" min="0"
-                       max="10">
+                {% for point in student_scores[s.id] %}
+                    {% if point.pointType_point.type == '15 phút' %}
+                        <p>{{ point.pointValue }}</p>
+                    {% endif %}
+                {% endfor %}
             </td>
+
+            <!-- Điểm 1 tiết -->
             <td class="table-cell test-container">
-                <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
+                {% for point in student_scores[s.id] %}
+                    {% if point.pointType_point.type == '1 tiết' %}
+                        <p>{{ point.pointValue }}</p>
+                    {% endif %}
+                {% endfor %}
             </td>
-            <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
-                                          min="0" max="10"></td>
+
+            <!-- Điểm thi -->
+            <td class="table-cell">
+                {% for point in student_scores[s.id] %}
+                    {% if point.pointType_point.type == 'Cuối kỳ' %}
+                        <p>{{ point.pointValue }}</p>
+                    {% endif %}
+                {% endfor %}
+            </td>
+
+            <!-- Điểm trung bình -->
+            <td class="table-cell">
+                {% set average = averages[s.id] %}
+                {% if average %}
+                    <p>{{ average | round(2) }}</p>
+                {% else %}
+                    <p>Chưa có điểm</p>
+                {% endif %}
+            </td>
+
         </tr>
         {% endfor %}
-        </tbody>
+    </tbody>
+</table>
 
-    </table>
+    <!-- Bảng hiển thị điểm trung bình -->
+
 
 </div>
 
 
-
-<script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"></script>
 {% endblock %}
-
-
-
-
