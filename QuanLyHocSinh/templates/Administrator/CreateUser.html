@@ -12,15 +12,12 @@ Tạo tài khoản người dùng
 
 <!-- Hiển thị thông báo flash -->
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div class="alert-container">
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+{% if messages %}
+<div class="alert alert-{{ messages[0][0] }} alert-dismissible fade show" role="alert">
+    {{ messages[0][1] }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
 {% endwith %}
 
 

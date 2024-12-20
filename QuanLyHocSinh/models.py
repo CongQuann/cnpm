@@ -83,7 +83,7 @@ class Class(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     className = Column(String(20), nullable=False)
     classRuleID = Column(Integer, ForeignKey(ClassRule.id), nullable=False)
-    gradeID = Column(Integer, ForeignKey(Grade.id), nullable=False)
+    gradeID = Column(Integer, ForeignKey(Grade.id,ondelete='CASCADE'), nullable=False)
     teaches = relationship('Teach', backref='class_teach', lazy=False, cascade="all, delete")
 
     # Quan hệ nhiều-nhiều với Student
@@ -103,8 +103,8 @@ class StudentClass(db.Model):
 class Teach(db.Model):
     __tablename__ = 'teach'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    teacherID = Column(Integer, ForeignKey(Teacher.id), nullable=False)
-    classID = Column(Integer, ForeignKey(Class.id), nullable=False)
+    teacherID = Column(Integer, ForeignKey(Teacher.id, ondelete='CASCADE'), nullable=False)
+    classID = Column(Integer, ForeignKey(Class.id, ondelete='CASCADE'), nullable=False)
 
 
 class StudentRule(db.Model):
@@ -124,7 +124,7 @@ class Student(db.Model):
     address = Column(String(200))
     phone = Column(String(11),unique=True)
     email = Column(String(70),unique=True)
-    stuRuleID = Column(Integer, ForeignKey(StudentRule.id), nullable=False)
+    stuRuleID = Column(Integer, ForeignKey(StudentRule.id,ondelete='CASCADE'), nullable=False)
     points = relationship('Point', backref='student_point', lazy=True, cascade="all, delete")
 
     # Quan hệ nhiều-nhiều với Class
@@ -161,9 +161,9 @@ class Point(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     pointValue = Column(Float, nullable=False)
     pointTypeID = Column(Integer, ForeignKey(PointType.id), nullable=False)
-    semesterID = Column(Integer, ForeignKey(Semester.id), nullable=False)
-    subjectID = Column(Integer, ForeignKey(Subject.id), nullable=False)
-    studentID = Column(Integer, ForeignKey(Student.id), nullable=False)
+    semesterID = Column(Integer, ForeignKey(Semester.id,ondelete='CASCADE'), nullable=False)
+    subjectID = Column(Integer, ForeignKey(Subject.id,ondelete='CASCADE'), nullable=False)
+    studentID = Column(Integer, ForeignKey(Student.id,ondelete='CASCADE'), nullable=False)
 
 
 def delete_user_by_id(user_id):

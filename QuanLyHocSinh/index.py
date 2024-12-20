@@ -668,6 +668,40 @@ def teacher_mng():
     teachers = Teacher.query.all()
     subjects = Subject.query.all()
     return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
+
+@app.route("/Administrator/TeachManagement", methods=["GET", "POST"])
+def teach_mng():
+    if request.method == "POST":
+        # Xử lý thêm lớp cho giáo viên
+        for teacher in Teacher.query.all():
+            add_class_id = request.form.get(f"add_class_{teacher.id}")
+            if add_class_id:
+                # Kiểm tra nếu lớp này đã được gán cho giáo viên chưa
+                existing_assignment = Teach.query.filter_by(
+                    teacherID=teacher.id, classID=add_class_id
+                ).first()
+                if not existing_assignment:
+                    new_teach = Teach(teacherID=teacher.id, classID=add_class_id)
+                    db.session.add(new_teach)
+
+            # Xử lý xóa lớp dạy
+            for teach in teacher.teaches:
+                remove_key = f"remove_class_{teach.id}"
+                if remove_key in request.form:
+                    db.session.delete(teach)
+
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+        flash("Cập nhật thành công!", "success")
+
+        # Truy vấn danh sách giáo viên và lớp học
+    teachers = Teacher.query.all()
+    classes = Class.query.all()
+    return render_template(
+        "Administrator/TeachManagement.html", teachers=teachers, classes=classes
+    )
+
+
 # ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():

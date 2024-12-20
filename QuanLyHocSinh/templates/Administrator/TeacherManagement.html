@@ -21,52 +21,57 @@ Quản lý giáo viên
     <h2 class="text-center">Danh sách Giáo viên</h2>
 
     <!-- Bảng hiển thị các teacher -->
-    <form id="teacher-management-form" method="POST">
+    <form action="/Administrator/TeacherManagement" id="teacher-management-form" method="POST">
         <div class="text-end mb-4">
             <button type="submit" class="save-btn btn btn-success">Lưu</button>
             <a href="{{ url_for('teacher_mng') }}" class="btn btn-secondary">Hủy</a>
         </div>
 
         <!-- Bảng hiển thị các teacher -->
-        <table class="table table-bordered">
-            <thead>
-            <tr>
-                <th>STT</th>
-                <th>Tên</th>
-                <th>Email</th>
-                <th>Số điện thoại</th>
-                <th>Ngày sinh</th>
-                <th>Kinh nghiệm</th>
-                <th>Chuyên môn</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for teacher in teachers %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ teacher.name }}</td>
-                <td>{{ teacher.email }}</td>
-                <td>{{ teacher.phoneNumber }}</td>
-                <td>{{ teacher.DOB.strftime('%d/%m/%Y') if teacher.DOB else 'N/A' }}</td>
-                <td>{{ teacher.yearExperience }}</td>
-                <td>
-                    <!-- Chọn chuyên môn từ danh sách môn học -->
-                    <select class="form-select" name="subject_{{ teacher.id }}">
-                        <option value="">Chưa có chuyên môn</option> <!-- Tùy chọn mặc định -->
-                        {% for subject in subjects %}
-                        <option value="{{ subject.id }}" {% if teacher.subjectID== subject.id %}selected{% endif %}>
-                            {{ subject.subjectName }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+         <div class="table-container">
+            <table class="table table-bordered table-striped">
+                <thead class="table-header">
+                <tr>
+                    <th>STT</th>
+                    <th>Tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Ngày sinh</th>
+                    <th>Kinh nghiệm</th>
+                    <th>Chuyên môn</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for teacher in teachers %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ teacher.name }}</td>
+                    <td>{{ teacher.email }}</td>
+                    <td>{{ teacher.phoneNumber }}</td>
+                    <td>{{ teacher.DOB.strftime('%d/%m/%Y') if teacher.DOB else 'N/A' }}</td>
+                    <td>{{ teacher.yearExperience }}</td>
+                    <td>
+                        <!-- Chọn chuyên môn từ danh sách môn học -->
+                        <select class="form-select" name="subject_{{ teacher.id }}">
+                            <option value="">Chưa có chuyên môn</option> <!-- Tùy chọn mặc định -->
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if teacher.subjectID== subject.id %}selected{% endif %}>
+                                {{ subject.subjectName }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </form>
 
 </div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/Administrator/TeacherManagement.js') }}"></script>
 {% endblock %}
