@@ -1041,30 +1041,63 @@ def update_student(student_id):
 
 
 
-@app.route('/Teacher/EnterPoints/class_filter', methods=['POST'])
+
+
+
+
+
+
+@app.route('/Teacher/EnterPoints/class_filter', methods=['POST', 'GET'])
 def class_filter():
-    class_name = request.form.get('class-input')
-    semester_name = request.form.get('semester-input')
-    year = request.form.get('academic-year-input')
+    teacher_subject = ""
+    if request.method == 'GET':
+        _subject = db.session.query(Subject).filter(Subject.id == current_user.id).first()
+        teacher_subject = _subject.subjectName  # Môn học của giáo viên
+        return render_template('Teacher/EnterPoints.html', teacher_subject = teacher_subject)
 
-    if not class_name or not semester_name or not year:
-        return render_template('Teacher/EnterPoints.html', error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!")
+    students = []  # Khởi tạo danh sách sinh viên rỗng hoặc có thể là danh sách mặc định nếu cần
+    error = None
+    if request.method =='POST':
+        # Lấy dữ liệu từ form
+        class_name = request.form.get('class-input')
+        semester_name = request.form.get('semester-input')
+        year = request.form.get('academic-year-input')
 
-    _class = db.session.query(Class).filter(Class.className == class_name).first()
-    _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name, Semester.year == year).first()
+        # Kiểm tra dữ liệu từ form
+        if not class_name or not semester_name or not year:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!",
+            )
 
-    if not _class or not _semester:
-        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy lớp hoặc học kỳ phù hợp!")
+        # Tìm lớp và học kỳ
+        _class = db.session.query(Class).filter(Class.className == class_name).first()
+        _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
+                                                      Semester.year == year).first()
 
-    students = db.session.query(Student).join(StudentClass).filter(
-        StudentClass.class_id == _class.id, StudentClass.semester_id == _semester.id)
+        # Kiểm tra dữ liệu lớp hoặc học kỳ
+        if not _class or not _semester:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Không tìm thấy lớp hoặc học kỳ phù hợp!",
+            )
 
-    if not students:
-        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
+        # Lấy danh sách học sinh
+        students = db.session.query(Student).join(StudentClass).filter(
+            StudentClass.class_id == _class.id,
+            StudentClass.semester_id == _semester.id
+        ).all()
 
+        # Kiểm tra nếu không có sinh viên
+        if not students:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Không tìm thấy sinh viên trong lớp và học kỳ này!",
+            )
 
+    # Trả về template với danh sách sinh viên
+    return render_template('Teacher/EnterPoints.html', students=students, teacher_subject = teacher_subject, error = error)
 
-    return render_template('Teacher/EnterPoints.html', students=students)
 
 
 
