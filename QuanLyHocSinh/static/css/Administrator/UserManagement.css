@@ -27,10 +27,14 @@ table th {
     z-index: 1; /* Đảm bảo header luôn hiển thị trên các dòng */
 }
 .div-table{
-    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius:5px;
 }
 
 .text-white {
     text-decoration: none;
     margin-bottom: 7px;
+}
+.btn-danger{
+    padding: 2px 24px 2px 24px !important;
 }
