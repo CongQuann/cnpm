@@ -55,15 +55,18 @@ main {
     overflow: hidden;
     transition: height 0.5s ease-in-out; /* Tạo hiệu ứng mượt khi mở */
     padding:0.5rem;
+
 }
 .canvas-div.active {
     background-color: #f2f2f2; /* Màu nền khi vẽ biểu đồ */
-    border-radius: 15px;
+    border-radius: 5px;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.2); /* Hiệu ứng nổi giữa thead và tbody */
 }
 .charts-container {
     display: flex;
     justify-content: space-between; /* Tạo khoảng cách giữa các biểu đồ */
     gap: 20px; /* Khoảng cách giữa các thẻ con */
+
 }
 canvas {
     width: 100%; /* Chiếm toàn bộ chiều rộng của container */
@@ -76,7 +79,9 @@ canvas {
     z-index: 10; /* Giúp thead nằm trên các phần khác */
 }
 .fixed-header thead th{
-    background-color:  #262626; /* Màu nền của header */
+    background-color: #31313b; /* Màu nền của header */
     color:#f2f2f2;
 }
+
+
 

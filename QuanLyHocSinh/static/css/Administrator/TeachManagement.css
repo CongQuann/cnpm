@@ -3,7 +3,7 @@
     color: #fff;
     text-align: center;
     padding: 0.5rem 0;
-    position: sticky;
+    position: fixed;
     bottom: 0;
     width: 100%;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
@@ -29,28 +29,25 @@
     margin-top: 0px;
 }
 
-.table-container {
-    max-height: 400px; /* Giới hạn chiều cao bảng */
-    padding:0;
-    overflow-y: auto; /* Thanh cuộn dọc */
-}
 
 .table {
     border-collapse: collapse; /* Loại bỏ khoảng trống giữa các ô */
     width: 100%;
     table-layout: fixed; /* Đồng bộ kích thước cột */
+    border-spacing: 0;
 }
 
 .table thead th {
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: #f8f9fa; /* Màu nền của header */
+
     text-align: center; /* Canh giữa tiêu đề */
     white-space: nowrap; /* Ngăn tiêu đề bị xuống dòng */
     box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1); /* Hiệu ứng nổi giữa thead và tbody */
     background-color: #31313b;
     color: #fff;
+
 }
 
 .table tbody td {
@@ -59,8 +56,22 @@
 }
 
 .table-container {
-    height: 400px;
-    overflow-y: auto;
+    flex: 1;
+    min-width: 45%;  /* Đảm bảo các bảng không bị quá hẹp */
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 0px;
+    border-radius: 8px;
+    max-height: 400px;  /* Chiều cao cố định cho bảng */
+    overflow-y:auto;
+}
+
+
+
+/* Tùy chỉnh các bảng và tiêu đề */
+h3.text-center {
+    margin-bottom: 20px;
 }
 
 ul {
@@ -73,5 +84,12 @@ ul li {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.table-container-wrapper {
+    display: flex;
+    justify-content: space-between;  /* Chia đều khoảng cách giữa các bảng */
+    gap: 20px;  /* Khoảng cách giữa hai bảng */
+    flex-wrap: wrap;  /* Cho phép các bảng xuống dòng nếu cần */
 }
 

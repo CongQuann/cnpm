@@ -24,88 +24,87 @@ Quản lý dạy học
         <div class="text-end mt-3 mb-2">
             <button type="submit" class="btn btn-success">Lưu thay đổi</button>
         </div>
-        <div class="table-container">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên Giáo viên</th>
-                        <th>Lớp đang dạy</th>
-                        <th>Thêm lớp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for teacher in teachers %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ teacher.name }}</td>
-                        <td>
-                            {% if teacher.teaches %}
-                            <ul>
-                                {% for teach in teacher.teaches %}
-                                <li class="mt-1">
-                                    {{ teach.class_teach.className }}
-                                    <button type="submit" name="remove_class_{{ teach.id }}" class="btn btn-danger btn-sm">
-                                        Xóa
-                                    </button>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            {% else %}
-                            <em>Chưa dạy lớp nào</em>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <select class="form-select" name="add_class_{{ teacher.id }}">
-                                <option value="">Chọn lớp</option>
-                                {% for classroom in classes %}
-                                <option value="{{ classroom.id }}">{{ classroom.className }}</option>
-                                {% endfor %}
-                            </select>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <div class="table-container-wrapper">
+            <div class="table-container">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Giáo viên</th>
+                            <th>Lớp đang dạy</th>
+                            <th>Thêm lớp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ teacher.name }}</td>
+                            <td>
+                                {% if teacher.teaches %}
+                                <ul>
+                                    {% for teach in teacher.teaches %}
+                                    <li class="mt-1">
+                                        {{ teach.class_teach.className }}
+                                        <button type="submit" name="remove_class_{{ teach.id }}" class="btn btn-danger btn-sm">
+                                            Xóa
+                                        </button>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <em>Chưa dạy lớp nào</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <select class="form-select" name="add_class_{{ teacher.id }}">
+                                    <option value="">Chọn lớp</option>
+                                    {% for classroom in classes %}
+                                    <option value="{{ classroom.id }}">{{ classroom.className }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
+            <div class="table-container">
+<!--                <h3 class="text-center">Danh sách các lớp học và Giáo viên</h3>-->
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Lớp</th>
+                            <th>Giáo viên</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for classroom in classes %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ classroom.className }}</td>
+                            <td>
+                                {% if classroom.teaches %}
+                                <ul>
+                                    {% for teach in classroom.teaches %}
+                                    <li>{{ teach.teacher_teach.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <em>Chưa có giáo viên</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </form>
 </div>
 
-
-<div class="container mt-5">
-    <h3 class="text-center">Danh sách các lớp học và Giáo viên</h3>
-    <div class="table-container">
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Tên Lớp</th>
-                    <th>Giáo viên</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for classroom in classes %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ classroom.className }}</td>
-                    <td>
-                        {% if classroom.teaches %}
-                        <ul>
-                            {% for teach in classroom.teaches %}
-                            <li>{{ teach.teacher_teach.name }}</li>
-                            {% endfor %}
-                        </ul>
-                        {% else %}
-                        <em>Chưa có giáo viên</em>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/Administrator/TeachManagement.js') }}"></script>
 {% endblock %}

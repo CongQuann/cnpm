@@ -93,3 +93,24 @@
     transition: ease 0.7s;
 }
 
+.table-wrapper table thead th{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f8f9fa; /* Màu nền của header */
+    text-align: center; /* Canh giữa tiêu đề */
+    white-space: nowrap; /* Ngăn tiêu đề bị xuống dòng */
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1); /* Hiệu ứng nổi giữa thead và tbody */
+    background-color: #31313b;
+    color: #fff;
+}
+.table-wrapper table thead{
+    margin-top:0px;
+}
+
+.table-wrapper{
+    padding:0px;
+    border-radius:5px;
+    border:0px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
