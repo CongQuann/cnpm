@@ -5,11 +5,51 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>{% block title %}Trang chính{% endblock %}</title>
     {% block css %}
-    <!--CSS tại đây-->
+    <!-- CSS tại đây -->
     {% endblock %}
+    <style>
+        .menu-trigger {
+            background: none;
+            border: none;
+            color: #FFFFFF8C;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .menu-trigger:hover {
+            color:white;
+        }
+        .offcanvas{
+            width:20% !important;
+            transition: transform 0.5s ease-in-out !important;
+        }
+
+        .offcanvas-body ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .offcanvas-body ul li {
+            margin-bottom: 15px;
+        }
+
+        .offcanvas-body ul li a {
+            color: #ffffff8c !important;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 450 !important;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .offcanvas-body ul li a:hover {
+            background-color: #343a40;
+            color:#ffffff !important;
+        }
+    </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
 </head>
 <body>
 <!-- Header -->
@@ -21,30 +61,14 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="mynavbar">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('report')}}">Báo cáo thống kê</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('rule')}}">Chỉnh sửa quy định</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('subject_mng')}}">Quản lý môn học</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('user_mng')}}">Quản lý người dùng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('teacher_mng')}}">Quản lý giáo viên</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('teach_mng')}}">Quản lý dạy học</a>
-                    </li>
-                </ul>
-                  <!-- Chuyển Đăng xuất qua phải -->
+                <!-- Thêm nút mở Off-navbar bên trái -->
+                 <button class="menu-trigger me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#demo">
+                    Menu
+                </button>
+                <!-- Chuyển Đăng xuất qua phải -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" style="font-size: 1.2rem; ">Chào mừng, {{current_user.name}}</a>
+                        <a class="nav-link" style="font-size: 1.2rem;">Chào mừng, {{current_user.name}}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link logout-btn" href="{{url_for('logout')}}">Đăng xuất</a>
@@ -55,15 +79,44 @@
     </nav>
 </header>
 
+<!-- Off-navbar -->
+<div class="offcanvas offcanvas-start text-bg-dark" id="demo">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Danh mục</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('report')}}">Báo cáo thống kê</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('rule')}}">Chỉnh sửa quy định</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('subject_mng')}}">Quản lý môn học</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('user_mng')}}">Quản lý người dùng</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('teacher_mng')}}">Quản lý giáo viên</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{{url_for('teach_mng')}}">Quản lý dạy học</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
 <!-- Nội dung động -->
 <main>
     {% block content %}
-
     {% endblock %}
 </main>
 
 <!-- Footer -->
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 <footer class="custom-footer">
     <p>&copy; 2024 - Quản lý học sinh</p>

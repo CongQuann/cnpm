@@ -74,3 +74,6 @@ ul li {
     justify-content: space-between;
     align-items: center;
 }
+.nav-link{
+    width:100% !important
+}

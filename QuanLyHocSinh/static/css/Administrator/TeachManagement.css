@@ -92,4 +92,6 @@ ul li {
     gap: 20px;  /* Khoảng cách giữa hai bảng */
     flex-wrap: wrap;  /* Cho phép các bảng xuống dòng nếu cần */
 }
-
+.nav-link{
+    width:100% !important
+}
