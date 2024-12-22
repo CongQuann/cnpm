@@ -10,6 +10,7 @@ from flask import render_template, request, redirect, flash, url_for
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
+from flask_login import current_user
 from wtforms.validators import email
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -234,7 +235,11 @@ def report():
 
 
 def calculate_average(student_id, subject_id, semester_id):
-    points = Point.query.filter_by(studentID=student_id, subjectID=subject_id, semesterID=semester_id).all()
+    query = Point.query.filter_by(studentID=student_id, semesterID=semester_id)
+    if subject_id:
+        query = query.filter_by(subjectID=subject_id)
+
+    points = query.all()
     total_points = 0
     total_weight = 0
 
@@ -650,16 +655,63 @@ def decrypt_data(encrypted_data_base64):
 # =================================================
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
+    if request.method == 'POST':
+        # Lặp qua tất cả giáo viên và cập nhật môn học của họ
+        for teacher in Teacher.query.all():
+            subject_id = request.form.get(f"subject_{teacher.id}")  # Lấy môn học từ form
+            # Nếu subject_id không phải là rỗng, gán giá trị môn học cho giáo viên
+            if subject_id:
+                teacher.subjectID = subject_id
+            else:
+                teacher.subjectID = None  # Nếu không có môn học, gán là None (Chưa có chuyên môn)
 
-    return render_template('Administrator/TeacherManagement.html')
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+        flash('Cập nhật thành công!', 'success')
+
+    teachers = Teacher.query.all()
+    subjects = Subject.query.all()
+    return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
+
+@app.route("/Administrator/TeachManagement", methods=["GET", "POST"])
+def teach_mng():
+    if request.method == "POST":
+        # Xử lý thêm lớp cho giáo viên
+        for teacher in Teacher.query.all():
+            add_class_id = request.form.get(f"add_class_{teacher.id}")
+            if add_class_id:
+                # Kiểm tra nếu lớp này đã được gán cho giáo viên chưa
+                existing_assignment = Teach.query.filter_by(
+                    teacherID=teacher.id, classID=add_class_id
+                ).first()
+                if not existing_assignment:
+                    new_teach = Teach(teacherID=teacher.id, classID=add_class_id)
+                    db.session.add(new_teach)
+
+            # Xử lý xóa lớp dạy
+            for teach in teacher.teaches:
+                remove_key = f"remove_class_{teach.id}"
+                if remove_key in request.form:
+                    db.session.delete(teach)
+
+        # Lưu thay đổi vào cơ sở dữ liệu
+        db.session.commit()
+        flash("Cập nhật thành công!", "success")
+
+        # Truy vấn danh sách giáo viên và lớp học
+    teachers = Teacher.query.all()
+    classes = Class.query.all()
+    return render_template(
+        "Administrator/TeachManagement.html", teachers=teachers, classes=classes
+    )
+
 
 # ===========================================END ADMINISTRATOR===============================================================
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
-    regulations = {
-
-    }
-    return render_template('Teacher/EnterPoints.html', regulations=regulations)
+    _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
+    subject_name = _subject.subjectName
+    return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
 
 # staff
@@ -1122,29 +1174,111 @@ def update_student(student_id):
     return redirect(url_for('class_edit', student_id=student_id))
 
 
-
-@app.route('/Teacher/EnterPoints/class_filter', methods=['POST'])
+@app.route('/Teacher/EnterPoints/class_filter', methods=['POST', 'GET'])
 def class_filter():
-    class_name = request.form.get('class-input')
-    semester_name = request.form.get('semester-input')
-    year = request.form.get('academic-year-input')
 
-    if not class_name or not semester_name or not year:
-        return render_template('Teacher/EnterPoints.html', error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!")
+    students = []  # Khởi tạo danh sách sinh viên rỗng hoặc có thể là danh sách mặc định nếu cần
+    error = None
+    if request.method =='POST':
+        # Lấy dữ liệu từ form
+        class_name = request.form.get('class-input')
+        semester_name = request.form.get('semester-input')
+        year = request.form.get('academic-year-input')
 
-    _class = db.session.query(Class).filter(Class.className == class_name).first()
-    _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name, Semester.year == year).first()
+        # Kiểm tra dữ liệu từ form
+        if not class_name or not semester_name or not year:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!",
+            )
 
-    if not _class or not _semester:
-        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy lớp hoặc học kỳ phù hợp!")
+        # Tìm lớp và học kỳ
+        _class = db.session.query(Class).filter(Class.className == class_name).first()
+        _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
+                                                      Semester.year == year).first()
 
-    students = db.session.query(Student).join(StudentClass).filter(
-        StudentClass.class_id == _class.id, StudentClass.semester_id == _semester.id)
+        # Kiểm tra dữ liệu lớp hoặc học kỳ
+        if not _class or not _semester:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Không tìm thấy lớp hoặc học kỳ phù hợp!",
+            )
 
-    if not students:
-        return render_template('Teacher/EnterPoints.html', error="Không tìm thấy sinh viên trong lớp và học kỳ này!")
+        # Lấy danh sách học sinh
+        students = db.session.query(Student).join(StudentClass).filter(
+            StudentClass.class_id == _class.id,
+            StudentClass.semester_id == _semester.id
+        ).all()
 
-    return render_template('Teacher/EnterPoints.html', students=students)
+        # Kiểm tra nếu không có sinh viên
+        if not students:
+            return render_template(
+                'Teacher/EnterPoints.html',
+                error="Không tìm thấy sinh viên trong lớp và học kỳ này!",
+            )
+
+    # Trả về template với danh sách sinh viên
+    return render_template('Teacher/EnterPoints.html', students=students, error = error)
+
+
+@app.route("/Teacher/GenerateTranscript", methods=["GET", "POST"])
+def generate_transcript():
+    # Lấy thông tin môn học của giáo viên hiện tại
+    _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
+    subject_name = _subject.subjectName
+    students = []  # Khởi tạo danh sách sinh viên rỗng
+    student_scores = {}  # Khởi tạo dictionary lưu điểm của sinh viên
+    averages = {}  # Khởi tạo dictionary lưu điểm trung bình của sinh viên
+    error = None
+
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        class_name = request.form.get('class-input')
+        semester_name = request.form.get('semester-input')
+        year = request.form.get('academic-year-input')
+
+        # Kiểm tra dữ liệu từ form
+        if not class_name or not semester_name or not year:
+            return render_template(
+                'Teacher/GenerateTranscript.html',
+                error="Vui lòng nhập đầy đủ lớp, học kỳ và năm học!"
+            )
+
+        # Tìm lớp và học kỳ từ dữ liệu nhập vào
+        _class = db.session.query(Class).filter(Class.className == class_name).first()
+        _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
+                                                      Semester.year == year).first()
+
+        # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
+        if not _class or not _semester:
+            return render_template(
+                'Teacher/GenerateTranscript.html',
+                error="Không tìm thấy lớp hoặc học kỳ phù hợp!"
+            )
+
+        # Lấy danh sách học sinh trong lớp và học kỳ
+        students = db.session.query(Student).join(StudentClass).filter(
+            StudentClass.class_id == _class.id,
+            StudentClass.semester_id == _semester.id
+        ).all()
+
+        # Lấy điểm của các học sinh
+        for student in students:
+            points = db.session.query(Point).filter(
+                Point.studentID == student.id,
+                Point.subjectID == _subject.id,
+                Point.semesterID == _semester.id
+            ).all()
+            student_scores[student.id] = points  # Lưu điểm của từng học sinh
+
+        # Tính điểm trung bình cho từng sinh viên
+        for student in students:
+            average = calculate_average(student.id, _subject.id, _semester.id)
+            averages[student.id] = average
+
+    return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name, students=students,
+                           student_scores=student_scores, averages=averages, error=error)
+
 
 
 if __name__ == '__main__':

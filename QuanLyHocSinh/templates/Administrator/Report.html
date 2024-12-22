@@ -50,9 +50,16 @@ Báo cáo thống kê
     <div id="report-section" class="mt-4">
         <h4 class="text-center">Thống kê điểm môn <strong>{{ subject_name }}</strong> - Học kỳ <strong>{{ semester_name
             }} ({{ year }})</strong></h4>
-
-        <div style="max-height: 280px; overflow-y: auto;">
-            <table class="table table-bordered table-striped">
+        <div class="charts-container mb-2">
+            <div class="mt-4 canvas-div">
+                <canvas id="reportChart"></canvas>
+            </div>
+            <div class="mt-4 canvas-div">
+                <canvas id="passRateChart"></canvas>
+            </div>
+        </div>
+        <div style="max-height: 280px; overflow-y: auto; padding:0px; border-radius:10px; box-shadow: 0 3px 3px rgba(0, 0, 0, 0.2);" >
+            <table class="table table-bordered table-striped fixed-header">
                 <thead>
                 <tr class="table-primary">
                     <th>STT</th>
@@ -77,12 +84,7 @@ Báo cáo thống kê
         </div>
         <!-- Nút vẽ biểu đồ -->
         <button id="drawChart" class="btn btn-primary mt-3">Vẽ biểu đồ</button>
-        <div class="mt-4">
-            <canvas id="reportChart" width="400" height="200"></canvas>
-        </div>
-        <div class="mt-4">
-            <canvas id="passRateChart" width="400" height="200"></canvas>
-        </div>
+
     </div>
     {% else %}
     <p class="text-center">Không có dữ liệu báo cáo.</p>
@@ -93,6 +95,16 @@ Báo cáo thống kê
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.getElementById('drawChart').addEventListener('click', function () {
+       const canvasDivs = document.querySelectorAll('.canvas-div');
+
+        //Kiểm tra trạng thái
+
+        //  Mở rộng chiều cao của canvas-div
+        canvasDivs.forEach(div => {
+            div.style.height = '300px'; // Đặt chiều cao mong muốn, ví dụ 400px
+            div.classList.add('active');
+        });
+
         // Dữ liệu từ bảng
         const classNames = {{ statistics | tojson | safe }};
         const totalStudents = classNames.map(stat => stat.total_students);
@@ -185,7 +197,6 @@ Báo cáo thống kê
         });
     });
 </script>
-
 
 
 {% endblock %}
