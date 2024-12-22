@@ -29,3 +29,8 @@
     color: #212529 !important;
     transition: ease 0.7s;
 }
+
+.container{
+    width:60% !important;
+
+}
