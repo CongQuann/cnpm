@@ -753,7 +753,29 @@ def staff():
         if not all([name, dob, gender, address, phone]):
             flash("Vui lòng điền đầy đủ thông tin!", "error")
             return redirect(url_for("staff"))
-
+        # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+        if not phone.isdigit():
+            flash("Số điện thoại không không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        #kiểm tra số điện thoại có tồn tại chưa
+        existing_student = Student.query.filter_by(phone=phone).first()
+        if existing_student:
+            flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+            return redirect(url_for("staff"))
+        if name.isdigit():
+            flash("Họ và tên không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        if address.isdigit():
+            flash("Địa chỉ không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        if email.isdigit():
+            flash("Email không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        #kiểm tra email
+        existing_email = Student.query.filter_by(email=email).first()
+        if existing_email:
+            flash("Email này đã tồn tại trong hệ thống!", "error")
+            return redirect(url_for("staff"))
         # Tạo một đối tượng Student
         new_student = Student(
             name=name,
@@ -791,8 +813,45 @@ def student_edit():
 
 @app.route('/update_student_NoClass/<int:student_id>', methods=['POST'])
 def update_student_NoClass(student_id):
-    # Lấy thông tin học sinh
+    #lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
+    check_student = Student.query.filter(Student.id != student.id).all()
+    name = request.form.get("name")
+    dob = request.form.get("dob")
+    gender = request.form.get("gender")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    email = request.form.get("email")
+
+    # Kiểm tra dữ liệu bắt buộc
+    if not all([name, dob, gender, address, phone]):
+        flash("Vui lòng điền đầy đủ thông tin!", "error")
+        return redirect(url_for("student_edit"))
+    # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+    if not phone.isdigit():
+        flash("Số điện thoại không không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    # kiểm tra số điện thoại có tồn tại chưa
+    existing_student = next((s for s in check_student if s.phone == phone), None)
+    if existing_student:
+        flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("student_edit"))
+    if name.isdigit():
+        flash("Họ và tên không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    if address.isdigit():
+        flash("Địa chỉ không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    if email.isdigit():
+        flash("Email không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    # kiểm tra email
+    existing_email = next((s for s in check_student if s.email == email), None)
+    if existing_email:
+        flash("Email này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("student_edit"))
+
+    # Lấy thông tin học sinh
 
     # Lấy dữ liệu từ form và cập nhật thông tin học sinh
     student.name = request.form.get('name', student.name)
@@ -956,8 +1015,46 @@ def student_class_info(student_id):
     )
 @app.route('/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
-    # Lấy thông tin học sinh
+
+    # lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
+    check_student = Student.query.filter(Student.id != student.id).all()
+    name = request.form.get("name")
+    dob = request.form.get("dob")
+    gender = request.form.get("gender")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    email = request.form.get("email")
+
+    # Kiểm tra dữ liệu bắt buộc
+    if not all([name, dob, gender, address, phone]):
+        flash("Vui lòng điền đầy đủ thông tin!", "error")
+        return redirect(url_for("class_edit"))
+    # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+    if not phone.isdigit():
+        flash("Số điện thoại không không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    # kiểm tra số điện thoại có tồn tại chưa
+    existing_student = next((s for s in check_student if s.phone == phone), None)
+    if existing_student:
+        flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("class_edit"))
+    if name.isdigit():
+        flash("Họ và tên không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    if address.isdigit():
+        flash("Địa chỉ không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    if email.isdigit():
+        flash("Email không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    # kiểm tra email
+    existing_email = next((s for s in check_student if s.email == email), None)
+    if existing_email:
+        flash("Email này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("class_edit"))
+
+    # Lấy thông tin học sinh
 
     # Lấy dữ liệu từ form
     student.name = request.form.get('name', student.name)
