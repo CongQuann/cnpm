@@ -1,3 +1,6 @@
+
+
+
 document.addEventListener("DOMContentLoaded", function() {
         // Các phần tử input
         const classInput = document.getElementById("class-input");
@@ -52,8 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 newInput.min = "0";
                 newInput.max = "10";
                 container.appendChild(newInput);
-            } else {
-                alert('Đã đạt giới hạn số ô nhập điểm 15 phút!');
             }
         });
         });
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             rows.forEach(row => {
                 const container = row.querySelector('.test-container');
                 const inputs = container.querySelectorAll('.test-score');
-                if (inputs.length < MAX_TEST) {
+                if (inputs.length < MAX_TEST - 1) {
                     const newInput = document.createElement('input');
                     newInput.type = 'number';
                     newInput.className = 'input-cell test-score';
@@ -93,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
             rows.forEach(row => {
                 const container = row.querySelector('.test-container');
                 const inputs = container.querySelectorAll('.test-score');
-                if (inputs.length > 1) {
+                if (inputs.length > 0) {
                     container.removeChild(inputs[inputs.length - 1]);
                 }
             });
@@ -107,22 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (target.value > 10) target.value = 10;
             }
         });
-        // Đảm bảo giá trị nhập vào là số hợp lệ
-        studentRows.addEventListener('input', (event) => {
-            const target = event.target;
-            if (target.type === 'number') {
-                if (target.value < 0) target.value = 0;
-                if (target.value > 10) target.value = 10;
-            }
 
-            // Kiểm tra họ tên
-            if (target.classList.contains('student-name')) {
-                const regex = /[0-9]/g;
-                if (regex.test(target.value)) {
-                    alert("Họ tên không được chứa số!");
-                    target.value = target.value.replace(regex, '');
-                }
-            }
-        });
     });
+
+
 

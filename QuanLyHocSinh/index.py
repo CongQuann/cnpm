@@ -11,6 +11,13 @@ from flask_login import login_user, LoginManager, login_required, logout_user,cu
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
 from flask_login import current_user
+from flask import session
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+from io import BytesIO
+from flask import send_file
 from wtforms.validators import email
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -805,7 +812,29 @@ def staff():
         if not all([name, dob, gender, address, phone]):
             flash("Vui lòng điền đầy đủ thông tin!", "error")
             return redirect(url_for("staff"))
-
+        # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+        if not phone.isdigit():
+            flash("Số điện thoại không không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        #kiểm tra số điện thoại có tồn tại chưa
+        existing_student = Student.query.filter_by(phone=phone).first()
+        if existing_student:
+            flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+            return redirect(url_for("staff"))
+        if name.isdigit():
+            flash("Họ và tên không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        if address.isdigit():
+            flash("Địa chỉ không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        if email.isdigit():
+            flash("Email không hợp lệ!", "error")
+            return redirect(url_for("staff"))
+        #kiểm tra email
+        existing_email = Student.query.filter_by(email=email).first()
+        if existing_email:
+            flash("Email này đã tồn tại trong hệ thống!", "error")
+            return redirect(url_for("staff"))
         # Tạo một đối tượng Student
         new_student = Student(
             name=name,
@@ -843,8 +872,45 @@ def student_edit():
 
 @app.route('/update_student_NoClass/<int:student_id>', methods=['POST'])
 def update_student_NoClass(student_id):
-    # Lấy thông tin học sinh
+    #lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
+    check_student = Student.query.filter(Student.id != student.id).all()
+    name = request.form.get("name")
+    dob = request.form.get("dob")
+    gender = request.form.get("gender")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    email = request.form.get("email")
+
+    # Kiểm tra dữ liệu bắt buộc
+    if not all([name, dob, gender, address, phone]):
+        flash("Vui lòng điền đầy đủ thông tin!", "error")
+        return redirect(url_for("student_edit"))
+    # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+    if not phone.isdigit():
+        flash("Số điện thoại không không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    # kiểm tra số điện thoại có tồn tại chưa
+    existing_student = next((s for s in check_student if s.phone == phone), None)
+    if existing_student:
+        flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("student_edit"))
+    if name.isdigit():
+        flash("Họ và tên không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    if address.isdigit():
+        flash("Địa chỉ không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    if email.isdigit():
+        flash("Email không hợp lệ!", "error")
+        return redirect(url_for("student_edit"))
+    # kiểm tra email
+    existing_email = next((s for s in check_student if s.email == email), None)
+    if existing_email:
+        flash("Email này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("student_edit"))
+
+    # Lấy thông tin học sinh
 
     # Lấy dữ liệu từ form và cập nhật thông tin học sinh
     student.name = request.form.get('name', student.name)
@@ -1008,8 +1074,46 @@ def student_class_info(student_id):
     )
 @app.route('/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
-    # Lấy thông tin học sinh
+
+    # lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
+    check_student = Student.query.filter(Student.id != student.id).all()
+    name = request.form.get("name")
+    dob = request.form.get("dob")
+    gender = request.form.get("gender")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    email = request.form.get("email")
+
+    # Kiểm tra dữ liệu bắt buộc
+    if not all([name, dob, gender, address, phone]):
+        flash("Vui lòng điền đầy đủ thông tin!", "error")
+        return redirect(url_for("class_edit"))
+    # Kiểm tra định dạng số điện thoại (chỉ chứa các chữ số 0-9)
+    if not phone.isdigit():
+        flash("Số điện thoại không không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    # kiểm tra số điện thoại có tồn tại chưa
+    existing_student = next((s for s in check_student if s.phone == phone), None)
+    if existing_student:
+        flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("class_edit"))
+    if name.isdigit():
+        flash("Họ và tên không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    if address.isdigit():
+        flash("Địa chỉ không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    if email.isdigit():
+        flash("Email không hợp lệ!", "error")
+        return redirect(url_for("class_edit"))
+    # kiểm tra email
+    existing_email = next((s for s in check_student if s.email == email), None)
+    if existing_email:
+        flash("Email này đã tồn tại trong hệ thống!", "error")
+        return redirect(url_for("class_edit"))
+
+    # Lấy thông tin học sinh
 
     # Lấy dữ liệu từ form
     student.name = request.form.get('name', student.name)
@@ -1079,7 +1183,8 @@ def update_student(student_id):
 
 @app.route('/Teacher/EnterPoints/class_filter', methods=['POST', 'GET'])
 def class_filter():
-
+    _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
+    subject_name = _subject.subjectName
     students = []  # Khởi tạo danh sách sinh viên rỗng hoặc có thể là danh sách mặc định nếu cần
     error = None
     if request.method =='POST':
@@ -1106,7 +1211,7 @@ def class_filter():
                 'Teacher/EnterPoints.html',
                 error="Không tìm thấy lớp hoặc học kỳ phù hợp!",
             )
-
+        session['semester_id'] = _semester.id
         # Lấy danh sách học sinh
         students = db.session.query(Student).join(StudentClass).filter(
             StudentClass.class_id == _class.id,
@@ -1121,8 +1226,46 @@ def class_filter():
             )
 
     # Trả về template với danh sách sinh viên
-    return render_template('Teacher/EnterPoints.html', students=students, error = error)
+    return render_template('Teacher/EnterPoints.html', students=students, subject_name = subject_name,error = error)
 
+
+@app.route('/Teacher/EnterPoints/save_points', methods=['POST'])
+def save_points():
+    error = None
+    if request.method == 'POST':
+        try:
+            student_ids = request.form.getlist('student_ids[]')
+            scores_15min = request.form.getlist('scores_15min[]')
+            scores_test = request.form.getlist('scores_test[]')
+            scores_exam = request.form.getlist('scores_exam[]')
+            semester_id = session.get('semester_id')
+
+            # Duyệt qua từng sinh viên và lưu điểm
+            for idx, student_id in enumerate(student_ids):
+                # Lấy các giá trị điểm
+                point_15min = float(scores_15min[idx]) if scores_15min[idx] else None
+                point_test = float(scores_test[idx]) if scores_test[idx] else None
+                point_exam = float(scores_exam[idx]) if scores_exam[idx] else None
+
+                # Thêm các điểm vào cơ sở dữ liệu
+                if point_15min is not None:
+                    db.session.add(
+                        Point(pointValue=point_15min, pointTypeID=1, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
+                if point_test is not None:
+                    db.session.add(
+                        Point(pointValue=point_test, pointTypeID=2, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
+                if point_exam is not None:
+                    db.session.add(
+                        Point(pointValue=point_exam, pointTypeID=3, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
+
+            # Lưu thay đổi vào DB
+            db.session.commit()
+
+            return redirect(url_for('class_filter'))
+        except Exception as e:
+            error = f"Có lỗi xảy ra: {e}"
+
+    return render_template('Teacher/EnterPoints.html', students=[], error=error)
 
 @app.route("/Teacher/GenerateTranscript", methods=["GET", "POST"])
 def generate_transcript():
@@ -1182,7 +1325,48 @@ def generate_transcript():
     return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name, students=students,
                            student_scores=student_scores, averages=averages, error=error)
 
+@app.route('/Teacher/EnterPoints/export_pdf', methods=['GET'])
+def export_pdf():
+    # Tạo PDF trong bộ nhớ
 
+    font_path = 'static/fonts/Arial.ttf'  # Đảm bảo đường dẫn chính xác tới file .ttf
+    pdfmetrics.registerFont(TTFont('Arial', font_path))
+
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+
+    c.setFont("Arial", 12)
+
+    # Dữ liệu điểm cần xuất (ví dụ từ cơ sở dữ liệu)
+    students = db.session.query(Student).all()  # Lấy danh sách sinh viên từ cơ sở dữ liệu
+    y_position = 750  # Vị trí y để in trên PDF
+
+    c.drawString(100, y_position, "Danh sách điểm sinh viên")
+    y_position -= 20
+
+    # Thêm tiêu đề cột
+    c.drawString(100, y_position, "Tên Sinh Viên")
+    c.drawString(300, y_position, "Điểm 15 phút")
+    c.drawString(400, y_position, "Điểm Kiểm Tra")
+    c.drawString(500, y_position, "Điểm Thi")
+    y_position -= 20
+
+    # Lặp qua sinh viên và in điểm
+    for student in students:
+        c.drawString(100, y_position, student.name)
+        # Giả sử bạn đã có các điểm trong cơ sở dữ liệu
+        points = db.session.query(Point).filter(Point.studentID == student.id).all()
+        c.drawString(300, y_position, str(points[0].pointValue if points else ''))
+        c.drawString(400, y_position, str(points[1].pointValue if len(points) > 1 else ''))
+        c.drawString(500, y_position, str(points[2].pointValue if len(points) > 2 else ''))
+        y_position -= 20
+
+    c.showPage()
+    c.save()
+
+    # Trả về PDF dưới dạng file
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name="diem_sinh_vien.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(debug=True)
