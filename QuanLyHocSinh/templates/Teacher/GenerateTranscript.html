@@ -57,6 +57,10 @@ Nhập điểm
             </div>
         </div>
     </form>
+    <!-- Thêm nút để xuất ra PDF -->
+<form action="{{ url_for('export_pdf') }}" method="get">
+    <button type="submit" class="btn btn-success">Xuất ra PDF</button>
+</form>
 
     <table id="scoreboard-table">
     <thead>

@@ -9,8 +9,18 @@ Nhập điểm
 {% endblock %}
 
 {% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for category, message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <div class="container mt-4 container-div">
-    <h2 class="text-center">Nhập điểm cho môn {{subjectName}} </h2>
+    <h2 class="text-center">Nhập điểm cho môn {{subject_name}} </h2>
     <!-- Bộ lọc -->
     <form action="{{ url_for('class_filter') }}" method="POST">
         <div id="scoreboard-container">
@@ -50,7 +60,6 @@ Nhập điểm
                     <datalist id="academic-year-list">
                         <option value="2022-2023">
                         <option value="2023-2024">
-
                     </datalist>
                 </p>
                 <button id="class_filter" type="submit">Lọc</button>
@@ -58,57 +67,57 @@ Nhập điểm
         </div>
     </form>
     <!-- Bảng điểm -->
-    <table id="scoreboard-table">
-        <thead>
-        <tr>
-            <th class="table-header">STT</th>
-            <th class="table-header">Mã học sinh</th>
-            <th class="table-header">Họ tên</th>
-            <th class="table-header score-15min-header">Điểm 15’
-                <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
-                <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
-            </th>
-            <th class="table-header score-test-header">Điểm 1 tiết
-                <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
-                <button type="button" id="remove-test-bt    `n" class="btn btn-sm btn-danger">-</button>
-            </th>
-            <th class="table-header">Điểm thi</th>
-        </tr>
-        </thead>
+    <form action="{{ url_for('save_points') }}" method="POST" id="score-form">
+        <button type="submit" class="btn btn-primary mt-3">Lưu điểm</button>
+        <table id="scoreboard-table">
+            <thead>
+                <tr>
+                    <th class="table-header">STT</th>
+                    <th class="table-header">Mã học sinh</th>
+                    <th class="table-header">Họ tên</th>
+                    <th class="table-header score-15min-header">Điểm 15’
+                        <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
+                        <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
+                    </th>
+                    <th class="table-header score-test-header">Điểm 1 tiết
+                        <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
+                        <button type="button" id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
+                    </th>
+                    <th class="table-header">Điểm thi</th>
+                </tr>
+            </thead>
 
-        <tbody id="student-rows">
-        {% if error %}
-        <div class="alert alert-danger">
-            {{ error }}
-        </div>
-        {% endif %}
-        {% for s in students %}
-        <tr>
-            <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
-            <td class="table-cell">{{ s.id }}</td>
-            <td class="table-cell">{{ s.name }}</td>
-            <td class="table-cell score-15min-container">
-                <input type="number" class="input-cell" id="score-15min" placeholder="Điểm 15’" min="0"
-                       max="10">
-            </td>
-            <td class="table-cell test-container">
-                <input type="number" class="input-cell test-score" placeholder="Điểm 1 tiết" min="0" max="10">
-            </td>
-            <td class="table-cell"><input type="number" class="input-cell exam-score" placeholder="Điểm thi"
-                                          min="0" max="10"></td>
-        </tr>
-        {% endfor %}
-        </tbody>
+            <tbody id="student-rows">
+                {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+                {% endif %}
+                {% for s in students %}
+                <tr>
+                    <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
+                    <td class="table-cell">
+                        <input type="hidden" name="student_ids[]" value="{{ s.id }}">
+                        {{ s.id }}
+                    </td>
+                    <td class="table-cell">{{ s.name }}</td>
+                    <td class="table-cell score-15min-container">
+                        <input type="number" class="input-cell" name="scores_15min[]" placeholder="Điểm 15’" min="0" max="10">
+                    </td>
+                    <td class="table-cell test-container">
+                        <input type="number" class="input-cell" name="scores_test[]" placeholder="Điểm 1 tiết" min="0" max="10">
+                    </td>
+                    <td class="table-cell">
+                        <input type="number" class="input-cell" name="scores_exam[]" placeholder="Điểm thi" min="0" max="10">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    </table>
+    </form>
 
 </div>
 
-
-
 <script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}"></script>
 {% endblock %}
-
-
-
-
