@@ -1,7 +1,6 @@
 import base64
 import string
 from datetime import datetime
-from importlib.metadata import requires
 import random
 
 
@@ -18,8 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from io import BytesIO
 from flask import send_file
-from wtforms.validators import email
-from werkzeug.security import check_password_hash, generate_password_hash
+
 
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
@@ -172,7 +170,7 @@ def forgot_password(step):
         return render_template('Administrator/forgot_password.html', step=3, username=username)
 # ===========================================================ADMINISTRATOR================================================
 
-
+@login_required
 @app.route("/Administrator/Report", methods=["GET", "POST"])
 def report():
     # Lấy tất cả các môn học và học kỳ
@@ -284,6 +282,7 @@ def is_student_passed(student_id, subject_id, semester_id):
 
 # ========================================
 
+@login_required
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
     if request.method == "POST":
@@ -322,7 +321,7 @@ def rule():
         student_rule=student_rule,
     )
 
-
+@login_required
 @app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
 def subject_mng():
     if request.method == "POST":
@@ -417,18 +416,18 @@ def update_subject():
 
 # =====================================
 
-@app.route('/confirm/<username>')
-def confirm_account(username):
-    user = User.query.filter_by(userName=username).first()
-    if user:
-        # Cập nhật trạng thái tài khoản thành đã xác nhận
-        user.is_confirmed = True
-        db.session.commit()
-        flash('Tài khoản của bạn đã được xác nhận!', 'success')
-    else:
-        flash('Không tìm thấy người dùng!', 'danger')
-
-    return redirect('/login')  # Chuyển hướng đến trang đăng nhập
+# @app.route('/confirm/<username>')
+# def confirm_account(username):
+#     user = User.query.filter_by(userName=username).first()
+#     if user:
+#         # Cập nhật trạng thái tài khoản thành đã xác nhận
+#         user.is_confirmed = True
+#         db.session.commit()
+#         flash('Tài khoản của bạn đã được xác nhận!', 'success')
+#     else:
+#         flash('Không tìm thấy người dùng!', 'danger')
+#
+#     return redirect('/login')  # Chuyển hướng đến trang đăng nhập
 
 
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
@@ -524,6 +523,7 @@ def create_user():
 
 
 # ============Quản lý người dùng
+@login_required
 @app.route("/Administrator/UserManagement", methods=["GET", "POST"])
 def user_mng():
     users = db.session.query(User).options(
@@ -660,6 +660,7 @@ def decrypt_data(encrypted_data_base64):
 
 
 # =================================================
+@login_required
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
     if request.method == 'POST':
@@ -680,6 +681,7 @@ def teacher_mng():
     subjects = Subject.query.all()
     return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
 
+@login_required
 @app.route("/Administrator/TeachManagement", methods=["GET", "POST"])
 def teach_mng():
     if request.method == "POST":
@@ -708,16 +710,19 @@ def teach_mng():
         # Truy vấn danh sách giáo viên và lớp học
     teachers = Teacher.query.all()
     classes = Class.query.all()
+
     return render_template(
         "Administrator/TeachManagement.html", teachers=teachers, classes=classes
     )
 
 
 # ===========================================END ADMINISTRATOR===============================================================
+@login_required
 @app.route("/Teacher/EnterPoints", methods=["GET", "POST"])
 def enter_point():
     _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
     subject_name = _subject.subjectName
+
     return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
 
