@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const newInput = document.createElement('input');
                 newInput.type = 'number';
                 newInput.className = 'input-cell score-15min';
+                newInput.name='scores_15min[]';
                 newInput.placeholder = 'Điểm 15’';
                 newInput.min = "0";
                 newInput.max = "10";
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (inputs.length < MAX_TEST - 1) {
                     const newInput = document.createElement('input');
                     newInput.type = 'number';
+                    newInput='scores_test[]';
                     newInput.className = 'input-cell test-score';
                     newInput.placeholder = 'Điểm 1 tiết';
                     newInput.min = "0";
