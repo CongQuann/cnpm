@@ -58,8 +58,8 @@ def login():
                     login_user(user)
                     return redirect("/Teacher/EnterPoints")
                 elif decrypted_password ==password and user.type == 'staff':
+                    login_user(user)
                     return redirect("/class_edit")
-
         flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
     return render_template('index.html')
 
@@ -397,7 +397,8 @@ def edit_subject_page(subject_id):
 def update_subject():
     subject_id = request.form.get("subject_id")
     subject_name = request.form.get("subject_name")
-
+    subject_requirement = request.form.get("subject_requirement")
+    subject_description = request.form.get("subject_description")
     # Xử lý cập nhật
     subject = Subject.query.get(subject_id)
     if not subject:
@@ -406,6 +407,8 @@ def update_subject():
 
     try:
         subject.subjectName = subject_name
+        subject.subjectRequirement = subject_requirement
+        subject.subjectDescription = subject_description
         db.session.commit()
         flash("Cập nhật thành công!", "success")
     except Exception as e:
@@ -416,18 +419,6 @@ def update_subject():
 
 # =====================================
 
-# @app.route('/confirm/<username>')
-# def confirm_account(username):
-#     user = User.query.filter_by(userName=username).first()
-#     if user:
-#         # Cập nhật trạng thái tài khoản thành đã xác nhận
-#         user.is_confirmed = True
-#         db.session.commit()
-#         flash('Tài khoản của bạn đã được xác nhận!', 'success')
-#     else:
-#         flash('Không tìm thấy người dùng!', 'danger')
-#
-#     return redirect('/login')  # Chuyển hướng đến trang đăng nhập
 
 
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])

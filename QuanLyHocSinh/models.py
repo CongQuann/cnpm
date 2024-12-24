@@ -136,6 +136,8 @@ class Subject(db.Model):
     __tablename__ = 'subject'
     id = Column(Integer, primary_key=True, autoincrement=True)
     subjectName = Column(String(50), nullable=False)
+    subjectRequirement = Column(String(1000))
+    subjectDescription = Column(String(1500))
     teachers = relationship('Teacher', backref='subject_teacher', lazy=True, cascade="all, delete")
     points = relationship('Point', backref='subject_point', lazy=True, cascade="all, delete")
 
