@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (inputs.length < MAX_TEST - 1) {
                     const newInput = document.createElement('input');
                     newInput.type = 'number';
-                    newInput='scores_test[]';
+                    newInput.name = 'scores_test[]';
                     newInput.className = 'input-cell test-score';
                     newInput.placeholder = 'Điểm 1 tiết';
                     newInput.min = "0";
