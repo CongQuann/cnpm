@@ -17,6 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from io import BytesIO
 from flask import send_file
+from sqlalchemy.exc import SQLAlchemyError
 
 
 from QuanLyHocSinh import app, db
@@ -715,7 +716,27 @@ def enter_point():
     subject_name = _subject.subjectName
 
     return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
+@login_required
+@app.route("/Teacher/GenerateTranscript", methods=["GET", "POST"])
+def generate_transcript():
+    _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
+    subject_name = _subject.subjectName
 
+    return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+
+
+@login_required
+@app.route("/Teacher/ImportPoints", methods=["GET", "POST"])
+def import_points():
+
+    return render_template('Teacher/ImportPoints.html')
+
+
+@login_required
+@app.route("/Teacher/ExportTranscript", methods=["GET", "POST"])
+def export_points():
+
+    return render_template('Teacher/ExportTranscript.html')
 
 # staff
 
@@ -1222,80 +1243,91 @@ def class_filter():
             )
 
     # Trả về template với danh sách sinh viên
-    return render_template('Teacher/EnterPoints.html', students=students, subject_name = subject_name,error = error)
+    return render_template('Teacher/ImportPoints.html', students=students, subject_name = subject_name,error = error)
 
 
 @app.route('/Teacher/EnterPoints/save_points', methods=['POST'])
 def save_points():
-    error = None
-    if request.method == 'POST':
-        try:
-            # Lấy danh sách dữ liệu từ form
-            student_ids = request.form.getlist('student_ids[]')
-            scores_15min = request.form.getlist('scores_15min[]')
-            scores_test = request.form.getlist('scores_test[]')
-            scores_exam = request.form.getlist('scores_exam[]')
-            semester_id = session.get('semester_id')
+    try:
+        # Lấy danh sách dữ liệu từ form
+        student_ids = request.form.getlist('student_ids[]')
+        scores_15min = request.form.getlist('scores_15min[]')
+        scores_test = request.form.getlist('scores_test[]')
+        scores_exam = request.form.getlist('scores_exam[]')
+        semester_id = session.get('semester_id')
 
-            # Lặp qua từng học sinh
-            for i, student_id in enumerate(student_ids):
-                # Xử lý điểm 15 phút
-                start_idx_15min = i * len(scores_15min) // len(student_ids)
-                end_idx_15min = start_idx_15min + len(scores_15min) // len(student_ids)
-                student_scores_15min = scores_15min[start_idx_15min:end_idx_15min]
-                for score in student_scores_15min:
-                    if score:
-                        db.session.add(
-                            Point(
-                                pointValue=float(score),
-                                pointTypeID=1,
-                                semesterID=semester_id,
-                                subjectID=current_user.subjectID,
-                                studentID=student_id
-                            )
-                        )
+        # Kiểm tra dữ liệu đầu vào
+        if len(scores_15min) % len(student_ids) != 0 or len(scores_test) % len(student_ids) != 0:
+            flash("Dữ liệu điểm không đồng bộ với số lượng học sinh.", "danger")
+            return redirect(url_for('class_filter'))
 
-                # Xử lý điểm 1 tiết
-                start_idx_test = i * len(scores_test) // len(student_ids)
-                end_idx_test = start_idx_test + len(scores_test) // len(student_ids)
-                student_scores_test = scores_test[start_idx_test:end_idx_test]
-                for score in student_scores_test:
-                    if score:
-                        db.session.add(
-                            Point(
-                                pointValue=float(score),
-                                pointTypeID=2,
-                                semesterID=semester_id,
-                                subjectID=current_user.subjectID,
-                                studentID=student_id
-                            )
-                        )
-
-                # Xử lý điểm thi (chỉ một giá trị duy nhất)
-                point_exam = scores_exam[i] if i < len(scores_exam) else None
-                if point_exam:
+        # Lặp qua từng học sinh
+        for i, student_id in enumerate(student_ids):
+            # Xử lý điểm 15 phút
+            start_idx_15min = i * len(scores_15min) // len(student_ids)
+            end_idx_15min = start_idx_15min + len(scores_15min) // len(student_ids)
+            student_scores_15min = scores_15min[start_idx_15min:end_idx_15min]
+            for score in student_scores_15min:
+                if score:
                     db.session.add(
                         Point(
-                            pointValue=float(point_exam),
-                            pointTypeID=3,
+                            pointValue=float(score),
+                            pointTypeID=1,
                             semesterID=semester_id,
                             subjectID=current_user.subjectID,
                             studentID=student_id
                         )
                     )
 
-            # Lưu thay đổi vào DB
-            db.session.commit()
-            return redirect(url_for('class_filter'))
+            # Xử lý điểm 1 tiết
+            start_idx_test = i * len(scores_test) // len(student_ids)
+            end_idx_test = start_idx_test + len(scores_test) // len(student_ids)
+            student_scores_test = scores_test[start_idx_test:end_idx_test]
+            for score in student_scores_test:
+                if score:
+                    db.session.add(
+                        Point(
+                            pointValue=float(score),
+                            pointTypeID=2,
+                            semesterID=semester_id,
+                            subjectID=current_user.subjectID,
+                            studentID=student_id
+                        )
+                    )
 
-        except Exception as e:
-            error = f"Có lỗi xảy ra: {e}"
+            # Xử lý điểm thi
+            point_exam = scores_exam[i] if i < len(scores_exam) else None
+            if point_exam:
+                db.session.add(
+                    Point(
+                        pointValue=float(point_exam),
+                        pointTypeID=3,
+                        semesterID=semester_id,
+                        subjectID=current_user.subjectID,
+                        studentID=student_id
+                    )
+                )
 
-    return render_template('Teacher/EnterPoints.html', students=[], error=error)
+        # Lưu thay đổi vào DB
+        db.session.commit()
+        flash("Lưu điểm thành công!", "success")
+        return redirect(url_for('class_filter'))
+
+    except SQLAlchemyError as db_err:
+        db.session.rollback()
+        flash(f"Lỗi cơ sở dữ liệu: {db_err}", "danger")
+    except ValueError as val_err:
+        flash(f"Lỗi dữ liệu đầu vào: {val_err}", "danger")
+    except Exception as e:
+        flash(f"Có lỗi xảy ra: {e}", "danger")
+
+    return redirect(url_for('class_filter'))
 
 
-@app.route("/Teacher/GenerateTranscript", methods=["GET", "POST"])
-def generate_transcript():
+
+
+@app.route("/Teacher/GenerateTranscript/generate", methods=["GET", "POST"])
+def generate():
     # Lấy thông tin môn học của giáo viên hiện tại
     _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
     subject_name = _subject.subjectName
@@ -1349,10 +1381,10 @@ def generate_transcript():
             average = calculate_average(student.id, _subject.id, _semester.id)
             averages[student.id] = average
 
-    return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name, students=students,
+    return render_template('Teacher/ExportTranscript.html', subject_name=subject_name, students=students,
                            student_scores=student_scores, averages=averages, error=error)
 
-@app.route('/Teacher/EnterPoints/export_pdf', methods=['GET'])
+@app.route('/Teacher/ExportTranscript/export_pdf', methods=['GET'])
 def export_pdf():
     # Tạo PDF trong bộ nhớ
 

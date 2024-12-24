@@ -10,54 +10,7 @@ Nhập điểm
 
 {% block content %}
 <div class="container mt-4 container-div">
-    <h2 class="text-center">Nhập điểm cho môn {{subject_name}}</h2>
 
-    <!-- Bộ lọc -->
-    <form action="{{ url_for('generate') }}" method="POST">
-        <div id="scoreboard-container">
-            <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
-            <div id="class-info">
-                <!-- Lớp -->
-                <p>
-                    <strong>Lớp:</strong>
-                    <input type="text" id="class-input" name="class-input" class="input-field"
-                           placeholder="Nhập lớp (vd: 10A1)"
-                           list="class-list" required>
-                    <datalist id="class-list">
-                        <option value="10A">
-                        <option value="10B">
-                        <option value="10C">
-                        <option value="12A">
-                    </datalist>
-                </p>
-
-                <!-- Học kỳ -->
-                <p>
-                    <strong>Học kỳ:</strong>
-                    <input type="text" id="semester-input" name="semester-input" class="input-field"
-                           placeholder="Nhập học kỳ (vd: 1, 2)"
-                           list="semester-list" required>
-                    <datalist id="semester-list">
-                        <option value="Học kỳ 1"></option>
-                        <option value="Học kỳ 2"></option>
-                    </datalist>
-                </p>
-
-                <!-- Năm học -->
-                <p>
-                    <strong>Năm học:</strong>
-                    <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
-                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" required>
-                    <datalist id="academic-year-list">
-                        <option value="2022-2023">
-                        <option value="2023-2024">
-                    </datalist>
-                </p>
-                <button id="generate" type="submit" class="btn btn-primary">Lọc</button>
-            </div>
-        </div>
-    </form>
-    <!-- Thêm nút để xuất ra PDF -->
 <form action="{{ url_for('export_pdf') }}" method="get">
     <button type="submit" class="btn btn-success">Xuất ra PDF</button>
 </form>
