@@ -1244,24 +1244,45 @@ def save_points():
             scores_test = request.form.getlist('scores_test[]')
             scores_exam = request.form.getlist('scores_exam[]')
             semester_id = session.get('semester_id')
+            num_scores_15min = len(scores_15min)
+            num_students = len(student_ids)
 
-            # Duyệt qua từng sinh viên và lưu điểm
-            for idx, student_id in enumerate(student_ids):
+
+
                 # Lấy các giá trị điểm
-                point_15min = float(scores_15min[idx]) if scores_15min[idx] else None
-                point_test = float(scores_test[idx]) if scores_test[idx] else None
-                point_exam = float(scores_exam[idx]) if scores_exam[idx] else None
+                # print(student_ids)
+                # print(scores_15min)
+                # print(student_id)
+                # print(idx)
 
-                # Thêm các điểm vào cơ sở dữ liệu
-                if point_15min is not None:
+                # Nếu số lượng điểm 15 phút chia đều cho các học sinh:
+                # Mỗi học sinh có số lượng điểm 15 phút tương ứng, bạn có thể lặp qua từng học sinh và mỗi cột điểm:
+            for i, student_id in enumerate(student_ids):
+                # Tính chỉ số điểm của sinh viên này
+                start_idx = i * len(scores_15min) // len(
+                    student_ids)  # Giả sử mỗi sinh viên có tối đa 2 điểm 15p (hoặc điều chỉnh nếu cần)
+                end_idx = start_idx + len(scores_15min) // len(student_ids)  # Điều chỉnh cho số lượng điểm 15 phút
+
+                # Lấy các điểm 15 phút cho sinh viên này (có thể có 1 hoặc 2 điểm)
+                student_scores_15min = scores_15min[start_idx:end_idx]
+
+                # Thêm điểm cho sinh viên này vào cơ sở dữ liệu
+                for score in student_scores_15min:
+                    if score:  # Kiểm tra nếu điểm không rỗng
+                        db.session.add(
+                            Point(pointValue=float(score), pointTypeID=1, semesterID=semester_id,
+                                  subjectID=current_user.subjectID, studentID=student_id))
+                point_test = scores_test[i] if i < len(scores_test) else None
+                point_exam = scores_exam[i] if i < len(scores_exam) else None
+
+                if point_test:
                     db.session.add(
-                        Point(pointValue=point_15min, pointTypeID=1, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
-                if point_test is not None:
+                        Point(pointValue=float(point_test), pointTypeID=2, semesterID=semester_id,
+                              subjectID=current_user.subjectID, studentID=student_id))
+                if point_exam:
                     db.session.add(
-                        Point(pointValue=point_test, pointTypeID=2, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
-                if point_exam is not None:
-                    db.session.add(
-                        Point(pointValue=point_exam, pointTypeID=3, semesterID=semester_id, subjectID=current_user.subjectID, studentID=student_id))
+                        Point(pointValue=float(point_exam), pointTypeID=3, semesterID=semester_id,
+                              subjectID=current_user.subjectID, studentID=student_id))
 
             # Lưu thay đổi vào DB
             db.session.commit()
