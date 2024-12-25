@@ -1471,7 +1471,7 @@ def export_pdf():
         ).all()
 
         # Đặt khoảng cách dòng
-
+        line_spacing=20
         # In các điểm 15 phút (2x2)
         for i in range(0, len(points_15min), 2):  # Nhóm các điểm theo từng cặp
             line_points = []
