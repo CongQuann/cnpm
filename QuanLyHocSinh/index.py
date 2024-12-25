@@ -2,7 +2,7 @@ import base64
 import string
 from datetime import datetime
 import random
-
+from itertools import zip_longest
 
 from cryptography.fernet import Fernet
 from flask import render_template, request, redirect, flash, url_for
@@ -17,6 +17,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from io import BytesIO
 from flask import send_file
+from reportlab.lib import colors
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -1367,6 +1368,9 @@ def generate():
             StudentClass.semester_id == _semester.id
         ).all()
 
+        session['class_id'] = _class.id
+        session['semester_id'] = _semester.id
+
         # Lấy điểm của các học sinh
         for student in students:
             points = db.session.query(Point).filter(
@@ -1381,44 +1385,161 @@ def generate():
             average = calculate_average(student.id, _subject.id, _semester.id)
             averages[student.id] = average
 
+
     return render_template('Teacher/ExportTranscript.html', subject_name=subject_name, students=students,
                            student_scores=student_scores, averages=averages, error=error)
 
 @app.route('/Teacher/ExportTranscript/export_pdf', methods=['GET'])
 def export_pdf():
     # Tạo PDF trong bộ nhớ
-
     font_path = 'static/fonts/Arial.ttf'  # Đảm bảo đường dẫn chính xác tới file .ttf
     pdfmetrics.registerFont(TTFont('Arial', font_path))
-
+    averages = {}
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
-
     c.setFont("Arial", 12)
 
     # Dữ liệu điểm cần xuất (ví dụ từ cơ sở dữ liệu)
-    students = db.session.query(Student).all()  # Lấy danh sách sinh viên từ cơ sở dữ liệu
+    class_id = session.get('class_id')
+    semester_id = session.get('semester_id')
+    students = db.session.query(Student).join(StudentClass).filter(
+        StudentClass.class_id == class_id,
+        StudentClass.semester_id == semester_id
+    ).all()
+
+    # Tính điểm trung bình cho mỗi sinh viên
+    for student in students:
+        average = calculate_average(student.id, current_user.subjectID, semester_id)
+        averages[student.id] = average
+
     y_position = 750  # Vị trí y để in trên PDF
 
-    c.drawString(100, y_position, "Danh sách điểm sinh viên")
+    # Thêm tiêu đề trường và môn học
+    c.setFont("Arial", 16)
+    c.drawString(50, y_position, "Trường THPT Chu Văn An")
+    y_position -= 20
+    c.setFont("Arial", 14)
+    c.drawString(50, y_position, "Môn học: Toán học")  # Có thể thay đổi theo môn học
+    y_position -= 40
+
+    # Thêm tiêu đề bảng điểm
+    c.setFont("Arial", 12)
+    c.drawString(50, y_position, "Danh sách điểm sinh viên")
     y_position -= 20
 
+    # Vẽ đường kẻ phân cách
+    c.setStrokeColor(colors.black)
+    c.setLineWidth(0.5)
+    c.line(50, y_position, 550, y_position)  # Đặt tổng chiều rộng cho cột "Điểm Trung Bình"
+    y_position -= 10
+
     # Thêm tiêu đề cột
-    c.drawString(100, y_position, "Tên Sinh Viên")
-    c.drawString(300, y_position, "Điểm 15 phút")
-    c.drawString(400, y_position, "Điểm Kiểm Tra")
-    c.drawString(500, y_position, "Điểm Thi")
+    c.drawString(50, y_position, "Tên Sinh Viên")
+    c.drawString(200, y_position, "Điểm 15 phút")
+    c.drawString(300, y_position, "Điểm Kiểm Tra")
+    c.drawString(400, y_position, "Điểm Thi")
+    c.drawString(470, y_position, "Điểm Trung Bình")  # Cột điểm trung bình
     y_position -= 20
+
+    # Vẽ đường kẻ phân cách
+    c.line(50, y_position, 550, y_position)  # Vẽ đường kẻ bao gồm cột điểm trung bình
+    y_position -= 10
 
     # Lặp qua sinh viên và in điểm
     for student in students:
-        c.drawString(100, y_position, student.name)
-        # Giả sử bạn đã có các điểm trong cơ sở dữ liệu
-        points = db.session.query(Point).filter(Point.studentID == student.id).all()
-        c.drawString(300, y_position, str(points[0].pointValue if points else ''))
-        c.drawString(400, y_position, str(points[1].pointValue if len(points) > 1 else ''))
-        c.drawString(500, y_position, str(points[2].pointValue if len(points) > 2 else ''))
-        y_position -= 20
+        c.drawString(50, y_position, student.name)
+
+        # Lấy tất cả các điểm 15 phút, kiểm tra và thi của sinh viên này
+        points_15min = db.session.query(Point).filter(
+            Point.studentID == student.id,
+            Point.pointTypeID == 1,
+            Point.subjectID == current_user.subjectID,  # Replace with actual subject ID
+            Point.semesterID == semester_id  # Replace with actual semester ID
+        ).all()
+
+        points_test = db.session.query(Point).filter(
+            Point.studentID == student.id,
+            Point.pointTypeID == 2,
+            Point.subjectID == current_user.subjectID,  # Replace with actual subject ID
+            Point.semesterID == semester_id  # Replace with actual semester ID
+        ).all()
+        points_exam = db.session.query(Point).filter(
+            Point.studentID == student.id,
+            Point.pointTypeID == 3,
+            Point.subjectID == current_user.subjectID,  # Replace with actual subject ID
+            Point.semesterID == semester_id  # Replace with actual semester ID
+        ).all()
+
+        # Đặt khoảng cách dòng
+
+        # In các điểm 15 phút (2x2)
+        for i in range(0, len(points_15min), 2):  # Nhóm các điểm theo từng cặp
+            line_points = []
+            if i < len(points_15min):  # Lấy điểm đầu tiên trong cặp
+                line_points.append(str(points_15min[i].pointValue))
+            if i + 1 < len(points_15min):  # Lấy điểm thứ hai trong cặp nếu có
+                line_points.append(str(points_15min[i + 1].pointValue))
+            c.drawString(200, y_position, '  '.join(line_points))  # In điểm 15 phút
+            y_position -= line_spacing  # Giảm vị trí y để xuống dòng tiếp theo
+
+        # Sau khi in xong các điểm 15 phút, tính toán lại vị trí cho cột tiếp theo
+        y_position += (len(points_15min) // 2) * line_spacing  # Cộng thêm khoảng cách cho các cặp điểm
+        if len(points_15min) % 2 != 0:  # Nếu có điểm lẻ, cộng thêm khoảng cách cho điểm lẻ
+            y_position += line_spacing
+
+        # In các điểm kiểm tra (2x2)
+        for i in range(0, len(points_test), 2):
+            line_points = []
+            if i < len(points_test):
+                line_points.append(str(points_test[i].pointValue))
+            if i + 1 < len(points_test):
+                line_points.append(str(points_test[i + 1].pointValue))
+            c.drawString(300, y_position, '  '.join(line_points))
+            y_position -= line_spacing  # Giảm vị trí y để xuống dòng tiếp theo
+
+        # Sau khi in xong các điểm kiểm tra, tính toán lại vị trí cho cột tiếp theo
+        y_position += (len(points_test) // 2) * line_spacing
+        if len(points_test) % 2 != 0:
+            y_position += line_spacing
+
+        # In các điểm thi (2x2)
+        for i in range(0, len(points_exam), 2):
+            line_points = []
+            if i < len(points_exam):
+                line_points.append(str(points_exam[i].pointValue))
+            if i + 1 < len(points_exam):
+                line_points.append(str(points_exam[i + 1].pointValue))
+            c.drawString(400, y_position, '  '.join(line_points))
+            y_position -= line_spacing  # Giảm vị trí y để xuống dòng tiếp theo
+
+        # Sau khi in xong các điểm thi, tính toán lại vị trí cho cột tiếp theo
+        y_position += (len(points_exam) // 2) * line_spacing
+        if len(points_exam) % 2 != 0:
+            y_position += line_spacing
+
+        # In điểm trung bình ở cuối cùng của hàng sinh viên
+        average = averages.get(student.id, 0)
+        c.drawString(485, y_position, f"{average:.2f}")  # Đưa điểm trung bình lên cùng hàng đầu tiên
+        y_position -= line_spacing  # Giảm khoảng cách sau khi in xong toàn bộ sinh viên
+
+        # Nếu có nhiều trang, tạo thêm một trang mới
+        if y_position < 100:
+            c.showPage()
+            c.setFont("Arial", 12)
+            y_position = 750
+            c.drawString(50, y_position, "Danh sách điểm sinh viên")
+            y_position -= 20
+            c.drawString(50, y_position, "Tên Sinh Viên")
+            c.drawString(200, y_position, "Điểm 15 phút")
+            c.drawString(300, y_position, "Điểm Kiểm Tra")
+            c.drawString(400, y_position, "Điểm Thi")
+            c.drawString(500, y_position, "Điểm Trung Bình")  # Cột điểm trung bình
+            y_position -= 20
+
+    # Vẽ chữ ký
+    c.setFont("Arial", 12)
+    c.drawString(50, 100, "Chữ ký của giáo viên:")
+    c.line(200, 100, 350, 100)
 
     c.showPage()
     c.save()
@@ -1426,6 +1547,10 @@ def export_pdf():
     # Trả về PDF dưới dạng file
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="diem_sinh_vien.pdf", mimetype='application/pdf')
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
