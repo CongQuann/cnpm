@@ -149,6 +149,12 @@
     cursor: pointer; /* Trỏ chuột */
     transition: background-color 0.3s ease; /* Hiệu ứng hover */
 }
+<<<<<<< HEAD
 #user_name{
     color: white;
+=======
+
+.container{
+    margin-bottom: 5rem !important;
+>>>>>>> f59b5fc2194d5022237854f88c78bee74b4a8d3b
 }
