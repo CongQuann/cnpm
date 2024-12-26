@@ -26,29 +26,27 @@
             {% endif %}
         {% endwith %}
         <form action="{{ url_for('info_user_teacher') }}" method="POST">
-            <div class="account-id">Tên Người Dùng: {{ decrypted_username or 'Không thể giải mã' }}</div>
+            <div class="account-id">Tên Người Dùng: {{ current_user.userName or 'Không thể giải mã' }}</div>
             <a href="{{ url_for('logout') }}" class="log_out">Đăng Xuất</a>
             <h1>Thông Tin Cá Nhân</h1>
 
             <div class="info-section">
                 <label for="username">Họ Tên</label>
-                <div class="value">{{ Cuser.name }}</div>
+                <div id="username" class="value">{{ Cuser.name }}</div>
             </div>
 
             <div class="info-section">
                 <label for="email">Email</label>
-                <div class="value">{{ Cuser.email }}</div>
+                <div id="email" class="value">{{ Cuser.email }}</div>
             </div>
 
             <div class="info-section">
-                <label for="password">Mật Khẩu</label>
-                <div class="value">{{ decrypted_password or 'Không thể giải mã' }}</div>
                 <a href="{{url_for('password_info_teacher')}}" class="change-link">Thay đổi mật khẩu</a>
             </div>
 
             <div class="info-section">
                 <label for="phone">Số Điện Thoại</label>
-                <div class="value" data-info="phone">{{ Cuser.phoneNumber }}</div>
+                <div id="phone" class="value" data-info="phone">{{ Cuser.phoneNumber }}</div>
             </div>
         </form>
     </div>
