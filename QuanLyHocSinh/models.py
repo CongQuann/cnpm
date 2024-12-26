@@ -6,9 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, LoginManager
 from QuanLyHocSinh import db, app
-from cryptography.fernet import Fernet
 import base64
-
+from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model,UserMixin):
     __tablename__ = 'user'
 
@@ -18,7 +17,7 @@ class User(db.Model,UserMixin):
     DOB = Column(DateTime)
     email = Column(String(50),unique=True)
     phoneNumber = Column(String(11),unique=True)
-    userName = Column(String(500), unique=True)
+    userName = Column(String(50), unique=True)
     password = Column(String(500))
     verification_code = Column(String(10), nullable=True)
     type = Column(String(50))  # Phân biệt loại người dùng
@@ -379,40 +378,14 @@ def generate_points():
     return points
 
 
-# Tải khóa từ tệp
-def load_key():
-    with open("secret.key", "rb") as key_file:
-        return key_file.read()
-
-# Hàm mã hóa
-def encrypt_data(data):
-    key = load_key()
-    fernet = Fernet(key)
-    encrypted_data = fernet.encrypt(data.encode())
-    encrypted_data_base64 = base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
-    return encrypted_data_base64
-
-# Hàm giải mã
-def decrypt_data(encrypted_data_base64):
-    try:
-        # Giải mã base64 thành dữ liệu mã hóa gốc
-        encrypted_data = base64.urlsafe_b64decode(encrypted_data_base64.encode('utf-8'))
-
-        key = load_key()
-        fernet = Fernet(key)
-        decrypted = fernet.decrypt(encrypted_data)  # Giải mã dữ liệu
-        return decrypted.decode()  # Chuyển về chuỗi ban đầu
-    except Exception as e:
-        print(f"Error during decryption: {e}")
-        return None
 
 
 
 
 def create_admin():
     # Mã hóa thông tin
-    encrypted_username = encrypt_data("admin")  # Mã hóa tên đăng nhập "admin"
-    encrypted_password = encrypt_data("123")  # Mã hóa mật khẩu "adminpassword"
+    username = "admin"  # Mã hóa tên đăng nhập "admin"
+    hashed_password = generate_password_hash("123")  # Mã hóa mật khẩu
 
     # Tạo đối tượng User và Administrator
     admin_user = Administrator(
@@ -421,8 +394,8 @@ def create_admin():
         DOB="1980-01-01",  # Ví dụ ngày sinh
         email="admin@example.com",
         phoneNumber="1234567890",
-        userName=encrypted_username,
-        password=encrypted_password,
+        userName=username,
+        password=hashed_password,
         type="administrator",
         adminRole="Super Admin"  # Ví dụ vai trò admin
     )

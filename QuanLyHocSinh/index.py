@@ -2,9 +2,11 @@ import base64
 import string
 from datetime import datetime
 import random
-from itertools import zip_longest
 
-from cryptography.fernet import Fernet
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
+
 from flask import render_template, request, redirect, flash, url_for
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
@@ -48,18 +50,17 @@ def login():
 
         # Duyệt qua tất cả người dùng để tìm người dùng khớp với username đã giải mã
         for user in users:
-            decrypted_username = decrypt_data(user.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
+             # Giải mã tên đăng nhập trong cơ sở dữ liệu
 
-            if decrypted_username == username:  # Nếu username khớp
-                decrypted_password = decrypt_data(user.password)  # Giải mã mật khẩu
+            if user.userName == username:  # Nếu username khớp
 
-                if decrypted_password == password and user.type == 'administrator':
+                if check_password_hash(user.password, password) and user.type == 'administrator':
                     login_user(user)
                     return redirect("/Administrator/Report")
-                elif decrypted_password == password and user.type == 'teacher':
+                elif check_password_hash(user.password, password) and user.type == 'teacher':
                     login_user(user)
                     return redirect("/Teacher/EnterPoints")
-                elif decrypted_password ==password and user.type == 'staff':
+                elif check_password_hash(user.password, password) and user.type == 'staff':
                     login_user(user)
                     return redirect("/class_edit")
         flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
@@ -81,12 +82,9 @@ def forgot_password(step):
             user = None
             users = User.query.all()
             for i in users:
-                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
-
-                if decrypted_username == username:  # Nếu username khớp
+                if i.userName==username: # Nếu username khớp
                     user = i
-
-
+            print(user)
             if not user:
                 flash("Tên tài khoản không tồn tại!", "danger")
                 return render_template('Administrator/forgot_password.html', step=1)
@@ -125,9 +123,9 @@ def forgot_password(step):
             user = None
             users = User.query.all()
             for i in users:
-                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
 
-                if decrypted_username == username:  # Nếu username khớp
+
+                if i.userName==username:  # Nếu username khớp
                     user = i
             input_code = request.form['verification_code']
             if not user or input_code != user.verification_code:
@@ -149,9 +147,7 @@ def forgot_password(step):
             user = None
             users = User.query.all()
             for i in users:
-                decrypted_username = decrypt_data(i.userName)  # Giải mã tên đăng nhập trong cơ sở dữ liệu
-
-                if decrypted_username == username:  # Nếu username khớp
+                if i.userName==username:  # Nếu username khớp
                     user = i
             new_password = request.form['new_password']
             confirm_password = request.form['confirm_password']
@@ -163,7 +159,7 @@ def forgot_password(step):
                 return render_template('Administrator/forgot_password.html', step=3, username=username)
 
             # Cập nhật mật khẩu
-            user.password = encrypt_data(new_password)
+            user.password = generate_password_hash(new_password)
             user.verification_code = None  # Xóa mã xác nhận
             db.session.commit()
             flash("Đặt lại mật khẩu thành công!", "success")
@@ -287,12 +283,20 @@ def is_student_passed(student_id, subject_id, semester_id):
 @login_required
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
+
     if request.method == "POST":
         # Lấy dữ liệu từ form
         min_age = request.form.get("min_age")
         max_age = request.form.get("max_age")
         max_class_size = request.form.get("max_class_size")
 
+        # Kiểm tra giá trị nhập vào
+        if int(max_age) < int(min_age):
+            flash("Tuổi tối đa không được nhỏ hơn tuổi tối thiểu!", "warning")
+            return redirect("/Administrator/RuleManagement")
+        if int(max_class_size) <= 0:
+            flash("Sĩ số tối đa phải lớn hơn 0!", "warning")
+            return redirect("/Administrator/RuleManagement")
         # Lấy bản ghi đầu tiên trong bảng
         student_rule = StudentRule.query.first()
         class_rule = ClassRule.query.first()
@@ -303,7 +307,6 @@ def rule():
             student_rule.minAge = int(min_age)
             student_rule.maxAge = int(max_age)
             class_rule.maxNoStudent = int(max_class_size)
-
             # Lưu thay đổi vào cơ sở dữ liệu
             db.session.commit()
 
@@ -313,15 +316,15 @@ def rule():
 
         return redirect("/Administrator/RuleManagement")
 
-        # Xử lý GET request
+    # Xử lý GET request
     class_rule = ClassRule.query.first()
     student_rule = StudentRule.query.first()
-
     return render_template(
         "Administrator/RuleManagement.html",
         class_rule=class_rule,
         student_rule=student_rule,
     )
+
 
 @login_required
 @app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
@@ -428,7 +431,7 @@ def create_user():
     if request.method == 'POST':
         # Lấy thông tin từ form
         name = request.form['name']
-        username = encrypt_data(request.form['userName'])
+        username = request.form['userName']
         email = request.form['email']
         phone_number = request.form['phoneNumber']
         # Kiểm tra nếu tên đăng nhập đã tồn tại
@@ -447,8 +450,8 @@ def create_user():
         gender = request.form['gender']
         dob = request.form['DOB']
 
-
-        password = encrypt_data(request.form['password'])
+        password = request.form['password']
+        hashed_password = generate_password_hash(request.form['password'])
         role = request.form['role']
 
         # Tạo bản ghi dựa trên phân quyền
@@ -461,7 +464,7 @@ def create_user():
                 email=email,
                 phoneNumber=phone_number,
                 userName=username,
-                password=password,
+                password=hashed_password,
                 staffRole=staff_role
             )
         elif role == 'Teacher':
@@ -473,7 +476,7 @@ def create_user():
                 email=email,
                 phoneNumber=phone_number,
                 userName=username,
-                password=password,
+                password=hashed_password,
                 yearExperience=year_experience
             )
         elif role == 'Administrator':
@@ -485,7 +488,7 @@ def create_user():
                 email=email,
                 phoneNumber=phone_number,
                 userName=username,
-                password=password,
+                password=hashed_password,
                 adminRole=admin_role
             )
         else:
@@ -503,7 +506,7 @@ def create_user():
                 subject="Xác nhận đăng ký hệ thống quản lý học sinh!",  # Tiêu đề email
                 recipients=[email],  # Người nhận
                 # Nội dung email
-                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {decrypt_data(username)}\nPassword: {decrypt_data(password)}\n\nChúc bạn một ngày tốt lành!"
+                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {username}\nPassword: {password}\n\nChúc bạn một ngày tốt lành!"
             )
             mail.send(msg)  # Gửi email
             flash('Tạo tài khoản thành công và email xác nhận đã được gửi!', 'success')
@@ -543,7 +546,7 @@ def user_mng():
             role = "Teacher"
             additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
 
-        decrypted_username = decrypt_data(user.userName)
+
 
         user_data.append({
             "id": user.id,
@@ -552,7 +555,7 @@ def user_mng():
             "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
             "email": user.email,
             "phoneNumber": user.phoneNumber,
-            "userName": decrypted_username,
+            "userName": user.userName,
             "role": role,
             "additional_info": additional_info
         })
@@ -620,36 +623,6 @@ def delete_user():
     return redirect("/Administrator/UserManagement")
 
 
-# ============================== MÃ HÓA DỮ LIỆU NGƯỜI DÙNG=====================
-# Tạo và lưu khóa vào tệp
-
-# Tải khóa từ tệp
-def load_key():
-    with open("secret.key", "rb") as key_file:
-        return key_file.read()
-
-
-# Hàm mã hóa
-def encrypt_data(data):
-    key = load_key()
-    fernet = Fernet(key)
-    encrypted_data = fernet.encrypt(data.encode())
-    encrypted_data_base64 = base64.urlsafe_b64encode(encrypted_data).decode('utf-8')
-    return encrypted_data_base64
-
-
-def decrypt_data(encrypted_data_base64):
-    try:
-        # Giải mã base64 thành dữ liệu mã hóa gốc
-        encrypted_data = base64.urlsafe_b64decode(encrypted_data_base64.encode('utf-8'))
-
-        key = load_key()
-        fernet = Fernet(key)
-        decrypted = fernet.decrypt(encrypted_data)  # Giải mã dữ liệu
-        return decrypted.decode()  # Chuyển về chuỗi ban đầu
-    except Exception as e:
-        print(f"Error during decryption: {e}")
-        return None
 
 
 # =================================================
@@ -784,17 +757,15 @@ def export_points():
 def info_user():
     try:
         # Giải mã User Name và Password
-        decrypted_username = decrypt_data(current_user.userName)
-        decrypted_password = decrypt_data(current_user.password)
+        username = current_user.userName
     except Exception as e:
-        decrypted_username = None
-        decrypted_password = None
+        username = None
+
         print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template(
         'staff/InfoUser.html',
         Cuser=current_user,
-        decrypted_password = decrypted_password,
-        decrypted_username = decrypted_username
+        username = username
     )
 
 @app.route('/password_info', methods=['GET'])
@@ -812,10 +783,10 @@ def change_password():
         confirm_password = request.form.get('confirm_password')
 
         # Giải mã mật khẩu hiện tại
-        decrypted_password = decrypt_data(current_user.password)
+
 
         # Kiểm tra mật khẩu hiện tại
-        if decrypted_password != current_password:
+        if not check_password_hash(current_user.password,current_password):
             flash("Mật khẩu hiện tại không đúng!", "error")
             return redirect(url_for('password_info'))
 
@@ -825,7 +796,7 @@ def change_password():
             return redirect(url_for('password_info'))
 
         # Cập nhật mật khẩu mới (băm trước khi lưu)
-        current_user.password = encrypt_data(new_password)  # Lưu mật khẩu đã mã hóa
+        current_user.password = generate_password_hash(new_password)  # Lưu mật khẩu đã mã hóa
         db.session.commit()
 
         flash("Thay đổi mật khẩu thành công!", "success")
