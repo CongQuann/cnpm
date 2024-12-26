@@ -31,11 +31,7 @@ Nhập điểm
                     <strong>Lớp:</strong>
                     <input type="text" id="class-input" name="class-input" class="input-field"
                            placeholder="Nhập lớp (vd: 10A1)"
-<<<<<<< HEAD
-                           list="class-list" required>
-=======
                            list="class-list" autocomplete="off">
->>>>>>> f59b5fc2194d5022237854f88c78bee74b4a8d3b
                     <datalist id="class-list">
                         <option value="10A">
                         <option value="10B">
@@ -49,11 +45,8 @@ Nhập điểm
                     <strong>Học kỳ:</strong>
                     <input type="text" id="semester-input" name="semester-input" class="input-field"
                            placeholder="Nhập học kỳ (vd: 1, 2)"
-<<<<<<< HEAD
-                           list="semester-list" required>
-=======
+
                            list="semester-list" autocomplete="off">
->>>>>>> f59b5fc2194d5022237854f88c78bee74b4a8d3b
                     <datalist id="semester-list">
                         <option value="Học kỳ 1"></option>
                         <option value="Học kỳ 2"></option>
@@ -64,11 +57,7 @@ Nhập điểm
                 <p>
                     <strong>Năm học:</strong>
                     <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
-<<<<<<< HEAD
-                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" required>
-=======
                            placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" autocomplete="off">
->>>>>>> f59b5fc2194d5022237854f88c78bee74b4a8d3b
                     <datalist id="academic-year-list">
                         <option value="2022-2023">
                         <option value="2023-2024">
@@ -82,12 +71,5 @@ Nhập điểm
 </div>
 
 <script src="{{ url_for('static', filename='js/Teacher/EnterPoints.js') }}">
-    setTimeout(function() {
-    var flashMessages = document.getElementById('flash-messages');
-    if (flashMessages) {
-      flashMessages.style.display = 'none';
-    }
-  }, 5000);  // Thời gian là 5 giây
-
 </script>
 {% endblock %}
