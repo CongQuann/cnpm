@@ -9,6 +9,17 @@ Nhập điểm
 {% endblock %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for category, message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <div class="container mt-4 container-div">
     <h2 class="text-center">Xuất điểm cho môn {{subject_name}}</h2>
 

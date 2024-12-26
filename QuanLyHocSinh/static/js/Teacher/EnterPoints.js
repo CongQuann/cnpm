@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const MAX_15MIN = 5;
         const MAX_TEST = 3;
 
+
+
+
         // Thêm ô nhập điểm 15 phút
         add15MinBtn.addEventListener('click', () => {
         const rows = studentRows.querySelectorAll('tr');
@@ -113,5 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
+setTimeout(function() {
+    var flashMessages = document.getElementById('flash-messages');
+    if (flashMessages) {
+      flashMessages.style.display = 'none';
+    }
+  }, 5000);
 
 
