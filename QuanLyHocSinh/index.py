@@ -1,4 +1,3 @@
-import base64
 import string
 from datetime import datetime
 import random
