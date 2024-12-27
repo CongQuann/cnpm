@@ -103,7 +103,6 @@ def forgot_password(step):
             except Exception as e:
                 flash(f'Đã xảy ra lỗi khi gửi mã xác nhận: {str(e)}', 'danger')
 
-            print(f"Mã xác nhận đã được gửi đến email {user.email}: {verification_code}")
             return redirect(url_for('forgot_password', step=2, username=username))
 
         return render_template('Administrator/forgot_password.html', step=1)
@@ -716,7 +715,7 @@ def enter_point():
 
 # staff
 
-@app.route('/InfoUser')
+@app.route('/staff/InfoUser')
 @login_required
 def info_user():
     try:
@@ -734,13 +733,13 @@ def info_user():
         decrypted_username = decrypted_username
     )
 
-@app.route('/password_info', methods=['GET'])
+@app.route('/staff/password_info', methods=['GET'])
 @login_required
 def password_info():
     return render_template('staff/PasswordChange.html')
 
 
-@app.route('/change_password', methods=['POST'])
+@app.route('/staff/change_password', methods=['POST'])
 @login_required
 def change_password():
     try:
@@ -774,7 +773,7 @@ def change_password():
         return redirect(url_for('password_info'))
 
 
-@app.route('/student_add', methods=["GET", "POST"])
+@app.route('/staff/student_add', methods=["GET", "POST"])
 def staff():
     # Nếu là GET request, chỉ trả về giao diện
     classes = Class.query.all()
@@ -850,7 +849,7 @@ def staff():
         return redirect(url_for("staff"))
     return render_template('staff/staff.html')
 
-@app.route('/student_edit', methods=["GET", "POST"])
+@app.route('/staff/student_edit', methods=["GET", "POST"])
 def student_edit():
     students = []
     students_query = Student.query
@@ -863,7 +862,7 @@ def student_edit():
     return render_template('staff/StudentEdit.html', students= students)
 
 
-@app.route('/update_student_NoClass/<int:student_id>', methods=['POST'])
+@app.route('/staff/update_student_NoClass/<int:student_id>', methods=['POST'])
 def update_student_NoClass(student_id):
     #lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
@@ -942,20 +941,20 @@ def update_student_NoClass(student_id):
     return redirect(url_for('student_edit', student_id=student_id))
 
 
-@app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
+@app.route('/staff/student_delete/<int:student_id>', methods=['GET','POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)
     db.session.commit()
     return redirect(url_for('student_edit'))
 
-@app.route('/student_info/<int:student_id>')
+@app.route('/staff/student_info/<int:student_id>')
 def student_info(student_id):
     student = Student.query.get_or_404(student_id)  # Lấy thông tin học sinh
     return render_template('staff/StudentInfo.html', student=student)
 
 
-@app.route('/class_edit', methods=['GET', 'POST'])
+@app.route('/staff/class_edit', methods=['GET', 'POST'])
 def class_edit():
     class_list = Class.query.all()
     semester_list = Semester.query.all()
@@ -1002,7 +1001,7 @@ def class_edit():
         class_id=class_id,
         semester_id=semester_id
     )
-@app.route('/student_delete_class', methods=['POST'])
+@app.route('/staff/student_delete_class', methods=['POST'])
 def student_delete_class():
     student_id = request.form.get('student_id')
     class_id = request.form.get('class_id')
@@ -1031,7 +1030,7 @@ def student_delete_class():
 
     return redirect(url_for('class_edit'))
 
-@app.route('/student_class_info/<int:student_id>', methods=['GET', 'POST'])
+@app.route('/staff/student_class_info/<int:student_id>', methods=['GET', 'POST'])
 def student_class_info(student_id):
     # Lấy tham số class_id và semester_id từ request arguments (GET/POST)
     class_id = request.args.get('class_id', None)
@@ -1065,7 +1064,7 @@ def student_class_info(student_id):
         current_class_id=current_class_id,
         current_semester_id=current_semester_id
     )
-@app.route('/update_student/<int:student_id>', methods=['POST'])
+@app.route('/staff/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
 
     # lấy id của hs hiện tại
