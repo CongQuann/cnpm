@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 
-from flask import render_template, request, redirect, flash, url_for
+from flask import render_template, request, redirect, flash, url_for, jsonify
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
@@ -701,16 +701,8 @@ def enter_point():
 
     # Nếu có môn học, lấy tên môn học
     subject_name = _subject.subjectName
-    semester_id = session.get('semester_id')
-    class_id = session.get('class_id')
 
-    # Lấy danh sách học sinh
-    students = db.session.query(Student).join(StudentClass).filter(
-        StudentClass.class_id == class_id,
-        StudentClass.semester_id == semester_id
-    ).all()
 
-    # Lấy số lượng điểm 15 phút của mỗi học sinh trong cơ sở dữ liệu
 
 
     return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
@@ -740,8 +732,33 @@ def generate_transcript():
 @login_required
 @app.route("/Teacher/ImportPoints", methods=["GET", "POST"])
 def import_points():
-
-    return render_template('Teacher/ImportPoints.html')
+    semester_id = session.get('semester_id')
+    class_id = session.get('class_id')
+    student_ids = request.form.getlist('student_ids[]')
+    scores_15min = request.form.getlist('scores_15min[]')
+    scores_test = request.form.getlist('scores_test[]')
+    scores_exam = request.form.getlist('scores_exam[]')
+    # Lấy danh sách học sinh
+    students = db.session.query(Student).join(StudentClass).filter(
+        StudentClass.class_id == class_id,
+        StudentClass.semester_id == semester_id
+    ).all()
+    existing_15min = []
+    for i, student_id in enumerate(student_ids):
+        # Kiểm tra số lượng điểm 15 phút hiện tại của học sinh
+        existing_15min_scores = db.session.query(Point).filter(
+            Point.studentID == student_id,
+            Point.pointTypeID == 1,  # 1 là mã cho điểm 15 phút
+            Point.semesterID == semester_id,
+            Point.subjectID == current_user.subjectIDs
+        ).count()
+        existing_15min[i] = existing_15min_scores
+        if request.method == "POST" and request.is_json:
+            # Chuyển danh sách học sinh sang JSON
+            student_list = [{"id": student.id, "name": student.name} for student in students]
+            return jsonify(student_list)
+        # Tính số lượng điểm 15 phút cho học sinh hiện tại
+    return render_template('Teacher/ImportPoints.html', existing_15min = existing_15min, students = students)
 
 
 @login_required
@@ -1269,12 +1286,12 @@ def class_filter():
     if not hasattr(current_user, 'subjectID'):
         flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
         return render_template('Teacher/EnterPoints.html', subject_name='', )
-
-    # Lấy thông tin môn học
     if current_user.subjectID:
         _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
-        subject_name = _subject.subjectName if _subject else None
-        students = []  # Danh sách sinh viên mặc định
+        subject_name = _subject.subjectName
+        student_scores = {}  # Điểm của sinh viên
+        averages = {}  # Điểm trung bình của sinh viên
+
         if request.method == 'POST':
             # Lấy dữ liệu từ form
             class_name = request.form.get('class-input')
@@ -1286,30 +1303,118 @@ def class_filter():
                 flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
                 return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
-            # Tìm lớp và học kỳ
+            # Tìm lớp và học kỳ từ dữ liệu nhập vào
             _class = db.session.query(Class).filter(Class.className == class_name).first()
             _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
                                                           Semester.year == year).first()
-            session['semester_id']=_semester.id
-            session['class_id'] = _class.id
+
+            # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester:
                 flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
                 return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
-            # Lấy danh sách học sinh
+            session['class_id'] = _class.id
+            session['semester_id'] = _semester.id
+            # Lấy danh sách học sinh trong lớp và học kỳ
             students = db.session.query(Student).join(StudentClass).filter(
                 StudentClass.class_id == _class.id,
                 StudentClass.semester_id == _semester.id
             ).all()
 
+            # Kiểm tra nếu không có sinh viên
             if not students:
                 flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
                 return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
-        # Nếu thành công, chuyển đến trang ImportPoints
-        return render_template('Teacher/ImportPoints.html', students=students, subject_name=subject_name)
+            # Lấy điểm của các học sinh
+            for student in students:
+                points = db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.subjectID == _subject.id,
+                    Point.semesterID == _semester.id
+                ).all()
+                student_scores[student.id] = points  # Lưu điểm của từng học sinh
+
+            # Tính điểm trung bình cho từng sinh viên
+            for student in students:
+                average = calculate_average(student.id, _subject.id, _semester.id)
+                averages[student.id] = average
+
+            # Render trang ExportTranscript nếu không có lỗi
+            return render_template('Teacher/ImportPoints.html',
+                                   subject_name=subject_name,
+                                   students=students,
+                                   student_scores=student_scores,
+                                   averages=averages)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/EnterPoints.html', subject_name='', )
+
+@app.route("/Teacher/GenerateTranscript/generate", methods=["GET", "POST"])
+def generate():
+    if not hasattr(current_user, 'subjectID'):
+        flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
+        return render_template('Teacher/GenerateTranscript.html', subject_name='', )
+    if current_user.subjectID:
+        _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
+        subject_name = _subject.subjectName
+        student_scores = {}  # Điểm của sinh viên
+        averages = {}  # Điểm trung bình của sinh viên
+
+        if request.method == 'POST':
+            # Lấy dữ liệu từ form
+            class_name = request.form.get('class-input')
+            semester_name = request.form.get('semester-input')
+            year = request.form.get('academic-year-input')
+
+            # Kiểm tra dữ liệu từ form
+            if not class_name or not semester_name or not year:
+                flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
+                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+
+            # Tìm lớp và học kỳ từ dữ liệu nhập vào
+            _class = db.session.query(Class).filter(Class.className == class_name).first()
+            _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
+                                                          Semester.year == year).first()
+
+            # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
+            if not _class or not _semester:
+                flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
+                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+            session['class_id'] = _class.id
+            session['semester_id'] = _semester.id
+            # Lấy danh sách học sinh trong lớp và học kỳ
+            students = db.session.query(Student).join(StudentClass).filter(
+                StudentClass.class_id == _class.id,
+                StudentClass.semester_id == _semester.id
+            ).all()
+
+            # Kiểm tra nếu không có sinh viên
+            if not students:
+                flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
+                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+
+            # Lấy điểm của các học sinh
+            for student in students:
+                points = db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.subjectID == _subject.id,
+                    Point.semesterID == _semester.id
+                ).all()
+                student_scores[student.id] = points  # Lưu điểm của từng học sinh
+
+            # Tính điểm trung bình cho từng sinh viên
+            for student in students:
+                average = calculate_average(student.id, _subject.id, _semester.id)
+                averages[student.id] = average
+
+    # Render trang ExportTranscript nếu không có lỗi
+            return render_template('Teacher/ExportTranscript.html',
+                                   subject_name=subject_name,
+                                   students=students,
+                                   student_scores=student_scores,
+                                   averages=averages)
+    flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
+    return render_template('Teacher/GenerateTranscript.html', subject_name='', )
 
 
 @app.route('/Teacher/EnterPoints/save_points', methods=['POST'])
@@ -1322,14 +1427,11 @@ def save_points():
         scores_exam = request.form.getlist('scores_exam[]')
         semester_id = session.get('semester_id')
         class_id = session.get('class_id')
-
         students = db.session.query(Student).join(StudentClass).filter(
             StudentClass.class_id == class_id,
             StudentClass.semester_id == semester_id
         ).all()
 
-
-        # Kiểm tra nếu không có điểm nào được nhập (15p, test, hoặc exam)
         # Kiểm tra nếu không có điểm nào được nhập (15p, test, hoặc exam)
         if not any(scores_15min) and not any(scores_test) and not any(scores_exam):
             return render_template('Teacher/ImportPoints.html', students=students)
@@ -1344,14 +1446,18 @@ def save_points():
             existing_15min_scores = db.session.query(Point).filter(
                 Point.studentID == student_id,
                 Point.pointTypeID == 1,  # 1 là mã cho điểm 15 phút
-                Point.semesterID == semester_id
+                Point.semesterID == semester_id,
+                Point.subjectID == current_user.subjectID
             ).count()
 
             # Nếu học sinh đã có đủ số điểm 15 phút (5 điểm), không cho thêm nữa
             if scores_15min[i] and existing_15min_scores >= 5:
                 flash_messages.append(f"Học sinh {student_id} đã có đủ điểm 15 phút.")
-                continue  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
+                return  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
 
+            if scores_15min[i] and len(scores_15min)//len(student_ids) + existing_15min_scores >=5:
+                flash_messages.append(f"Học sinh {student_id} chỉ có thể thêm {5 - existing_15min_scores} cột điểm 15p")
+                continue
             # Tính số lượng điểm 15 phút cho học sinh hiện tại
             start_idx_15min = i * len(scores_15min) // len(student_ids)
             end_idx_15min = (i + 1) * len(scores_15min) // len(student_ids)
@@ -1378,14 +1484,17 @@ def save_points():
             existing_test_scores = db.session.query(Point).filter(
                 Point.studentID == student_id,
                 Point.pointTypeID == 2,  # 2 là mã cho điểm kiểm tra
-                Point.semesterID == semester_id
+                Point.semesterID == semester_id,
+                Point.subjectID == current_user.subjectID
             ).count()
 
             # Nếu học sinh đã có đủ số điểm kiểm tra (3 điểm), không cho thêm nữa
             if scores_test[i] and existing_test_scores >= 3:
                 flash_messages.append(f"Học sinh {student_id} đã có đủ điểm kiểm tra.")
                 continue  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
-
+            if scores_test[i] and len(scores_15min)//len(student_ids) + existing_15min_scores >=3:
+                flash_messages.append(f"Học sinh {student_id} chỉ có thể thêm {3 - existing_15min_scores} cột điểm 1 tiết")
+                continue
             # Tính số lượng điểm kiểm tra cho học sinh hiện tại
             start_idx_test = i * len(scores_test) // len(student_ids)
             end_idx_test = (i + 1) * len(scores_test) // len(student_ids)
@@ -1412,7 +1521,8 @@ def save_points():
             existing_exam_score = db.session.query(Point).filter(
                 Point.studentID == student_id,
                 Point.pointTypeID == 3,  # 3 là mã cho điểm thi
-                Point.semesterID == semester_id
+                Point.semesterID == semester_id,
+                Point.subjectID == current_user.subjectID
             ).count()
 
             # Nếu học sinh đã có điểm thi, không cho phép thêm điểm thi mới
@@ -1459,71 +1569,7 @@ def save_points():
 
 
 
-@app.route("/Teacher/GenerateTranscript/generate", methods=["GET", "POST"])
-def generate():
-    if not hasattr(current_user, 'subjectID'):
-        flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
-        return render_template('Teacher/EnterPoints.html', subject_name='', )
-    if current_user.subjectID:
-        _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
-        subject_name = _subject.subjectName
-        student_scores = {}  # Điểm của sinh viên
-        averages = {}  # Điểm trung bình của sinh viên
 
-        if request.method == 'POST':
-            # Lấy dữ liệu từ form
-            class_name = request.form.get('class-input')
-            semester_name = request.form.get('semester-input')
-            year = request.form.get('academic-year-input')
-
-            # Kiểm tra dữ liệu từ form
-            if not class_name or not semester_name or not year:
-                flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
-
-            # Tìm lớp và học kỳ từ dữ liệu nhập vào
-            _class = db.session.query(Class).filter(Class.className == class_name).first()
-            _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
-                                                          Semester.year == year).first()
-
-            # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
-            if not _class or not _semester:
-                flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
-
-            # Lấy danh sách học sinh trong lớp và học kỳ
-            students = db.session.query(Student).join(StudentClass).filter(
-                StudentClass.class_id == _class.id,
-                StudentClass.semester_id == _semester.id
-            ).all()
-
-            # Kiểm tra nếu không có sinh viên
-            if not students:
-                flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
-
-            # Lấy điểm của các học sinh
-            for student in students:
-                points = db.session.query(Point).filter(
-                    Point.studentID == student.id,
-                    Point.subjectID == _subject.id,
-                    Point.semesterID == _semester.id
-                ).all()
-                student_scores[student.id] = points  # Lưu điểm của từng học sinh
-
-            # Tính điểm trung bình cho từng sinh viên
-            for student in students:
-                average = calculate_average(student.id, _subject.id, _semester.id)
-                averages[student.id] = average
-
-    # Render trang ExportTranscript nếu không có lỗi
-            return render_template('Teacher/ExportTranscript.html',
-                                   subject_name=subject_name,
-                                   students=students,
-                                   student_scores=student_scores,
-                                   averages=averages)
-    flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
-    return render_template('Teacher/GenerateTranscript.html', subject_name='', )
 
 
 @app.route('/Teacher/ExportTranscript/export_pdf', methods=['GET'])
@@ -1543,6 +1589,7 @@ def export_pdf():
         StudentClass.class_id == class_id,
         StudentClass.semester_id == semester_id
     ).all()
+    print(students)
 
     # Tính điểm trung bình cho mỗi sinh viên
     for student in students:

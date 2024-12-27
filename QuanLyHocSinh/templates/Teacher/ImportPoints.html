@@ -32,12 +32,10 @@ Nhập điểm
                 <th class="table-header">Mã học sinh</th>
                 <th class="table-header">Họ tên</th>
                 <th class="table-header score-15min-header">Điểm 15’
-                    <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
-                    <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
+
                 </th>
                 <th class="table-header score-test-header">Điểm 1 tiết
-                    <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
-                    <button type="button" id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
+
                 </th>
                 <th class="table-header">Điểm thi</th>
             </tr>
@@ -58,16 +56,20 @@ Nhập điểm
                 </td>
                 <td class="table-cell">{{ s.name }}</td>
                 <td class="table-cell score-15min-container">
+                    <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
+                    <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
                     <input type="number" class="input-cell scores_15min[]" name="scores_15min[]"
                            placeholder="Điểm 15’" step="0.1" min="0" max="10">
                 </td>
                 <td class="table-cell test-container">
+                    <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
+                    <button type="button" id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
                     <input type="number" class="input-cell scores_test[]" name="scores_test[]"
-                           placeholder="Điểm 1 tiết" step="0.1" min="0" max="10">
+                           placeholder="Điểm 1 tiết" step="0.1" min="0" max="10">-
                 </td>
                 <td class="table-cell">
                     <input type="number" class="input-cell" name="scores_exam[]"
-                           placeholder="Điểm thi" min="0" max="10">
+                           placeholder="Điểm thi" step="0.1" min="0" max="10">
                 </td>
             </tr>
             {% endfor %}

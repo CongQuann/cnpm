@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const semesterInput = document.getElementById("semester-input");
         const academicYearInput = document.getElementById("academic-year-input");
 
+
+
         // Hiển thị thông tin đã nhập vào
         classInput.addEventListener("input", function() {
             const enteredClass = classInput.value;
@@ -29,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("academic-year-display").textContent = "Năm học đã nhập: " + enteredYear;
         });
     });
+
 
 document.addEventListener('DOMContentLoaded', function () {
         const studentRows = document.getElementById('student-rows');
@@ -116,11 +119,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-setTimeout(function() {
-    var flashMessages = document.getElementById('flash-messages');
-    if (flashMessages) {
-      flashMessages.style.display = 'none';
-    }
-  }, 5000);
+//setTimeout(function() {
+//    var flashMessages = document.getElementById('flash-messages');
+//    if (flashMessages) {
+//      flashMessages.style.display = 'none';
+//    }
+//  }, 5000);
 
 
