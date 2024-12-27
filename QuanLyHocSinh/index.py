@@ -1,31 +1,61 @@
-import base64
+import random
 import string
 from datetime import datetime
-import random
-
-from werkzeug.security import generate_password_hash, check_password_hash
-
-
+from io import BytesIO
+from re import search
 
 from flask import render_template, request, redirect, flash, url_for
-from flask_login import login_user, LoginManager, login_required, logout_user,current_user
-from flask_mail import Mail, Message
-from sqlalchemy.orm import joinedload
-from flask_login import current_user
-from flask import session
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfbase import pdfmetrics
-from io import BytesIO
 from flask import send_file
+from flask import session
+from flask_login import login_user, LoginManager, login_required, logout_user, current_user
+from flask_mail import Mail, Message
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+from select import select
 from sqlalchemy.exc import SQLAlchemyError
-
+from sqlalchemy.orm import joinedload
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from QuanLyHocSinh import app, db
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
     Teacher, Administrator, StudentClass, Teach
+
+
+@app.before_request
+def restrict_routes():
+    # Các route hoặc phần route cần bảo vệ
+    protected_prefixes = ['/Administrator', '/Teacher', '/change_password', 'InfoUser', 'password_info', '/student_add',
+                          '/student_edit', '/update_student_NoClass', '/student_delete', '/student_info', '/class_edit',
+                          '/student_delete_class', '/student_class_info', '/update_student'
+                          ]
+
+    # Kiểm tra nếu route hiện tại bắt đầu với bất kỳ tiền tố nào trong danh sách
+    if any(request.path.startswith(prefix) for prefix in protected_prefixes):
+        # Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập
+        if not current_user.is_authenticated:
+            return redirect("/")
+
+
+@app.before_request
+def restrict_by_role():
+    protected_prefixes_admin = ['/Administrator']
+    protected_prefixes_teacher = ['/Teacher', '/change_password_teacher']
+    protected_prefixes_staff = ['InfoUser', 'password_info', '/student_add',
+                                '/student_edit', '/update_student_NoClass', '/student_delete', '/student_info',
+                                '/class_edit',
+                                '/student_delete_class', '/student_class_info', '/update_student']
+    if any(request.path.startswith(prefix) for prefix in
+           protected_prefixes_admin) and current_user.type != 'administrator':
+        return "Bạn không có quyền truy cập vào các trang quản trị.", 403
+    elif any(request.path.startswith(prefix) for prefix in
+             protected_prefixes_teacher) and current_user.type != 'teacher':
+        return "Bạn không có quyền truy cập vào các trang giáo viên.", 403
+    elif any(request.path.startswith(prefix) for prefix in
+             protected_prefixes_staff) and current_user.type != 'staff':
+        return "Bạn không có quyền truy cập vào các trang nhân viên.", 403
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -50,7 +80,7 @@ def login():
 
         # Duyệt qua tất cả người dùng để tìm người dùng khớp với username đã giải mã
         for user in users:
-             # Giải mã tên đăng nhập trong cơ sở dữ liệu
+            # Giải mã tên đăng nhập trong cơ sở dữ liệu
 
             if user.userName == username:  # Nếu username khớp
 
@@ -63,14 +93,16 @@ def login():
                 elif check_password_hash(user.password, password) and user.type == 'staff':
                     login_user(user)
                     return redirect("/class_edit")
-        flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
+        flash('Tên đăng nhập hoặc mật khẩu không đúng!', "danger")
     return render_template('index.html')
 
+
 @app.route("/logout")
-@login_required #phải đảm bảo người dùng đã đăng nhập trước khi đăng xuất
+@login_required  # phải đảm bảo người dùng đã đăng nhập trước khi đăng xuất
 def logout():
-    logout_user() #Thực hiện đăng xuất người dùng
-    return redirect("/") #thực hiện điều hướng về trang đăng nhập
+    logout_user()  # Thực hiện đăng xuất người dùng
+    session.clear()  # Xóa tất cả dữ liệu phiên
+    return redirect("/")  # thực hiện điều hướng về trang đăng nhập
 
 
 # Route lấy lại mật khẩu
@@ -82,7 +114,7 @@ def forgot_password(step):
             user = None
             users = User.query.all()
             for i in users:
-                if i.userName==username: # Nếu username khớp
+                if i.userName == username:  # Nếu username khớp
                     user = i
             print(user)
             if not user:
@@ -124,8 +156,7 @@ def forgot_password(step):
             users = User.query.all()
             for i in users:
 
-
-                if i.userName==username:  # Nếu username khớp
+                if i.userName == username:  # Nếu username khớp
                     user = i
             input_code = request.form['verification_code']
             if not user or input_code != user.verification_code:
@@ -147,7 +178,7 @@ def forgot_password(step):
             user = None
             users = User.query.all()
             for i in users:
-                if i.userName==username:  # Nếu username khớp
+                if i.userName == username:  # Nếu username khớp
                     user = i
             new_password = request.form['new_password']
             confirm_password = request.form['confirm_password']
@@ -166,6 +197,8 @@ def forgot_password(step):
             return redirect("/")
 
         return render_template('Administrator/forgot_password.html', step=3, username=username)
+
+
 # ===========================================================ADMINISTRATOR================================================
 
 @login_required
@@ -283,7 +316,6 @@ def is_student_passed(student_id, subject_id, semester_id):
 @login_required
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
-
     if request.method == "POST":
         # Lấy dữ liệu từ form
         min_age = request.form.get("min_age")
@@ -404,13 +436,23 @@ def update_subject():
     subject_name = request.form.get("subject_name")
     subject_requirement = request.form.get("subject_requirement")
     subject_description = request.form.get("subject_description")
-    # Xử lý cập nhật
+
+    # Lấy môn học từ cơ sở dữ liệu
     subject = Subject.query.get(subject_id)
     if not subject:
         flash("Không tìm thấy môn học.", "warning")
         return redirect("/Administrator/SubjectManagement")
 
     try:
+        # Kiểm tra nếu tên môn học có thay đổi
+        if subject.subjectName != subject_name:
+            # Kiểm tra xem tên mới đã tồn tại hay chưa
+            existing_subject = Subject.query.filter_by(subjectName=subject_name).first()
+            if existing_subject:
+                flash("Tên môn học đã được sử dụng!", "warning")
+                return redirect("/Administrator/SubjectManagement")
+
+        # Cập nhật thông tin môn học
         subject.subjectName = subject_name
         subject.subjectRequirement = subject_requirement
         subject.subjectDescription = subject_description
@@ -419,11 +461,11 @@ def update_subject():
     except Exception as e:
         db.session.rollback()
         flash("Lỗi trong quá trình cập nhật.", "danger")
+
     return redirect("/Administrator/SubjectManagement")
 
 
 # =====================================
-
 
 
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
@@ -518,7 +560,7 @@ def create_user():
     return render_template('Administrator/CreateUser.html')
 
 
-# ============Quản lý người dùng
+# ============Quản lý người dùng=================================
 @login_required
 @app.route("/Administrator/UserManagement", methods=["GET", "POST"])
 def user_mng():
@@ -545,8 +587,6 @@ def user_mng():
         elif user.teachers:
             role = "Teacher"
             additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
-
-
 
         user_data.append({
             "id": user.id,
@@ -623,8 +663,6 @@ def delete_user():
     return redirect("/Administrator/UserManagement")
 
 
-
-
 # =================================================
 @login_required
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
@@ -646,6 +684,7 @@ def teacher_mng():
     teachers = Teacher.query.all()
     subjects = Subject.query.all()
     return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
+
 
 @login_required
 @app.route("/Administrator/TeachManagement", methods=["GET", "POST"])
@@ -712,7 +751,6 @@ def enter_point():
 
     # Lấy số lượng điểm 15 phút của mỗi học sinh trong cơ sở dữ liệu
 
-
     return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
 
@@ -740,15 +778,14 @@ def generate_transcript():
 @login_required
 @app.route("/Teacher/ImportPoints", methods=["GET", "POST"])
 def import_points():
-
     return render_template('Teacher/ImportPoints.html')
 
 
 @login_required
 @app.route("/Teacher/ExportTranscript", methods=["GET", "POST"])
 def export_points():
-
     return render_template('Teacher/ExportTranscript.html')
+
 
 # staff
 
@@ -765,8 +802,9 @@ def info_user():
     return render_template(
         'staff/InfoUser.html',
         Cuser=current_user,
-        username = username
+        username=username
     )
+
 
 @app.route('/password_info', methods=['GET'])
 @login_required
@@ -784,9 +822,8 @@ def change_password():
 
         # Giải mã mật khẩu hiện tại
 
-
         # Kiểm tra mật khẩu hiện tại
-        if not check_password_hash(current_user.password,current_password):
+        if not check_password_hash(current_user.password, current_password):
             flash("Mật khẩu hiện tại không đúng!", "error")
             return redirect(url_for('password_info'))
 
@@ -828,7 +865,7 @@ def staff():
         age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
         if not (student_rule.minAge <= age <= student_rule.maxAge):
             flash(f"Tuổi học sinh phải nằm trong khoảng {student_rule.minAge} đến {student_rule.maxAge} tuổi.",
-                      "error")
+                  "error")
             return redirect(url_for("staff"))
 
         gender = request.form.get("gender")
@@ -843,7 +880,7 @@ def staff():
         if not phone.isdigit():
             flash("Số điện thoại không không hợp lệ!", "error")
             return redirect(url_for("staff"))
-        #kiểm tra số điện thoại có tồn tại chưa
+        # kiểm tra số điện thoại có tồn tại chưa
         existing_student = Student.query.filter_by(phone=phone).first()
         if existing_student:
             flash("Số điện thoại này đã tồn tại trong hệ thống!", "error")
@@ -857,7 +894,7 @@ def staff():
         if email.isdigit():
             flash("Email không hợp lệ!", "error")
             return redirect(url_for("staff"))
-        #kiểm tra email
+        # kiểm tra email
         existing_email = Student.query.filter_by(email=email).first()
         if existing_email:
             flash("Email này đã tồn tại trong hệ thống!", "error")
@@ -884,6 +921,7 @@ def staff():
         return redirect(url_for("staff"))
     return render_template('staff/staff.html')
 
+
 @app.route('/student_edit', methods=["GET", "POST"])
 def student_edit():
     students = []
@@ -894,12 +932,12 @@ def student_edit():
             # Tìm kiếm theo tên học sinh (không phân biệt chữ hoa/chữ thường)
             students_query = students_query.filter(Student.name.ilike(f'%{student_name}%'))
     students = students_query.all()
-    return render_template('staff/StudentEdit.html', students= students)
+    return render_template('staff/StudentEdit.html', students=students)
 
 
 @app.route('/update_student_NoClass/<int:student_id>', methods=['POST'])
 def update_student_NoClass(student_id):
-    #lấy id của hs hiện tại
+    # lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
     check_student = Student.query.filter(Student.id != student.id).all()
     name = request.form.get("name")
@@ -947,7 +985,6 @@ def update_student_NoClass(student_id):
     student.phone = request.form.get('phone', student.phone)
     student.email = request.form.get('email', student.email)
 
-
     try:
         dob_date = datetime.strptime(student.DOB, "%Y-%m-%d")  # Định dạng đúng: YYYY-MM-DD
     except ValueError:
@@ -963,7 +1000,6 @@ def update_student_NoClass(student_id):
               "error")
         return redirect(url_for("student_edit"))
 
-
     # Lưu thay đổi vào cơ sở dữ liệu
     try:
         db.session.commit()
@@ -976,12 +1012,13 @@ def update_student_NoClass(student_id):
     return redirect(url_for('student_edit', student_id=student_id))
 
 
-@app.route('/student_delete/<int:student_id>', methods=['GET','POST'])
+@app.route('/student_delete/<int:student_id>', methods=['GET', 'POST'])
 def student_delete(student_id):
     student = Student.query.get_or_404(student_id)
     db.session.delete(student)
     db.session.commit()
     return redirect(url_for('student_edit'))
+
 
 @app.route('/student_info/<int:student_id>')
 def student_info(student_id):
@@ -1002,7 +1039,6 @@ def class_edit():
         class_id = request.form.get('class')
         semester_id = request.form.get('semester')
         student_name = request.form.get('searchStudent', '').strip()
-
         # Truy vấn lại danh sách học sinh
         if class_id and semester_id and class_id != "none" and semester_id != "none":
             students_query = (
@@ -1028,14 +1064,22 @@ def class_edit():
 
         students = students_query.all()
 
+    # Lấy tên lớp và học kỳ từ ID
+
+    selected_class = Class.query.get(class_id) if class_id and class_id != "none" else None
+    selected_semester = Semester.query.get(semester_id) if semester_id and semester_id != "none" else None
     return render_template(
         'staff/ClassList.html',
         class_list=class_list,
         students=students,
         semester_list=semester_list,
         class_id=class_id,
-        semester_id=semester_id
+        semester_id=semester_id,
+        selected_class=selected_class,
+        selected_semester = selected_semester,
     )
+
+
 @app.route('/student_delete_class', methods=['POST'])
 def student_delete_class():
     student_id = request.form.get('student_id')
@@ -1064,6 +1108,7 @@ def student_delete_class():
     flash("Học sinh đã được xóa khỏi lớp thành công!", "success")
 
     return redirect(url_for('class_edit'))
+
 
 @app.route('/student_class_info/<int:student_id>', methods=['GET', 'POST'])
 def student_class_info(student_id):
@@ -1099,9 +1144,10 @@ def student_class_info(student_id):
         current_class_id=current_class_id,
         current_semester_id=current_semester_id
     )
+
+
 @app.route('/update_student/<int:student_id>', methods=['POST'])
 def update_student(student_id):
-
     # lấy id của hs hiện tại
     student = Student.query.get_or_404(student_id)
     check_student = Student.query.filter(Student.id != student.id).all()
@@ -1178,7 +1224,9 @@ def update_student(student_id):
     current_students_count = StudentClass.query.filter_by(class_id=class_id, semester_id=semester_id).count()
 
     if current_students_count >= current_class.classRule_class.maxNoStudent:
-        flash(f"Lớp {current_class.className} đã đạt tối đa số lượng học sinh ({current_class.classRule_class.maxNoStudent}).", "error")
+        flash(
+            f"Lớp {current_class.className} đã đạt tối đa số lượng học sinh ({current_class.classRule_class.maxNoStudent}).",
+            "error")
         return redirect(url_for("class_edit", student_id=student_id))
 
     # Kiểm tra và xử lý StudentClass
@@ -1220,9 +1268,10 @@ def info_user_teacher():
 
         print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template('Teacher/InforUser.html',
-        Cuser=current_user,
-        username = username
-    )
+                           Cuser=current_user,
+                           username=username
+                           )
+
 
 @app.route('/Teacher/password_info', methods=['GET'])
 @login_required
@@ -1238,9 +1287,8 @@ def change_password_teacher():
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
 
-
         # Kiểm tra mật khẩu hiện tại
-        if not check_password_hash(current_user.password,current_password):
+        if not check_password_hash(current_user.password, current_password):
             flash("Mật khẩu hiện tại không đúng!", "error")
             return redirect(url_for('password_info_teacher'))
 
@@ -1289,7 +1337,7 @@ def class_filter():
             _class = db.session.query(Class).filter(Class.className == class_name).first()
             _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
                                                           Semester.year == year).first()
-            session['semester_id']=_semester.id
+            session['semester_id'] = _semester.id
             session['class_id'] = _class.id
             if not _class or not _semester:
                 flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
@@ -1326,7 +1374,6 @@ def save_points():
             StudentClass.class_id == class_id,
             StudentClass.semester_id == semester_id
         ).all()
-
 
         # Kiểm tra nếu không có điểm nào được nhập (15p, test, hoặc exam)
         # Kiểm tra nếu không có điểm nào được nhập (15p, test, hoặc exam)
@@ -1457,7 +1504,6 @@ def save_points():
     return render_template('Teacher/ImportPoints.html', students=students)
 
 
-
 @app.route("/Teacher/GenerateTranscript/generate", methods=["GET", "POST"])
 def generate():
     if not hasattr(current_user, 'subjectID'):
@@ -1515,7 +1561,7 @@ def generate():
                 average = calculate_average(student.id, _subject.id, _semester.id)
                 averages[student.id] = average
 
-    # Render trang ExportTranscript nếu không có lỗi
+            # Render trang ExportTranscript nếu không có lỗi
             return render_template('Teacher/ExportTranscript.html',
                                    subject_name=subject_name,
                                    students=students,
@@ -1610,7 +1656,6 @@ def export_pdf():
 
         line_spacing = 15
 
-
         # In các điểm 15 phút (2x2)
         for i in range(0, len(points_15min), 2):  # Nhóm các điểm theo từng cặp
             line_points = []
@@ -1686,9 +1731,6 @@ def export_pdf():
     # Trả về PDF dưới dạng file
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="diem_sinh_vien.pdf", mimetype='application/pdf')
-
-
-
 
 
 if __name__ == '__main__':
