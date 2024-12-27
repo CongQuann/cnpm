@@ -31,6 +31,29 @@ login_manager.init_app(app)
 login_manager.login_view = '/'
 
 mail = Mail(app)
+#khống chế nguời dùng phải đăng nhập trước khi truy cập trang web
+@app.before_request
+def restrict_routes():
+    # Các route hoặc phần route cần bảo vệ
+    protected_prefixes = ['/Administrator','/Teacher','/staff']
+
+    # Kiểm tra nếu route hiện tại bắt đầu với bất kỳ tiền tố nào trong danh sách
+    if any(request.path.startswith(prefix) for prefix in protected_prefixes):
+        # Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+
+@app.before_request
+def restrict_by_role():
+    admin_routes = ['/Administrator']
+    staff_routes = ['/staff']
+    teacher_routes = ['/Teacher']
+    if any(request.path.startswith(prefix) for prefix in admin_routes) and current_user.type != 'administrator':
+        return "Bạn không có quyền truy cập vào các trang quản trị.", 403
+    if any(request.path.startswith(prefix) for prefix in staff_routes) and current_user.type != 'staff':
+        return "Bạn không có quyền truy cập vào các trang nhân viên.", 403
+    if any(request.path.startswith(prefix) for prefix in teacher_routes) and current_user.type != 'teacher':
+        return "Bạn không có quyền truy cập vào các trang giáo viên.", 403
 
 @app.before_request
 def restrict_routes():
@@ -1255,7 +1278,7 @@ def password_info_teacher():
     return render_template('Teacher/PasswordChange.html')
 
 
-@app.route('/change_password_teacher', methods=['POST'])
+@app.route('/Teacher/change_password_teacher', methods=['POST'])
 @login_required
 def change_password_teacher():
     try:
