@@ -1213,16 +1213,15 @@ def update_student(student_id):
 def info_user_teacher():
     try:
         # Giải mã User Name và Password
-        decrypted_username = decrypt_data(current_user.userName)
-        decrypted_password = decrypt_data(current_user.password)
+        username = current_user.userName
     except Exception as e:
-        decrypted_username = None
-        decrypted_password = None
+        username = None
+
         print(f"Lỗi khi giải mã dữ liệu: {e}")
-    return render_template('Teacher/InforUser.html',
+    return render_template(
+        'Teacher/InfoUser.html',
         Cuser=current_user,
-        decrypted_password = decrypted_password,
-        decrypted_username = decrypted_username
+        username=username
     )
 
 @app.route('/Teacher/password_info', methods=['GET'])
@@ -1240,20 +1239,19 @@ def change_password_teacher():
         confirm_password = request.form.get('confirm_password')
 
         # Giải mã mật khẩu hiện tại
-        decrypted_password = decrypt_data(current_user.password)
 
         # Kiểm tra mật khẩu hiện tại
-        if decrypted_password != current_password:
+        if not check_password_hash(current_user.password, current_password):
             flash("Mật khẩu hiện tại không đúng!", "error")
             return redirect(url_for('password_info_teacher'))
 
         # Kiểm tra mật khẩu mới và xác nhận mật khẩu
         if new_password != confirm_password:
             flash("Mật khẩu mới và xác nhận mật khẩu không khớp!", "error")
-            return redirect(url_for('password_info_teachero'))
+            return redirect(url_for('password_info_teacher'))
 
         # Cập nhật mật khẩu mới (băm trước khi lưu)
-        current_user.password = encrypt_data(new_password)  # Lưu mật khẩu đã mã hóa
+        current_user.password = generate_password_hash(new_password)  # Lưu mật khẩu đã mã hóa
         db.session.commit()
 
         flash("Thay đổi mật khẩu thành công!", "success")
@@ -1262,7 +1260,7 @@ def change_password_teacher():
     except Exception as e:
         db.session.rollback()
         flash(f"Lỗi không mong muốn: {e}", "error")
-        return redirect(url_for('password_info'))
+        return redirect(url_for('password_info_teacher'))
 
 
 @app.route('/Teacher/EnterPoints/class_filter', methods=['POST', 'GET'])
