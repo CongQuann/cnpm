@@ -1,7 +1,7 @@
 {% extends 'Teacher/base.html' %}
 
 {% block title %}
-Nhập điểm
+Xuất điểm
 {% endblock %}
 
 {% block css %}
@@ -9,11 +9,22 @@ Nhập điểm
 {% endblock %}
 
 {% block content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for category, message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
 <div class="container mt-4 container-div">
-    <h2 class="text-center">Nhập điểm cho môn {{subject_name}}</h2>
+    <h2 class="text-center">Xuất điểm cho môn {{subject_name}}</h2>
 
     <!-- Bộ lọc -->
-    <form action="{{ url_for('generate_transcript') }}" method="POST">
+    <form action="{{ url_for('generate') }}" method="POST">
         <div id="scoreboard-container">
             <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
             <div id="class-info">
@@ -53,79 +64,13 @@ Nhập điểm
                         <option value="2023-2024">
                     </datalist>
                 </p>
-                <button id="generate_transcript" type="submit" class="btn btn-primary">Lọc</button>
+                <button id="generate" type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </div>
     </form>
 
-    <table id="scoreboard-table">
-    <thead>
-        <tr>
-            <th class="table-header">STT</th>
-            <th class="table-header">Mã học sinh</th>
-            <th class="table-header">Họ tên</th>
-            <th class="table-header score-15min-header">Điểm 15’</th>
-            <th class="table-header score-test-header">Điểm 1 tiết</th>
-            <th class="table-header">Điểm thi</th>
-            <th class="table-header">Điểm trung bình</th>
-        </tr>
-    </thead>
 
-    <tbody id="student-rows">
-        {% if error %}
-        <div class="alert alert-danger">
-            {{ error }}
-        </div>
-        {% endif %}
-        {% for s in students %}
-        <tr>
-            <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
-            <td class="table-cell">{{ s.id }}</td>
-            <td class="table-cell">{{ s.name }}</td>
 
-            <!-- Điểm 15 phút -->
-            <td class="table-cell score-15min-container">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == '15 phút' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
-            </td>
-
-            <!-- Điểm 1 tiết -->
-            <td class="table-cell test-container">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == '1 tiết' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
-            </td>
-
-            <!-- Điểm thi -->
-            <td class="table-cell">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == 'Cuối kỳ' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
-            </td>
-
-            <!-- Điểm trung bình -->
-            <td class="table-cell">
-                {% set average = averages[s.id] %}
-                {% if average %}
-                    <p>{{ average | round(2) }}</p>
-                {% else %}
-                    <p>Chưa có điểm</p>
-                {% endif %}
-            </td>
-
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-    <!-- Bảng hiển thị điểm trung bình -->
 
 
 </div>

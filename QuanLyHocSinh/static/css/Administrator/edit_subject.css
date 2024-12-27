@@ -24,7 +24,19 @@
 
 .container{
     width: 50% !important;
+    margin-bottom:5rem;
+    box-shadow: 0 0 13px rgba(0, 0, 0, 0.2);
+    padding:1rem;
+    border-radius:8px;
 }
 h2{
       text-align: center
+}
+
+textarea{
+    width:100%;
+    border-radius:5px;
+    padding:1rem;
+    border:none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }

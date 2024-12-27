@@ -2,7 +2,7 @@
 
 #scoreboard-container {
     max-width: 1000px;
-    margin: 50px auto;
+    margin: 20px auto;
     padding: 20px;
     background-color: #f8f9fa;
     border-radius: 10px;
@@ -51,7 +51,7 @@
     min-width: 150px; / Đảm bảo độ rộng tối thiểu của mỗi ô /
     font-size: 1.2rem; /* Tăng kích cỡ chữ */
     border-spacing: 0; /* Khoảng cách giữa các ô */
-    margin: 0 auto; /* Canh giữa bảng */
+    margin: 3rem auto; /* Canh giữa bảng */
 
 }
 
@@ -148,4 +148,12 @@
     font-size: 14px; /* Cỡ chữ */
     cursor: pointer; /* Trỏ chuột */
     transition: background-color 0.3s ease; /* Hiệu ứng hover */
+}
+
+#user_name{
+    color: white;
+}
+
+.container{
+    margin-bottom: 5rem !important;
 }

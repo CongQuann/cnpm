@@ -11,8 +11,8 @@
 <body>
     <div class="container">
      <div class="sidebar">
-        <a href="{{ url_for('info_user') }}">Thông Tin Cá Nhân</a>
-        <a href="{{ url_for('staff') }}"><i class="fa-solid fa-backward"></i><span> Trang Chính</span></a>
+        <a href="{{ url_for('info_user_teacher') }}">Thông Tin Cá Nhân</a>
+        <a href="{{ url_for('enter_point') }}"><i class="fa-solid fa-backward"></i><span>Trang chính</span></a>
     </div>
 
     <div class="content" id="personalInfo">
@@ -25,8 +25,8 @@
                 </div>
             {% endif %}
         {% endwith %}
-        <form action="{{ url_for('info_user') }}" method="POST">
-            <div class="account-id">Tên Người Dùng: {{ username or 'Không thể giải mã' }}</div>
+        <form action="{{ url_for('info_user_teacher') }}" method="POST">
+            <div class="account-id">Tên Người Dùng: {{ current_user.userName or 'Không thể giải mã' }}</div>
             <a href="{{ url_for('logout') }}" class="log_out">Đăng Xuất</a>
             <h1>Thông Tin Cá Nhân</h1>
 
@@ -41,7 +41,7 @@
             </div>
 
             <div class="info-section">
-                <a href="{{url_for('password_info')}}" class="change-link">Thay đổi mật khẩu</a>
+                <a href="{{url_for('password_info_teacher')}}" class="change-link">Thay đổi mật khẩu</a>
             </div>
 
             <div class="info-section">

@@ -75,7 +75,7 @@ h3.text-center {
 }
 
 ul {
-    padding-left: 1rem;
+    padding-left: 0rem !important;
     margin: 0;
     list-style-type: none;
 }

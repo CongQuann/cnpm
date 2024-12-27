@@ -14,7 +14,7 @@
 <input type="text" id="address" name="address" value="{{ student.address if student else '' }}" required>
 
 <label for="phone">Số điện thoại:</label>
-<input type="tel" id="phone" name="phone" value="{{ student.phone if student else '' }}" required>
+<input type="number" id="phone" name="phone" class="form-control" min="0" step="1" required>
 
 <label for="email">Email:</label>
 <input type="email" id="email" name="email" value="{{ student.email if student else '' }}">
