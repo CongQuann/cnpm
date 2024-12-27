@@ -11,7 +11,7 @@ Nhập điểm
 {% block content %}
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-        <div class="alert alert-info">
+        <div class="alert alert-info" id="flash-messages">
             {% for category, message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
