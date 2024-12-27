@@ -45,7 +45,16 @@ Quản lý dạy học
                     {% for teacher in teachers %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td>{{ teacher.name }} [{{teacher.subject_teacher.subjectName}}]</td>
+                        <td>
+                            {{ teacher.name }}
+                            {% if teacher.subject_teacher.subjectName %}
+                            [{{teacher.subject_teacher.subjectName}}]
+
+                            {%else%}
+                            [<em>Chưa có môn dạy</em>]
+                            {%endif%}
+
+                        </td>
                         <td>
                             {% if teacher.teaches %}
                             <ul>
@@ -102,7 +111,12 @@ Quản lý dạy học
                             <ul>
                                 {% for teach in classroom.teaches %}
                                 <li>{{loop.index}}. {{ teach.teacher_teach.name }}
+                                    {% if teach.teacher_teach.subject_teacher.subjectName %}
                                     [{{teach.teacher_teach.subject_teacher.subjectName}}]
+
+                                    {%else%}
+                                    <em>Chưa có môn dạy</em>
+                                    {%endif%}
                                 </li>
                                 {% endfor %}
                             </ul>
