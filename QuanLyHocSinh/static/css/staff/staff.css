@@ -76,6 +76,9 @@ body {
     align-items: center;
     margin-left: 20px;
 }
+.sub_head_div h1{
+    color: #f2f2f2;
+}
 
 .offcanvas-body a {
     color: #676464;
