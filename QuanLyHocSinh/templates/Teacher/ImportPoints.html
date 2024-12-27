@@ -21,7 +21,6 @@ Nhập điểm
 {% endif %}
 {% endwith %}
 
-
 <div class="container">
     <form action="{{ url_for('save_points') }}" method="POST" id="score-form">
         <button type="submit" class="btn btn-primary mt-3">Lưu điểm</button>
@@ -31,12 +30,8 @@ Nhập điểm
                 <th class="table-header">STT</th>
                 <th class="table-header">Mã học sinh</th>
                 <th class="table-header">Họ tên</th>
-                <th class="table-header score-15min-header">Điểm 15’
-
-                </th>
-                <th class="table-header score-test-header">Điểm 1 tiết
-
-                </th>
+                <th class="table-header score-15min-header">Điểm 15’</th>
+                <th class="table-header score-test-header">Điểm 1 tiết</th>
                 <th class="table-header">Điểm thi</th>
             </tr>
             </thead>
@@ -56,28 +51,39 @@ Nhập điểm
                 </td>
                 <td class="table-cell">{{ s.name }}</td>
                 <td class="table-cell score-15min-container">
-                    <button type="button" id="add-15min-btn" class="btn btn-sm btn-primary">+</button>
-                    <button type="button" id="remove-15min-btn" class="btn btn-sm btn-danger">-</button>
-                    <input type="number" class="input-cell scores_15min[]" name="scores_15min[]"
-                           placeholder="Điểm 15’" step="0.1" min="0" max="10">
+                    {% if s.id in existing_15min and not existing_15min[s.id] %}
+                        Đã đủ điểm
+                    {% else %}
+                        {% for _ in range(existing_15min[s.id] if s.id in existing_15min else 1) %}
+                            <input type="number" class="input-cell scores_15min[]" name="scores_15min[]"
+                                   placeholder="Điểm 15’" step="0.1" min="0" max="10">
+                        {% endfor %}
+                    {% endif %}
                 </td>
                 <td class="table-cell test-container">
-                    <button type="button" id="add-test-btn" class="btn btn-sm btn-primary">+</button>
-                    <button type="button" id="remove-test-btn" class="btn btn-sm btn-danger">-</button>
-                    <input type="number" class="input-cell scores_test[]" name="scores_test[]"
-                           placeholder="Điểm 1 tiết" step="0.1" min="0" max="10">-
+                    {% if s.id in existing_test and not existing_test[s.id] %}
+                        Đã đủ điểm
+                    {% else %}
+                        {% for _ in range(existing_test[s.id] if s.id in existing_test else 1) %}
+                            <input type="number" class="input-cell scores_test[]" name="scores_test[]"
+                                   placeholder="Điểm 1 tiết" step="0.1" min="0" max="10">
+                        {% endfor %}
+                    {% endif %}
                 </td>
                 <td class="table-cell">
-                    <input type="number" class="input-cell" name="scores_exam[]"
-                           placeholder="Điểm thi" step="0.1" min="0" max="10">
+                    {% if s.id in existing_exam and not existing_exam[s.id] %}
+                        Đã đủ điểm
+                    {% else %}
+                        {% for _ in range(existing_exam[s.id] if s.id in existing_exam else 1) %}
+                            <input type="number" class="input-cell" name="scores_exam[]"
+                                   placeholder="Điểm thi" step="0.1" min="0" max="10">
+                        {% endfor %}
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
-
-
             </tbody>
         </table>
-
     </form>
 </div>
 

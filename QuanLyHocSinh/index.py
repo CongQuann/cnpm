@@ -734,31 +734,41 @@ def generate_transcript():
 def import_points():
     semester_id = session.get('semester_id')
     class_id = session.get('class_id')
-    student_ids = request.form.getlist('student_ids[]')
-    scores_15min = request.form.getlist('scores_15min[]')
-    scores_test = request.form.getlist('scores_test[]')
-    scores_exam = request.form.getlist('scores_exam[]')
     # Lấy danh sách học sinh
     students = db.session.query(Student).join(StudentClass).filter(
         StudentClass.class_id == class_id,
         StudentClass.semester_id == semester_id
     ).all()
-    existing_15min = []
-    for i, student_id in enumerate(student_ids):
+    existing_15min = {}
+    existing_test = {}
+    existing_exam = {}
+    for student in students:
         # Kiểm tra số lượng điểm 15 phút hiện tại của học sinh
-        existing_15min_scores = db.session.query(Point).filter(
-            Point.studentID == student_id,
+        existing_15min[student.id] = 5 - db.session.query(Point).filter(
+            Point.studentID == student.id,
             Point.pointTypeID == 1,  # 1 là mã cho điểm 15 phút
             Point.semesterID == semester_id,
-            Point.subjectID == current_user.subjectIDs
+            Point.subjectID == current_user.subjectID
         ).count()
-        existing_15min[i] = existing_15min_scores
-        if request.method == "POST" and request.is_json:
-            # Chuyển danh sách học sinh sang JSON
-            student_list = [{"id": student.id, "name": student.name} for student in students]
-            return jsonify(student_list)
-        # Tính số lượng điểm 15 phút cho học sinh hiện tại
-    return render_template('Teacher/ImportPoints.html', existing_15min = existing_15min, students = students)
+        existing_test[student.id] = 3 - db.session.query(Point).filter(
+            Point.studentID == student.id,
+            Point.pointTypeID == 2,  # 1 là mã cho điểm 15 phút
+            Point.semesterID == semester_id,
+            Point.subjectID == current_user.subjectID
+        ).count()
+        existing_exam[student.id] = 1 - db.session.query(Point).filter(
+            Point.studentID == student.id,
+            Point.pointTypeID == 3,  # 1 là mã cho điểm 15 phút
+            Point.semesterID == semester_id,
+            Point.subjectID == current_user.subjectID
+        ).count()
+
+
+    return render_template('Teacher/ImportPoints.html',
+                           students = students,
+                           existing_15min=existing_15min,
+                           existing_exam =existing_exam,
+                           existing_test =existing_test)
 
 
 @login_required
@@ -1236,7 +1246,7 @@ def info_user_teacher():
 
         print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template(
-        'Teacher/InfoUser.html',
+        'Teacher/InforUser.html',
         Cuser=current_user,
         username=username
     )
@@ -1326,26 +1336,44 @@ def class_filter():
                 flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
                 return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
 
-            # Lấy điểm của các học sinh
-            for student in students:
-                points = db.session.query(Point).filter(
-                    Point.studentID == student.id,
-                    Point.subjectID == _subject.id,
-                    Point.semesterID == _semester.id
-                ).all()
-                student_scores[student.id] = points  # Lưu điểm của từng học sinh
 
-            # Tính điểm trung bình cho từng sinh viên
+            existing_15min = {}
+            existing_test = {}
+            existing_exam = {}
+
             for student in students:
-                average = calculate_average(student.id, _subject.id, _semester.id)
-                averages[student.id] = average
+                # Kiểm tra số lượng điểm 15 phút hiện tại của học sinh
+                existing_15min[student.id] = 5 - db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.pointTypeID == 1,  # 1 là mã cho điểm 15 phút
+                    Point.semesterID == _semester.id,
+                    Point.subjectID == current_user.subjectID
+                ).count()
+                existing_test[student.id] = 3 - db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.pointTypeID == 2,  # 1 là mã cho điểm 15 phút
+                    Point.semesterID == _semester.id,
+                    Point.subjectID == current_user.subjectID
+                ).count()
+                existing_exam[student.id] = 1 - db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.pointTypeID == 3,  # 1 là mã cho điểm 15 phút
+                    Point.semesterID == _semester.id,
+                    Point.subjectID == current_user.subjectID
+                ).count()
+
+
+
 
             # Render trang ExportTranscript nếu không có lỗi
             return render_template('Teacher/ImportPoints.html',
                                    subject_name=subject_name,
                                    students=students,
                                    student_scores=student_scores,
-                                   averages=averages)
+                                   averages=averages,
+                                   existing_15min=existing_15min,
+                                   existing_exam =existing_exam,
+                                   existing_test=existing_test)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/EnterPoints.html', subject_name='', )
 
@@ -1407,6 +1435,7 @@ def generate():
                 average = calculate_average(student.id, _subject.id, _semester.id)
                 averages[student.id] = average
 
+
     # Render trang ExportTranscript nếu không có lỗi
             return render_template('Teacher/ExportTranscript.html',
                                    subject_name=subject_name,
@@ -1432,129 +1461,103 @@ def save_points():
             StudentClass.semester_id == semester_id
         ).all()
 
-        # Kiểm tra nếu không có điểm nào được nhập (15p, test, hoặc exam)
-        if not any(scores_15min) and not any(scores_test) and not any(scores_exam):
-            return render_template('Teacher/ImportPoints.html', students=students)
 
-        # Lưu trạng thái thông báo flash
-        flash_messages = []
-        points_added = False  # Biến kiểm tra có điểm nào được thêm vào không
+            # Kiểm tra dữ liệu trống hoặc không hợp lệ
 
-        # Xử lý điểm 15 phút: mỗi học sinh có thể có nhiều điểm 15 phút nhưng tối đa 5 điểm
-        for i, student_id in enumerate(student_ids):
+        existing_15min = {}
+        existing_test = {}
+        existing_exam = {}
+
+        for student in students:
             # Kiểm tra số lượng điểm 15 phút hiện tại của học sinh
-            existing_15min_scores = db.session.query(Point).filter(
-                Point.studentID == student_id,
+            existing_15min[student.id] = 5 - db.session.query(Point).filter(
+                Point.studentID == student.id,
                 Point.pointTypeID == 1,  # 1 là mã cho điểm 15 phút
                 Point.semesterID == semester_id,
                 Point.subjectID == current_user.subjectID
             ).count()
-
-            # Nếu học sinh đã có đủ số điểm 15 phút (5 điểm), không cho thêm nữa
-            if scores_15min[i] and existing_15min_scores >= 5:
-                flash_messages.append(f"Học sinh {student_id} đã có đủ điểm 15 phút.")
-                return  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
-
-            if scores_15min[i] and len(scores_15min)//len(student_ids) + existing_15min_scores >=5:
-                flash_messages.append(f"Học sinh {student_id} chỉ có thể thêm {5 - existing_15min_scores} cột điểm 15p")
-                continue
-            # Tính số lượng điểm 15 phút cho học sinh hiện tại
-            start_idx_15min = i * len(scores_15min) // len(student_ids)
-            end_idx_15min = (i + 1) * len(scores_15min) // len(student_ids)
-            student_scores_15min = scores_15min[start_idx_15min:end_idx_15min]
-
-            # Lặp qua các điểm 15 phút của học sinh
-            for score in student_scores_15min:
-                if score and existing_15min_scores < 5:
-                    db.session.add(
-                        Point(
-                            pointValue=float(score),
-                            pointTypeID=1,  # 1 là mã cho điểm 15 phút
-                            semesterID=semester_id,
-                            subjectID=current_user.subjectID,
-                            studentID=student_id
-                        )
-                    )
-                    existing_15min_scores += 1  # Cập nhật số lượng điểm 15 phút đã thêm
-                    points_added = True  # Có điểm 15 phút được thêm vào
-
-        # Xử lý điểm kiểm tra (1 tiết): mỗi học sinh có thể có nhiều điểm kiểm tra nhưng tối đa 3 điểm
-        for i, student_id in enumerate(student_ids):
-            # Kiểm tra số lượng điểm kiểm tra hiện tại của học sinh
-            existing_test_scores = db.session.query(Point).filter(
-                Point.studentID == student_id,
-                Point.pointTypeID == 2,  # 2 là mã cho điểm kiểm tra
+            existing_test[student.id] = 3 - db.session.query(Point).filter(
+                Point.studentID == student.id,
+                Point.pointTypeID == 2,  # 1 là mã cho điểm 15 phút
+                Point.semesterID == semester_id,
+                Point.subjectID == current_user.subjectID
+            ).count()
+            existing_exam[student.id] = 1 - db.session.query(Point).filter(
+                Point.studentID == student.id,
+                Point.pointTypeID == 3,  # 1 là mã cho điểm 15 phút
                 Point.semesterID == semester_id,
                 Point.subjectID == current_user.subjectID
             ).count()
 
-            # Nếu học sinh đã có đủ số điểm kiểm tra (3 điểm), không cho thêm nữa
-            if scores_test[i] and existing_test_scores >= 3:
-                flash_messages.append(f"Học sinh {student_id} đã có đủ điểm kiểm tra.")
-                continue  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
-            if scores_test[i] and len(scores_15min)//len(student_ids) + existing_15min_scores >=3:
-                flash_messages.append(f"Học sinh {student_id} chỉ có thể thêm {3 - existing_15min_scores} cột điểm 1 tiết")
-                continue
-            # Tính số lượng điểm kiểm tra cho học sinh hiện tại
-            start_idx_test = i * len(scores_test) // len(student_ids)
-            end_idx_test = (i + 1) * len(scores_test) // len(student_ids)
-            student_scores_test = scores_test[start_idx_test:end_idx_test]
 
-            # Lặp qua các điểm kiểm tra của học sinh
-            for score in student_scores_test:
-                if score and existing_test_scores < 3:
-                    db.session.add(
-                        Point(
-                            pointValue=float(score),
-                            pointTypeID=2,  # 2 là mã cho điểm kiểm tra
-                            semesterID=semester_id,
-                            subjectID=current_user.subjectID,
-                            studentID=student_id
-                        )
-                    )
-                    existing_test_scores += 1  # Cập nhật số lượng điểm kiểm tra đã thêm
-                    points_added = True  # Có điểm kiểm tra được thêm vào
 
-        # Xử lý điểm thi (chỉ có 1 cột duy nhất cho mỗi học sinh)
-        for i, student_id in enumerate(student_ids):
-            # Kiểm tra xem học sinh đã có điểm thi chưa
-            existing_exam_score = db.session.query(Point).filter(
-                Point.studentID == student_id,
-                Point.pointTypeID == 3,  # 3 là mã cho điểm thi
-                Point.semesterID == semester_id,
-                Point.subjectID == current_user.subjectID
-            ).count()
+        for id, student in enumerate(students):
+            if student.id in existing_15min:
+                for i in range(existing_15min[student.id]):
 
-            # Nếu học sinh đã có điểm thi, không cho phép thêm điểm thi mới
-            if scores_exam[i] and existing_exam_score >= 1:
-                flash_messages.append(f"Học sinh {student_id} đã có điểm thi.")
-                continue  # Tiếp tục lặp qua học sinh tiếp theo, không thực hiện thêm điểm
+                    if scores_15min:
+                        score = scores_15min.pop(0)  # Lấy điểm đầu tiên từ scores_15min và loại bỏ nó
+                        if score:  # Nếu score hợp lệ (không None hoặc không rỗng)
+                            db.session.add(
+                                Point(
+                                    pointValue=float(score),
+                                    pointTypeID=1,
+                                    semesterID=semester_id,
+                                    subjectID=current_user.subjectID,
+                                    studentID=student.id
+                                )
+                            )
+                            print(1)
+                try:
+                    db.session.commit()  # Commit sau khi đã thêm các điểm
+                except Exception as e:
+                    print(f"Error occurred: {e}")
+                    db.session.rollback()
+            if student.id in existing_test:
+                for i in range(existing_test[student.id]):
 
-            # Thêm điểm thi cho học sinh nếu có dữ liệu
-            if scores_exam[i]:  # Chỉ thêm điểm thi nếu có dữ liệu
-                db.session.add(
-                    Point(
-                        pointValue=float(scores_exam[i]),
-                        pointTypeID=3,  # 3 là mã cho điểm thi
-                        semesterID=semester_id,
-                        subjectID=current_user.subjectID,
-                        studentID=student_id
-                    )
-                )
-                points_added = True  # Có điểm thi được thêm vào
+                    if scores_test:
+                        score = scores_test.pop(0)  # Lấy điểm đầu tiên từ scores_15min và loại bỏ nó
+                        if score:  # Nếu score hợp lệ (không None hoặc không rỗng)
+                            db.session.add(
+                                Point(
+                                    pointValue=float(score),
+                                    pointTypeID=2,
+                                    semesterID=semester_id,
+                                    subjectID=current_user.subjectID,
+                                    studentID=student.id
+                                )
+                            )
+                            print(2)
+                try:
+                    db.session.commit()  # Commit sau khi đã thêm các điểm
+                except Exception as e:
+                    print(f"Error occurred: {e}")
+                    db.session.rollback()
+            if student.id in existing_exam:
+                for i in range(existing_exam[student.id]):
+                    if scores_exam:
+                        score = scores_exam.pop(0)
+                        if score:
+                            db.session.add(
+                                Point(
+                                    pointValue=float(score),
+                                    pointTypeID=3,
+                                    semesterID=semester_id,
+                                    subjectID=current_user.subjectID,
+                                    studentID=student.id
+                                )
+                            )
+                            print(3)
+                try:
+                    db.session.commit()  # Commit sau khi đã thêm các điểm
+                except Exception as e:
+                    print(f"Error occurred: {e}")
+                    db.session.rollback()
 
-        # Kiểm tra nếu có điểm được thêm vào thì commit
-        if points_added:
-            db.session.commit()
-            flash("Lưu điểm thành công!", "success")
-            return redirect(url_for('enter_point'))  # Chuyển đến trang EnterPoints.html sau khi lưu thành công
 
-        # Hiển thị các thông báo lỗi và giữ lại danh sách học sinh
-        for message in flash_messages:
-            flash(message, "danger")
 
-        # Render lại trang importpoints.html với danh sách học sinh và các thông báo
-        return render_template('Teacher/ImportPoints.html', students=students)
+
 
     except SQLAlchemyError as db_err:
         db.session.rollback()
@@ -1563,9 +1566,9 @@ def save_points():
         flash(f"Lỗi dữ liệu đầu vào: {val_err}", "danger")
     except Exception as e:
         flash(f"Có lỗi xảy ra: {e}", "danger")
-
+    flash(f"Lưu thành công", "message")
     # Nếu có lỗi xảy ra, vẫn giữ lại danh sách học sinh trên trang ImportPoints
-    return render_template('Teacher/ImportPoints.html', students=students)
+    return redirect(url_for('enter_point'))
 
 
 
