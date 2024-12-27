@@ -33,6 +33,16 @@ login_manager.login_view = '/'
 
 mail = Mail(app)
 
+@app.before_request
+def restrict_routes():
+    # Các route hoặc phần route cần bảo vệ
+    protected_prefixes = ['/Administrator','/Teacher',]
+
+    # Kiểm tra nếu route hiện tại bắt đầu với bất kỳ tiền tố nào trong danh sách
+    if any(request.path.startswith(prefix) for prefix in protected_prefixes):
+        # Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -1236,7 +1246,7 @@ def info_user_teacher():
 
         print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template(
-        'Teacher/InfoUser.html',
+        'Teacher/InforUser.html',
         Cuser=current_user,
         username=username
     )
