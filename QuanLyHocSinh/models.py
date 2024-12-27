@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, LoginManager
 from QuanLyHocSinh import db, app
-import base64
+
 from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model,UserMixin):
     __tablename__ = 'user'

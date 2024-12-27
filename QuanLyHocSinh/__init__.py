@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_admin import Admin
 from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'abcd'  # Đặt chuỗi bí mật tại đây
