@@ -94,7 +94,7 @@ def login():
                     return redirect("/Teacher/EnterPoints")
                 elif check_password_hash(user.password, password) and user.type == 'staff':
                     login_user(user)
-                    return redirect("/class_edit")
+                    return redirect("/staff/class_edit")
         flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
     return render_template('index.html')
 
@@ -102,6 +102,7 @@ def login():
 @login_required #phải đảm bảo người dùng đã đăng nhập trước khi đăng xuất
 def logout():
     logout_user() #Thực hiện đăng xuất người dùng
+    session.clear()  # Xóa tất cả dữ liệu phiên
     return redirect("/") #thực hiện điều hướng về trang đăng nhập
 
 
