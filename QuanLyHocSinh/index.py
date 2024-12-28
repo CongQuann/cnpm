@@ -1,6 +1,7 @@
 import string
 from datetime import datetime
 import random
+from importlib.metadata import unique_everseen
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -731,13 +732,17 @@ def enter_point():
         flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
         return render_template('Teacher/EnterPoints.html', subject_name='')
 
-    # Nếu có môn học, lấy tên môn học
+    semesters = Semester.query.all()
+    classes = Class.query.all()
+    class_name= sorted({classindex.className for classindex in classes})
+    unique_years = list({semester.year for semester in semesters})
+    unique_semesters = sorted({semester.semesterName for semester in semesters})
     subject_name = _subject.subjectName
 
 
 
 
-    return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
+    return render_template('Teacher/EnterPoints.html', subject_name=subject_name, unique_semesters=unique_semesters, unique_years=unique_years, class_name=class_name)
 
 
 @login_required
@@ -754,11 +759,16 @@ def generate_transcript():
     if not _subject:
         flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
         return render_template('Teacher/GenerateTranscript.html', subject_name='')
-
+    semesters = Semester.query.all()
+    classes = Class.query.all()
+    class_name = sorted({classindex.className for classindex in classes})
+    unique_years = list({semester.year for semester in semesters})
+    unique_semesters = sorted({semester.semesterName for semester in semesters})
+    subject_name = _subject.subjectName
     # Nếu có môn học, lấy tên môn học
     subject_name = _subject.subjectName
 
-    return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+    return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name,unique_semesters=unique_semesters, unique_years=unique_years, class_name=class_name)
 
 
 @login_required
