@@ -1,12 +1,7 @@
 import string
 from datetime import datetime
 import random
-from importlib.metadata import unique_everseen
-
 from werkzeug.security import generate_password_hash, check_password_hash
-
-
-
 from flask import render_template, request, redirect, flash, url_for, jsonify
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
@@ -24,6 +19,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 from QuanLyHocSinh import app, db
+from QuanLyHocSinh.dao import get_semester_info, get_subject_name, get_classes, get_student_classes, is_student_passed, \
+    calculate_average, get_class_rule, get_student_rule, update_rules, existing_subject_check, add_new_subject, \
+    get_subject, delete_subject_by_id, get_subject_by_id, check_existing_subject_name, update_subject_info, \
+    existing_user_check, existing_email_check, existing_phone_check, create_user_by_role, send_email, get_user_data, \
+    delete_user_by_id, teacher_subject_update, get_teacher, update_class_to_teacher
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
     Teacher, Administrator, StudentClass, Teach
 
@@ -208,115 +208,57 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
-    # Khởi tạo biến statistics để giữ dữ liệu nếu có chọn môn học và học kỳ
     statistics = []
     subject_name = None
     semester_name = None
     year = None
 
-    # Xử lý form khi người dùng chọn môn học và học kỳ
     if request.method == "POST":
         selected_subject = request.form.get('subject')
         selected_semester = request.form.get('semester')
 
-        # Tính toán thống kê cho môn học và học kỳ đã chọn
         if selected_subject and selected_semester:
             subject_id = selected_subject
             semester_id = selected_semester
 
-            # Lấy thông tin học kỳ và môn học
-            semester = Semester.query.get(semester_id)
-            subject_name = Subject.query.with_entities(Subject.subjectName).filter_by(id=subject_id).scalar()
+            semester = get_semester_info(semester_id)
+            subject_name = get_subject_name(subject_id)
             semester_name = semester.semesterName
             year = semester.year
 
-            # Lấy thông tin lớp học (Class)
-            classes = Class.query.all()
+            classes = get_classes()
 
-            # Thống kê số lượng học sinh đạt theo lớp
             for cls in classes:
-                # Lọc các học sinh theo lớp và học kỳ
-                student_classes = StudentClass.query.filter_by(class_id=cls.id, semester_id=semester_id).all()
-
+                student_classes = get_student_classes(cls.id, semester_id)
                 num_students = len(student_classes)
-                num_passed = 0
-
-                for student_class in student_classes:
-                    # Lấy học sinh từ StudentClass
-                    student = Student.query.get(student_class.student_id)
-                    if student:
-                        # Tính điểm trung bình của học sinh và kiểm tra nếu học sinh đã đạt
-                        if is_student_passed(student.id, subject_id, semester_id):
-                            num_passed += 1
-
-                # Tính tỷ lệ đạt
+                num_passed = sum(
+                    is_student_passed(student_class.student_id, subject_id, semester_id)
+                    for student_class in student_classes
+                )
                 pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
                 statistics.append({
                     "class_name": cls.className,
                     "total_students": num_students,
                     "num_passed": num_passed,
-                    "pass_rate": f"{pass_rate:.2f}%"  # Làm tròn 2 chữ số thập phân
+                    "pass_rate": f"{pass_rate:.2f}%"
                 })
 
-    # Render lại form và dữ liệu thống kê khi trang đầu tiên hoặc sau khi người dùng chọn môn học và học kỳ
-    return render_template('Administrator/Report.html',
-                           subjects=subject_list,
-                           semesters=semester_list,
-                           selected_subject=request.form.get('subject', None),
-                           selected_semester=request.form.get('semester', None),
-                           statistics=statistics,
-                           subject_name=subject_name,
-                           semester_name=semester_name,
-                           year=year)
-
-
-def calculate_average(student_id, subject_id, semester_id):
-    query = Point.query.filter_by(studentID=student_id, semesterID=semester_id)
-    if subject_id:
-        query = query.filter_by(subjectID=subject_id)
-
-    points = query.all()
-    total_points = 0
-    total_weight = 0
-
-    for point in points:
-        point_type = point.pointType_point.type
-
-        if point_type == "15 phút":
-            total_points += point.pointValue
-            total_weight += 1
-        elif point_type == "1 tiết":
-            total_points += 2 * point.pointValue
-            total_weight += 2
-        elif point_type == "Cuối kỳ":
-            total_points += 3 * point.pointValue
-            total_weight += 3
-
-    if total_weight == 0:
-        return 0
-
-    average = total_points / total_weight
-
-    return average
-
-
-def is_student_passed(student_id, subject_id, semester_id):
-    # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
-    average = calculate_average(student_id, subject_id, semester_id)
-
-    # Kiểm tra nếu điểm trung bình >= 5 thì đạt
-    if average >= 5:
-        return True  # Học sinh đạt môn
-    else:
-        return False  # Học sinh không đạt môn
-
-
+    return render_template(
+        'Administrator/Report.html',
+        subjects=subject_list,
+        semesters=semester_list,
+        selected_subject=request.form.get('subject', None),
+        selected_semester=request.form.get('semester', None),
+        statistics=statistics,
+        subject_name=subject_name,
+        semester_name=semester_name,
+        year=year
+    )
 # ========================================
 
 @login_required
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
-
     if request.method == "POST":
         # Lấy dữ liệu từ form
         min_age = request.form.get("min_age")
@@ -330,19 +272,11 @@ def rule():
         if int(max_class_size) <= 0:
             flash("Sĩ số tối đa phải lớn hơn 0!", "warning")
             return redirect("/Administrator/RuleManagement")
-        # Lấy bản ghi đầu tiên trong bảng
-        student_rule = StudentRule.query.first()
-        class_rule = ClassRule.query.first()
 
-        # Kiểm tra nếu các bản ghi tồn tại
-        if student_rule and class_rule:
-            # Cập nhật quy định
-            student_rule.minAge = int(min_age)
-            student_rule.maxAge = int(max_age)
-            class_rule.maxNoStudent = int(max_class_size)
-            # Lưu thay đổi vào cơ sở dữ liệu
-            db.session.commit()
+        # Cập nhật quy định
+        success = update_rules(min_age, max_age, max_class_size)
 
+        if success:
             flash("Quy định đã được cập nhật thành công!", "success")
         else:
             flash("Không thể cập nhật quy định. Vui lòng kiểm tra lại!", "error")
@@ -350,14 +284,14 @@ def rule():
         return redirect("/Administrator/RuleManagement")
 
     # Xử lý GET request
-    class_rule = ClassRule.query.first()
-    student_rule = StudentRule.query.first()
+    class_rule = get_class_rule()
+    student_rule = get_student_rule()
+
     return render_template(
         "Administrator/RuleManagement.html",
         class_rule=class_rule,
         student_rule=student_rule,
     )
-
 
 @login_required
 @app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
@@ -370,16 +304,14 @@ def subject_mng():
             return redirect("/Administrator/SubjectManagement")
 
         # Kiểm tra xem môn học đã tồn tại chưa
-        existing_subject = Subject.query.filter_by(subjectName=subject_name).first()
-        if existing_subject:
+
+        if existing_subject_check(subject_name):
             flash("Môn học đã tồn tại!", "warning")
             return redirect("/Administrator/SubjectManagement")
 
         # Thêm môn học mới vào cơ sở dữ liệu
         try:
-            new_subject = Subject(subjectName=subject_name)
-            db.session.add(new_subject)
-            db.session.commit()
+            add_new_subject(subject_name)
             flash("Thêm môn học thành công!", "success")
             return redirect("/Administrator/SubjectManagement")
         except Exception as e:
@@ -389,8 +321,8 @@ def subject_mng():
         return redirect("/Administrator/SubjectManagement")
 
     # Nếu là GET, trả về giao diện
-    subjects = Subject.query.all()
-    return render_template('Administrator/SubjectManagement.html', subjects=subjects)
+    get_subject()
+    return render_template('Administrator/SubjectManagement.html', subjects=get_subject())
 
 
 # ======Thêm route xử lý để xóa môn học=======
@@ -403,18 +335,17 @@ def delete_subject():
         return redirect("/Administrator/SubjectManagement")
 
     # Tìm môn học trong cơ sở dữ liệu
-    subject = Subject.query.get(subject_id)
-    if not subject:
+    if not get_subject_by_id(subject_id):
         flash("Môn học không tồn tại.", "warning")
         return redirect("/Administrator/SubjectManagement")
 
     # Xóa môn học
     try:
-        db.session.delete(subject)
-        db.session.commit()
+        delete_subject_by_id(subject_id)
         flash("Xóa môn học thành công!", "success")
     except Exception as e:
         db.session.rollback()
+        print("Error:", e)  # In ra lỗi chi tiết
         flash("Có lỗi xảy ra khi xóa môn học.", "danger")
 
     return redirect("/Administrator/SubjectManagement")
@@ -423,7 +354,7 @@ def delete_subject():
 # ============Phần chỉnh sửa môn học
 @app.route("/Administrator/SubjectManagement/edit/<int:subject_id>")  # route để gọi ra trang chỉnh sửa
 def edit_subject_page(subject_id):
-    subject = Subject.query.get(subject_id)
+    subject = get_subject_by_id(subject_id)
     if not subject:
         flash("Môn học không tồn tại.", "warning")
         return redirect("/Administrator/SubjectManagement")
@@ -438,19 +369,23 @@ def update_subject():
     subject_requirement = request.form.get("subject_requirement")
     subject_description = request.form.get("subject_description")
     # Xử lý cập nhật
-    subject = Subject.query.get(subject_id)
+    subject = get_subject_by_id(subject_id)
     if not subject:
         flash("Không tìm thấy môn học.", "warning")
         return redirect("/Administrator/SubjectManagement")
 
     try:
-        subject.subjectName = subject_name
-        subject.subjectRequirement = subject_requirement
-        subject.subjectDescription = subject_description
-        db.session.commit()
+        #kiểm tra môn học có thay đổi hay không
+        if check_existing_subject_name(subject_name,subject):
+            flash("Tên môn học đã được sử dụng!","warning")
+            return redirect(url_for('edit_subject_page'))
+
+        #cập nhật các môn học
+        update_subject_info(subject,subject_name,subject_requirement,subject_description)
         flash("Cập nhật thành công!", "success")
     except Exception as e:
         db.session.rollback()
+        print("Error:", e)  # In ra lỗi chi tiết
         flash("Lỗi trong quá trình cập nhật.", "danger")
     return redirect("/Administrator/SubjectManagement")
 
@@ -468,16 +403,14 @@ def create_user():
         email = request.form['email']
         phone_number = request.form['phoneNumber']
         # Kiểm tra nếu tên đăng nhập đã tồn tại
-        existing_user = User.query.filter_by(userName=username).first()
-        existing_email = User.query.filter_by(email=email).first()
-        existing_phone_number = User.query.filter_by(phoneNumber=phone_number).first()
-        if existing_user:
+
+        if existing_user_check(username):
             flash("Tên đăng nhập đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
-        if existing_email:
+        if existing_email_check(email):
             flash("Email đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
-        if existing_phone_number:
+        if existing_phone_check(phone_number):
             flash("Số điện thoại đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
         gender = request.form['gender']
@@ -486,68 +419,15 @@ def create_user():
         password = request.form['password']
         hashed_password = generate_password_hash(request.form['password'])
         role = request.form['role']
-
+        staff_role = request.form['staffRole']
+        year_experience = request.form['yearExperience']
+        admin_role = request.form['adminRole']
         # Tạo bản ghi dựa trên phân quyền
-        if role == 'Staff':
-            staff_role = request.form['staffRole']
-            new_user = Staff(
-                name=name,
-                gender=gender,
-                DOB=dob,
-                email=email,
-                phoneNumber=phone_number,
-                userName=username,
-                password=hashed_password,
-                staffRole=staff_role
-            )
-        elif role == 'Teacher':
-            year_experience = request.form['yearExperience']
-            new_user = Teacher(
-                name=name,
-                gender=gender,
-                DOB=dob,
-                email=email,
-                phoneNumber=phone_number,
-                userName=username,
-                password=hashed_password,
-                yearExperience=year_experience
-            )
-        elif role == 'Administrator':
-            admin_role = request.form['adminRole']
-            new_user = Administrator(
-                name=name,
-                gender=gender,
-                DOB=dob,
-                email=email,
-                phoneNumber=phone_number,
-                userName=username,
-                password=hashed_password,
-                adminRole=admin_role
-            )
-        else:
-            flash("Vai trò không hợp lệ!", "danger")
-            return render_template('Administrator/CreateUser.html')
-
-        # Thêm bản ghi vào cơ sở dữ liệu
-        db.session.add(new_user)
-        db.session.commit()
+        create_user_by_role(role,name,gender,dob,email,phone_number,username,hashed_password,staff_role,year_experience,admin_role)
 
         # Gửi email xác nhận
-        try:
-            # Tạo đối tượng email
-            msg = Message(
-                subject="Xác nhận đăng ký hệ thống quản lý học sinh!",  # Tiêu đề email
-                recipients=[email],  # Người nhận
-                # Nội dung email
-                body=f"Chào {name},\n\nThông tin tài khoản của bạn là:\n\nUsername: {username}\nPassword: {password}\n\nChúc bạn một ngày tốt lành!"
-            )
-            mail.send(msg)  # Gửi email
-            flash('Tạo tài khoản thành công và email xác nhận đã được gửi!', 'success')
-        except Exception as e:
-            flash(f'Đã xảy ra lỗi khi gửi email xác nhận: {str(e)}', 'danger')
-
-        return redirect("/Administrator/CreateUser")  # Redirect sau khi tạo thành công
-
+        send_email(name,username,email,password)
+        return redirect("/Administrator/UserManagement")  # Redirect sau khi tạo thành công
     return render_template('Administrator/CreateUser.html')
 
 
@@ -555,45 +435,11 @@ def create_user():
 @login_required
 @app.route("/Administrator/UserManagement", methods=["GET", "POST"])
 def user_mng():
-    users = db.session.query(User).options(
-        joinedload(User.staffs),
-        joinedload(User.teachers),
-        joinedload(User.admins)
-    ).all()
+    # Gọi hàm từ dao.py để lấy dữ liệu người dùng
+    users = get_user_data()
 
-    # Xử lý thông tin vai trò người dùng
-    user_data = []
-    for user in users:
-        # Bỏ qua người dùng có vai trò là Administrator
-        if user.admins:
-            continue
-
-        role = None
-        additional_info = None
-
-        # Kiểm tra vai trò và lấy thông tin từ các mối quan hệ
-        if user.staffs:
-            role = "Staff"
-            additional_info = f"Role: {user.staffs[0].staffRole}"
-        elif user.teachers:
-            role = "Teacher"
-            additional_info = f"Experience: {user.teachers[0].yearExperience}, Subject ID: {user.teachers[0].subjectID}"
-
-
-
-        user_data.append({
-            "id": user.id,
-            "name": user.name,
-            "gender": user.gender,
-            "DOB": user.DOB.strftime('%Y-%m-%d') if user.DOB else None,
-            "email": user.email,
-            "phoneNumber": user.phoneNumber,
-            "userName": user.userName,
-            "role": role,
-            "additional_info": additional_info
-        })
-
-    return render_template('Administrator/UserManagement.html', users=user_data)
+    # Render template và truyền dữ liệu vào
+    return render_template('Administrator/UserManagement.html', users=users)
 
 
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
@@ -618,6 +464,7 @@ def edit_user(user_id):
 
 
 @app.route('/delete_user', methods=['POST'])
+@login_required
 def delete_user():
     user_id = request.form.get("user_id")  # Lấy user_id từ form
 
@@ -625,33 +472,13 @@ def delete_user():
         flash("Không tìm thấy người dùng cần xóa.", "danger")
         return redirect("/Administrator/UserManagement")
 
-    # Lấy thông tin người dùng từ bảng User
-    user = db.session.get(User, user_id)
-    if not user:
-        flash("Người dùng không tồn tại.", "warning")
-        return redirect("/Administrator/UserManagement")
+    # Gọi hàm từ dao.py để xóa người dùng
+    result = delete_user_by_id(user_id)
 
-    try:
-        # Xóa bản ghi trong bảng con theo loại người dùng
-        # if user.type == "administrator":
-        #     db.session.query(Administrator).filter_by(id=user_id).delete(synchronize_session=False)
-
-        if user.type == "staff":
-            db.session.query(Staff).filter_by(id=user_id).delete(synchronize_session=False)
-
-        elif user.type == "teacher":
-            # Xóa các bản ghi liên quan trong bảng `Teach` trước
-            # db.session.query(Teach).filter_by(teacher_id=user_id).delete(synchronize_session=False)
-            db.session.query(Teacher).filter_by(id=user_id).delete(synchronize_session=False)
-
-        # Xóa bản ghi cha `User`
-        db.session.query(User).filter_by(id=user_id).delete(synchronize_session=False)
-
-        db.session.commit()
+    if result:
         flash("Xóa người dùng thành công!", "success")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Đã xảy ra lỗi khi xóa người dùng: {str(e)}", "danger")
+    else:
+        flash(f"Đã xảy ra lỗi khi xóa người dùng: {result}", "danger")
 
     return redirect("/Administrator/UserManagement")
 
@@ -663,55 +490,21 @@ def delete_user():
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
     if request.method == 'POST':
-        # Lặp qua tất cả giáo viên và cập nhật môn học của họ
-        for teacher in Teacher.query.all():
-            subject_id = request.form.get(f"subject_{teacher.id}")  # Lấy môn học từ form
-            # Nếu subject_id không phải là rỗng, gán giá trị môn học cho giáo viên
-            if subject_id:
-                teacher.subjectID = subject_id
-            else:
-                teacher.subjectID = None  # Nếu không có môn học, gán là None (Chưa có chuyên môn)
+        teacher_subject_update()
 
-        # Lưu thay đổi vào cơ sở dữ liệu
-        db.session.commit()
-        flash('Cập nhật thành công!', 'success')
-
-    teachers = Teacher.query.all()
-    subjects = Subject.query.all()
-    return render_template('Administrator/TeacherManagement.html', teachers=teachers, subjects=subjects)
+    return render_template('Administrator/TeacherManagement.html', teachers=get_teacher(), subjects=get_subject())
 
 @login_required
 @app.route("/Administrator/TeachManagement", methods=["GET", "POST"])
 def teach_mng():
     if request.method == "POST":
         # Xử lý thêm lớp cho giáo viên
-        for teacher in Teacher.query.all():
-            add_class_id = request.form.get(f"add_class_{teacher.id}")
-            if add_class_id:
-                # Kiểm tra nếu lớp này đã được gán cho giáo viên chưa
-                existing_assignment = Teach.query.filter_by(
-                    teacherID=teacher.id, classID=add_class_id
-                ).first()
-                if not existing_assignment:
-                    new_teach = Teach(teacherID=teacher.id, classID=add_class_id)
-                    db.session.add(new_teach)
+       update_class_to_teacher()
 
-            # Xử lý xóa lớp dạy
-            for teach in teacher.teaches:
-                remove_key = f"remove_class_{teach.id}"
-                if remove_key in request.form:
-                    db.session.delete(teach)
 
-        # Lưu thay đổi vào cơ sở dữ liệu
-        db.session.commit()
-        flash("Cập nhật thành công!", "success")
-
-        # Truy vấn danh sách giáo viên và lớp học
-    teachers = Teacher.query.all()
-    classes = Class.query.all()
 
     return render_template(
-        "Administrator/TeachManagement.html", teachers=teachers, classes=classes
+        "Administrator/TeachManagement.html", teachers=get_teacher(), classes=get_classes()
     )
 
 
