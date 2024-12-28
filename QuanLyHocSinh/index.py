@@ -1407,84 +1407,78 @@ pdfmetrics.registerFont(TTFont('Arial', font_path))
 @app.route('/Teacher/ExportTranscript/export_pdf', methods=['GET'])
 def export_pdf():
     # Tạo PDF trong bộ nhớ
-    font_path = 'static/fonts/Arial.ttf'  # Đảm bảo đường dẫn chính xác tới file .ttf
+    font_path = 'static/fonts/Arial.ttf'  # Ensure correct path to .ttf file
     pdfmetrics.registerFont(TTFont('Arial', font_path))
-    logo_path = 'static/images/Logo_THPT_Chu_Van_An.jpg'  # Đường dẫn tới logo
-    averages = {}
+    logo_path = 'static/images/Logo_THPT_Chu_Van_An.jpg'  # Path to logo
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     c.setFont("Arial", 12)
 
-    # Thêm logo góc trên bên phải trang đầu tiên
-    c.drawImage(logo_path, 450, 700, width=90, height=90, mask='auto')
+    # Add logo at the top right
+    c.drawImage(logo_path, 500, 695, width=90, height=90, mask='auto')
 
-    # Dữ liệu điểm cần xuất (ví dụ từ cơ sở dữ liệu)
+    # Fetch data from the database
     class_id = session.get('class_id')
     semester_id = session.get('semester_id')
 
-    # Lấy thông tin lớp từ cơ sở dữ liệu
     class_info = db.session.query(Class).filter(Class.id == class_id).first()
-    class_name = class_info.className
+    class_name = class_info.className if class_info else "Unknown Class"
 
     students = db.session.query(Student).join(StudentClass).filter(
         StudentClass.class_id == class_id,
         StudentClass.semester_id == semester_id
     ).all()
 
-    # Tính điểm trung bình cho mỗi sinh viên
+    # Calculate averages for each student
+    averages = {}
     for student in students:
         average = calculate_average(student.id, current_user.subjectID, semester_id)
         averages[student.id] = average
 
-    y_position = 750  # Vị trí y để in trên PDF
+    y_position = 750  # Initial y position
 
-    # Thêm tiêu đề trường và môn học
+    # Add header
     c.setFont("Arial", 16)
     c.drawString(50, y_position, "Trường Trung Học Quốc Gia Chu Văn An")
     y_position -= 20
     c.setFont("Arial", 14)
-    c.drawString(50, y_position, "Môn học: Toán học")  # Có thể thay đổi theo môn học
+    c.drawString(50, y_position, "Môn học: Toán học")
     y_position -= 40
 
-    # Thêm tiêu đề bảng điểm
+    # Add title
     c.setFont("Arial", 12)
     c.drawString(50, y_position, "Danh sách điểm sinh viên")
     y_position -= 20
-
-    # Thêm thông tin lớp
     c.drawString(50, y_position, f"Lớp: {class_name}")
-    y_position -= 20
+    y_position -= 40
 
-    # Vẽ đường kẻ phân cách phía trên
-    c.setStrokeColor(colors.black)
-    c.setLineWidth(0.5)
-    c.line(50, y_position, 550, y_position)  # Đặt tổng chiều rộng cho bảng
-    y_position -= 10
+    # Define column positions and row height
+    col_positions = [50, 180, 320, 420, 520, 580]  # Adjusted positions for spacing
+    row_height = 30  # Increased row height for better spacing
 
-    # Thêm tiêu đề cột
-    column_header_position = y_position - 10  # Giảm thêm để tiêu đề xuống giữa
-    c.drawString(50, column_header_position, "Tên Sinh Viên")
-    c.drawString(160, column_header_position, "Điểm 15 phút")
-    c.drawString(280, column_header_position, "Điểm Kiểm Tra")
-    c.drawString(400, column_header_position, "Điểm Thi")
-    c.drawString(500, column_header_position, "Điểm TB")
+    # Draw table header
+    c.setFont("Arial", 12)
+    c.line(col_positions[0], y_position, col_positions[-1], y_position)  # Top line
+    c.drawString(col_positions[0] + 25, y_position - row_height / 2, "Tên Sinh Viên")
+    c.drawString(col_positions[1] + 33, y_position - row_height / 2, "Điểm 15 phút")
+    c.drawString(col_positions[2] + 20, y_position - row_height / 2, "Điểm 1 tiết")
+    c.drawString(col_positions[3] + 25, y_position - row_height / 2, "Điểm Thi")
+    c.drawString(col_positions[4] + 7, y_position - row_height / 2, "Điểm TB")
+    y_position -= row_height
 
-    # Vẽ đường kẻ phân cách phía dưới
-    y_position -= 20  # Giảm thêm khoảng cách sau tiêu đề cột
-    c.line(50, y_position, 550, y_position)
-    y_position -= 15
+    # Draw vertical lines for header
+    for col in col_positions:
+        c.line(col, y_position + row_height, col, y_position)
 
-    # Lặp qua sinh viên và in điểm
+    # Draw each student's data
     for student in students:
-        c.drawString(50, y_position, student.name)
         points_15min = db.session.query(Point).filter(
             Point.studentID == student.id,
             Point.pointTypeID == 1,
             Point.subjectID == current_user.subjectID,
             Point.semesterID == semester_id
         ).all()
-        points_15min_str = " ".join(f"{p.pointValue:.1f}" for p in points_15min)
-        c.drawString(160, y_position, points_15min_str)
+        points_15min_str = "   ".join(f"{p.pointValue:.1f}" for p in points_15min)
 
         points_test = db.session.query(Point).filter(
             Point.studentID == student.id,
@@ -1492,8 +1486,7 @@ def export_pdf():
             Point.subjectID == current_user.subjectID,
             Point.semesterID == semester_id
         ).all()
-        points_test_str = " ".join(f"{p.pointValue:.1f}" for p in points_test)
-        c.drawString(280, y_position, points_test_str)
+        points_test_str = "    ".join(f"{p.pointValue:.1f}" for p in points_test)
 
         points_exam = db.session.query(Point).filter(
             Point.studentID == student.id,
@@ -1502,30 +1495,41 @@ def export_pdf():
             Point.semesterID == semester_id
         ).all()
         points_exam_str = " ".join(f"{p.pointValue:.1f}" for p in points_exam)
-        c.drawString(400, y_position, points_exam_str)
 
         average = averages.get(student.id, 0)
-        c.drawString(500, y_position, f"{average:.2f}")
 
-        y_position -= 25  # Tăng khoảng cách giữa các hàng
+        # Write student data
+        c.drawString(col_positions[0] + 5, y_position - row_height / 2, student.name)
+        c.drawString(col_positions[1] + 5, y_position - row_height / 2, points_15min_str)
+        c.drawString(col_positions[2] + 10, y_position - row_height / 2, points_test_str)
+        c.drawString(col_positions[3] + 40, y_position - row_height / 2, points_exam_str)
+        c.drawString(col_positions[4] + 18, y_position - row_height / 2, f"{average:.2f}")
 
-        # Nếu vị trí y nhỏ hơn 100, tạo trang mới
-        if y_position < 100:
+        # Draw row lines
+        c.line(col_positions[0], y_position, col_positions[-1], y_position)
+        y_position -= row_height
+
+        # Draw vertical lines for the row
+        for col in col_positions:
+            c.line(col, y_position + row_height, col, y_position)
+
+        if y_position < 100:  # If space runs out, start a new page
             c.showPage()
             c.setFont("Arial", 12)
-
-            # Vẽ logo trên trang mới
-            c.drawImage(logo_path, 450, 700, width=90, height=90, mask='auto')
-
+            c.drawImage(logo_path, 500, 695, width=90, height=90, mask='auto')
             y_position = 750
-            c.drawString(50, y_position, "Tên Sinh Viên")
-            c.drawString(160, y_position, "Điểm 15 phút")
-            c.drawString(280, y_position, "Điểm Kiểm Tra")
-            c.drawString(400, y_position, "Điểm Thi")
-            c.drawString(500, y_position, "Điểm TB")
-            y_position -= 20
+            c.line(col_positions[0], y_position, col_positions[-1], y_position)  # Top line
+            c.drawString(col_positions[0] + 25, y_position - row_height / 2, "Tên Sinh Viên")
+            c.drawString(col_positions[1] + 33, y_position - row_height / 2, "Điểm 15 phút")
+            c.drawString(col_positions[2] + 20, y_position - row_height / 2, "Điểm 1 tiết")
+            c.drawString(col_positions[3] + 25, y_position - row_height / 2, "Điểm Thi")
+            c.drawString(col_positions[4] + 7, y_position - row_height / 2, "Điểm TB")
+            y_position -= row_height
+            c.line(col_positions[0], y_position, col_positions[-1], y_position)
 
-    # Vẽ chữ ký
+    c.line(col_positions[0], y_position, col_positions[-1], y_position)
+
+    # Add signature
     c.setFont("Arial", 12)
     c.drawString(50, 100, "Chữ ký của giáo viên:")
     c.line(200, 100, 350, 100)
@@ -1533,9 +1537,9 @@ def export_pdf():
     c.showPage()
     c.save()
 
-    # Trả về PDF dưới dạng file
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="diem_sinh_vien.pdf", mimetype='application/pdf')
+
 
 
 if __name__ == '__main__':
