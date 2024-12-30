@@ -2,7 +2,7 @@ import string
 from datetime import datetime
 import random
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import render_template, request, redirect, flash, url_for, jsonify
+from flask import render_template, request, redirect, flash, url_for, jsonify, Flask
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
 from flask_mail import Mail, Message
 from sqlalchemy.orm import joinedload
@@ -18,7 +18,7 @@ from reportlab.lib import colors
 from sqlalchemy.exc import SQLAlchemyError
 
 
-from QuanLyHocSinh import app, db
+from QuanLyHocSinh import app, db, dao, utils
 from QuanLyHocSinh.dao import get_semester_info, get_subject_name, get_classes, get_student_classes, is_student_passed, \
     calculate_average, get_class_rule, get_student_rule, update_rules, existing_subject_check, add_new_subject, \
     get_subject, delete_subject_by_id, get_subject_by_id, check_existing_subject_name, update_subject_info, \
@@ -30,7 +30,6 @@ from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester,
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = '/'
-
 mail = Mail(app)
 #khống chế nguời dùng phải đăng nhập trước khi truy cập trang web
 @app.before_request
