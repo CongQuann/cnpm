@@ -11,7 +11,7 @@ Nhập điểm
 {% block content %}
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-        <div class="alert alert-info">
+        <div class="alert alert-info" id="flash-messages">
             {% for category, message in messages %}
                 <p>{{ message }}</p>
             {% endfor %}
@@ -24,19 +24,18 @@ Nhập điểm
     <!-- Bộ lọc -->
     <form action="{{ url_for('class_filter') }}" method="POST">
         <div id="scoreboard-container">
-            <h2 class="title">BẢNG ĐIỂM MÔN HỌC</h2>
+            <h2 class="title">LỌC LỚP</h2>
             <div id="class-info">
                 <!-- Lớp -->
                 <p>
                     <strong>Lớp:</strong>
                     <input type="text" id="class-input" name="class-input" class="input-field"
-                           placeholder="Nhập lớp (vd: 10A1)"
+                           placeholder="Nhập lớp (vd: 10A)"
                            list="class-list" autocomplete="off">
                     <datalist id="class-list">
-                        <option value="10A">
-                        <option value="10B">
-                        <option value="10C">
-                        <option value="12A">
+                        {%for class  in class_name%}
+                        <option value="{{class}}"></option>
+                        {%endfor%}
                     </datalist>
                 </p>
 
@@ -44,12 +43,13 @@ Nhập điểm
                 <p>
                     <strong>Học kỳ:</strong>
                     <input type="text" id="semester-input" name="semester-input" class="input-field"
-                           placeholder="Nhập học kỳ (vd: 1, 2)"
+                           placeholder="Nhập học kỳ (vd: Học kỳ 1)"
 
                            list="semester-list" autocomplete="off">
                     <datalist id="semester-list">
-                        <option value="Học kỳ 1"></option>
-                        <option value="Học kỳ 2"></option>
+                        {% for semester in unique_semesters %}
+                            <option value="{{ semester }}"></option>
+                        {% endfor %}
                     </datalist>
                 </p>
 
@@ -57,10 +57,11 @@ Nhập điểm
                 <p>
                     <strong>Năm học:</strong>
                     <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
-                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" autocomplete="off">
+                           placeholder="Nhập năm học (vd: 2023-2024)" list="academic-year-list" autocomplete="off">
                     <datalist id="academic-year-list">
-                        <option value="2022-2023">
-                        <option value="2023-2024">
+                        {% for year in unique_years %}
+                            <option value="{{ year }}"></option>
+                        {% endfor %}
                     </datalist>
                 </p>
                 <button id="class_filter" type="submit">Lọc</button>

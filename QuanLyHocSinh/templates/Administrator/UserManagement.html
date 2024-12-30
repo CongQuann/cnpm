@@ -21,9 +21,18 @@ Quản lý người dùng
 
 <div class="container mt-5">
     <h1 class="text-center mb-4">Quản Lý Người Dùng</h1>
-
-    <div class="text-end mb-4">
-        <a href="{{ url_for('create_user') }}" class="btn btn-success">Tạo tài khoản</a>
+    <!-- Form tìm kiếm -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <input type="text" id="search-input" class="form-control" placeholder="Nhập tên người dùng để tìm kiếm..."
+                   autocomplete="off">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-secondary" id="reset-btn">Reset</button>
+        </div>
+        <div class="text-end col-md-2">
+            <a href="{{ url_for('create_user') }}" class="btn btn-success">Tạo tài khoản</a>
+        </div>
     </div>
 
 

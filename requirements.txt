@@ -7,3 +7,4 @@ reportlab
 SQLAlchemy==1.4.46
 psycopg2==2.9.6
 pymysql
+cryptography

@@ -12,7 +12,7 @@ Xuất điểm
 <div class="container mt-4 container-div">
 
 <form action="{{ url_for('export_pdf') }}" method="get">
-    <button type="submit" class="btn btn-success">Xuất ra PDF</button>
+    <button type="submit" class="btn btn-success" id="export-btn">Xuất ra PDF</button>
 </form>
 
     <table id="scoreboard-table">
@@ -21,10 +21,10 @@ Xuất điểm
             <th class="table-header">STT</th>
             <th class="table-header">Mã học sinh</th>
             <th class="table-header">Họ tên</th>
-            <th class="table-header score-15min-header">Điểm 15’</th>
-            <th class="table-header score-test-header">Điểm 1 tiết</th>
-            <th class="table-header">Điểm thi</th>
-            <th class="table-header">Điểm trung bình</th>
+            <th class="table-header">Lớp</th>
+            <th class="table-header">Điểm TB Học Kỳ 1</th>
+            <th class="table-header">Điểm TB Học Kỳ 2</th>
+
         </tr>
     </thead>
 
@@ -39,37 +39,25 @@ Xuất điểm
             <td class="table-cell">{{ loop.index }}</td> <!-- Hiển thị STT -->
             <td class="table-cell">{{ s.id }}</td>
             <td class="table-cell">{{ s.name }}</td>
-
-            <!-- Điểm 15 phút -->
-            <td class="table-cell score-15min-container">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == '15 phút' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
-            </td>
-
-            <!-- Điểm 1 tiết -->
-            <td class="table-cell test-container">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == '1 tiết' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
-            </td>
-
-            <!-- Điểm thi -->
             <td class="table-cell">
-                {% for point in student_scores[s.id] %}
-                    {% if point.pointType_point.type == 'Cuối kỳ' %}
-                        <p>{{ point.pointValue }}</p>
-                    {% endif %}
-                {% endfor %}
+
+                {{ class_name }}
             </td>
+
+
 
             <!-- Điểm trung bình -->
             <td class="table-cell">
-                {% set average = averages[s.id] %}
+                {% set average = averages_1[s.id] %}
+                {% if average %}
+                    <p>{{ average | round(2) }}</p>
+                {% else %}
+                    <p>Chưa có điểm</p>
+                {% endif %}
+
+            </td>
+            <td class="table-cell">
+                {% set average = averages_2[s.id] %}
                 {% if average %}
                     <p>{{ average | round(2) }}</p>
                 {% else %}
