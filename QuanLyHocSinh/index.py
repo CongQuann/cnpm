@@ -527,7 +527,7 @@ def enter_point():
     semesters = Semester.query.all()
     classes = Class.query.all()
     class_name= sorted({classindex.className for classindex in classes})
-    unique_years = list({semester.year for semester in semesters})
+    unique_years = sorted({semester.year for semester in semesters}, key=None, reverse=True)
     unique_semesters = sorted({semester.semesterName for semester in semesters})
     subject_name = _subject.subjectName
 
@@ -554,7 +554,7 @@ def generate_transcript():
     semesters = Semester.query.all()
     classes = Class.query.all()
     class_name = sorted({classindex.className for classindex in classes})
-    unique_years = list({semester.year for semester in semesters})
+    unique_years = sorted({semester.year for semester in semesters}, key=None, reverse=True)
     unique_semesters = sorted({semester.semesterName for semester in semesters})
     # Nếu có môn học, lấy tên môn học
     subject_name = _subject.subjectName
@@ -1218,40 +1218,43 @@ def generate():
     if current_user.subjectID:
         _subject = db.session.query(Subject).filter(Subject.id == current_user.subjectID).first()
         subject_name = _subject.subjectName
-        student_scores = {}  # Điểm của sinh viên
-        averages = {}  # Điểm trung bình của sinh viên
+        student_scores_1 = {}  # Điểm của sinh viên
+        student_scores_2 = {}  # Điểm của sinh viên
+        averages_1 = {}  # Điểm trung bình của sinh viên
+        averages_2 = {}  # Điểm trung bình của sinh viên
 
         if request.method == 'POST':
             # Lấy dữ liệu từ form
             class_name = request.form.get('class-input')
-            semester_name = request.form.get('semester-input')
             year = request.form.get('academic-year-input')
-
             # Kiểm tra dữ liệu từ form
-            if not class_name or not semester_name or not year:
+            if not class_name or not year:
                 flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
                 return redirect(url_for('generate_transcript'))
 
             # Tìm lớp và học kỳ từ dữ liệu nhập vào
             _class = db.session.query(Class).filter(Class.className == class_name).first()
-            _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
+
+            _semester_1= db.session.query(Semester).filter(Semester.semesterName == "Học kỳ 1",
+                                                           Semester.year == year).first()
+            _semester_2= db.session.query(Semester).filter(Semester.semesterName == "Học kỳ 2",
                                                           Semester.year == year).first()
 
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
-            if not _class or not _semester:
-                flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
+            if not _class or not _semester_1 or not _semester_2:
+                flash("Không tìm thấy lớp!", "error")
                 return redirect(url_for('generate_transcript'))
             session['class_id'] = _class.id
-            session['semester_id'] = _semester.id
+            session['semester_1_id'] = _semester_1.id
+            session['semester_2_id'] = _semester_2.id
             # Lấy danh sách học sinh trong lớp và học kỳ
             students = db.session.query(Student).join(StudentClass).filter(
                 StudentClass.class_id == _class.id,
-                StudentClass.semester_id == _semester.id
+                StudentClass.semester_id == _semester_1.id
             ).all()
-
             # Kiểm tra nếu không có sinh viên
             if not students:
-                flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
+                flash("Không tìm thấy sinh viên trong lớp này!", "error")
                 return redirect(url_for('generate_transcript'))
 
             # Lấy điểm của các học sinh
@@ -1259,22 +1262,35 @@ def generate():
                 points = db.session.query(Point).filter(
                     Point.studentID == student.id,
                     Point.subjectID == _subject.id,
-                    Point.semesterID == _semester.id
+                    Point.semesterID == _semester_1.id
                 ).all()
-                student_scores[student.id] = points  # Lưu điểm của từng học sinh
+                student_scores_1[student.id] = points
 
+            for student in students:
+                points = db.session.query(Point).filter(
+                    Point.studentID == student.id,
+                    Point.subjectID == _subject.id,
+                    Point.semesterID == _semester_2.id
+                ).all()
+                student_scores_2[student.id] = points  # Lưu điểm của từng học sinh
+            print(student_scores_1)
+            print(student_scores_2)
             # Tính điểm trung bình cho từng sinh viên
             for student in students:
-                average = calculate_average(student.id, _subject.id, _semester.id)
-                averages[student.id] = average
+                average = calculate_average(student.id, _subject.id, _semester_1.id)
+                averages_1[student.id] = average
+            for student in students:
+                average = calculate_average(student.id, _subject.id, _semester_2.id)
+                averages_2[student.id] = average
 
 
     # Render trang ExportTranscript nếu không có lỗi
             return render_template('Teacher/ExportTranscript.html',
                                    subject_name=subject_name,
                                    students=students,
-                                   student_scores=student_scores,
-                                   averages=averages)
+                                   student_scores_1=student_scores_1,student_scores_2=student_scores_2,
+                                   averages_1=averages_1, averages_2=averages_2 ,
+                                   class_name = _class.className)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/GenerateTranscript.html', subject_name='', )
 
@@ -1283,7 +1299,6 @@ def generate():
 def save_points():
     try:
         # Lấy danh sách dữ liệu từ form
-        student_ids = request.form.getlist('student_ids[]')
         scores_15min = request.form.getlist('scores_15min[]')
         scores_test = request.form.getlist('scores_test[]')
         scores_exam = request.form.getlist('scores_exam[]')
@@ -1293,7 +1308,6 @@ def save_points():
             StudentClass.class_id == class_id,
             StudentClass.semester_id == semester_id
         ).all()
-
 
             # Kiểm tra dữ liệu trống hoặc không hợp lệ
 
@@ -1398,42 +1412,44 @@ def save_points():
     return redirect(url_for('enter_point'))
 
 
-font_path = 'static/fonts/Arial.ttf'  # Đảm bảo đường dẫn chính xác tới file .ttf
-pdfmetrics.registerFont(TTFont('Arial', font_path))
+
 
 
 @app.route('/Teacher/ExportTranscript/export_pdf', methods=['GET'])
 def export_pdf():
-    # Tạo PDF trong bộ nhớ
+    # Register custom font
     font_path = 'static/fonts/Arial.ttf'  # Ensure correct path to .ttf file
     pdfmetrics.registerFont(TTFont('Arial', font_path))
     logo_path = 'static/images/Logo_THPT_Chu_Van_An.jpg'  # Path to logo
+
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     c.setFont("Arial", 12)
 
     # Add logo at the top right
-    c.drawImage(logo_path, 500, 695, width=90, height=90, mask='auto')
+    c.drawImage(logo_path, 480, 695, width=80, height=80, mask='auto')
 
     # Fetch data from the database
     class_id = session.get('class_id')
-    semester_id = session.get('semester_id')
+    semester_1_id = session.get('semester_1_id')
+    semester_2_id = session.get('semester_2_id')
 
     class_info = db.session.query(Class).filter(Class.id == class_id).first()
     class_name = class_info.className if class_info else "Unknown Class"
 
     students = db.session.query(Student).join(StudentClass).filter(
         StudentClass.class_id == class_id,
-        StudentClass.semester_id == semester_id
+        StudentClass.semester_id == semester_1_id
     ).all()
 
     # Calculate averages for each student
-    averages = {}
+    averages1 = {}
+    averages2 = {}
     for student in students:
-        average = calculate_average(student.id, current_user.subjectID, semester_id)
-        averages[student.id] = average
+        averages1[student.id] = calculate_average(student.id, current_user.subjectID, semester_1_id)
+        averages2[student.id] = calculate_average(student.id, current_user.subjectID, semester_2_id)
 
-    y_position = 750  # Initial y position
+    y_position = 730  # Initial y position
 
     # Add header
     c.setFont("Arial", 16)
@@ -1447,21 +1463,18 @@ def export_pdf():
     c.setFont("Arial", 12)
     c.drawString(50, y_position, "Danh sách điểm sinh viên")
     y_position -= 20
-    c.drawString(50, y_position, f"Lớp: {class_name}")
-    y_position -= 40
 
     # Define column positions and row height
-    col_positions = [50, 180, 320, 420, 520, 580]  # Adjusted positions for spacing
-    row_height = 30  # Increased row height for better spacing
+    col_positions = [35, 205, 285, 435, 585]  # Adjusted positions for proper spacing
+    row_height = 25  # Increased row height for readability
 
     # Draw table header
     c.setFont("Arial", 12)
     c.line(col_positions[0], y_position, col_positions[-1], y_position)  # Top line
-    c.drawString(col_positions[0] + 25, y_position - row_height / 2, "Tên Sinh Viên")
-    c.drawString(col_positions[1] + 33, y_position - row_height / 2, "Điểm 15 phút")
-    c.drawString(col_positions[2] + 20, y_position - row_height / 2, "Điểm 1 tiết")
-    c.drawString(col_positions[3] + 25, y_position - row_height / 2, "Điểm Thi")
-    c.drawString(col_positions[4] + 7, y_position - row_height / 2, "Điểm TB")
+    c.drawString(col_positions[0] + 45, y_position - 4 - row_height / 2 , "Tên Sinh Viên")
+    c.drawString(col_positions[1] + 20, y_position - 4 - row_height / 2, "Lớp SV")
+    c.drawString(col_positions[2] + 25, y_position - 4 - row_height / 2, "Điểm TB Học Kỳ 1")
+    c.drawString(col_positions[3] + 25, y_position - 4 - row_height / 2, "Điểm TB Học Kỳ 2")
     y_position -= row_height
 
     # Draw vertical lines for header
@@ -1470,38 +1483,14 @@ def export_pdf():
 
     # Draw each student's data
     for student in students:
-        points_15min = db.session.query(Point).filter(
-            Point.studentID == student.id,
-            Point.pointTypeID == 1,
-            Point.subjectID == current_user.subjectID,
-            Point.semesterID == semester_id
-        ).all()
-        points_15min_str = "   ".join(f"{p.pointValue:.1f}" for p in points_15min)
-
-        points_test = db.session.query(Point).filter(
-            Point.studentID == student.id,
-            Point.pointTypeID == 2,
-            Point.subjectID == current_user.subjectID,
-            Point.semesterID == semester_id
-        ).all()
-        points_test_str = "    ".join(f"{p.pointValue:.1f}" for p in points_test)
-
-        points_exam = db.session.query(Point).filter(
-            Point.studentID == student.id,
-            Point.pointTypeID == 3,
-            Point.subjectID == current_user.subjectID,
-            Point.semesterID == semester_id
-        ).all()
-        points_exam_str = " ".join(f"{p.pointValue:.1f}" for p in points_exam)
-
-        average = averages.get(student.id, 0)
+        average1 = averages1.get(student.id, 0)
+        average2 = averages2.get(student.id, 0)
 
         # Write student data
-        c.drawString(col_positions[0] + 5, y_position - row_height / 2, student.name)
-        c.drawString(col_positions[1] + 5, y_position - row_height / 2, points_15min_str)
-        c.drawString(col_positions[2] + 10, y_position - row_height / 2, points_test_str)
-        c.drawString(col_positions[3] + 40, y_position - row_height / 2, points_exam_str)
-        c.drawString(col_positions[4] + 18, y_position - row_height / 2, f"{average:.2f}")
+        c.drawString(col_positions[0] + 5, y_position - 4 - row_height / 2, student.name)
+        c.drawString(col_positions[1] + 25, y_position - 4 - row_height / 2, class_name)
+        c.drawString(col_positions[2] + 60, y_position - 4 - row_height / 2, f"{average1:.2f}")
+        c.drawString(col_positions[3] + 60, y_position - 4 - row_height / 2, f"{average2:.2f}")
 
         # Draw row lines
         c.line(col_positions[0], y_position, col_positions[-1], y_position)
@@ -1514,14 +1503,13 @@ def export_pdf():
         if y_position < 100:  # If space runs out, start a new page
             c.showPage()
             c.setFont("Arial", 12)
-            c.drawImage(logo_path, 500, 695, width=90, height=90, mask='auto')
-            y_position = 750
+            c.drawImage(logo_path, 480, 730, width=80, height=80, mask='auto')
+            y_position = 700
             c.line(col_positions[0], y_position, col_positions[-1], y_position)  # Top line
-            c.drawString(col_positions[0] + 25, y_position - row_height / 2, "Tên Sinh Viên")
-            c.drawString(col_positions[1] + 33, y_position - row_height / 2, "Điểm 15 phút")
-            c.drawString(col_positions[2] + 20, y_position - row_height / 2, "Điểm 1 tiết")
-            c.drawString(col_positions[3] + 25, y_position - row_height / 2, "Điểm Thi")
-            c.drawString(col_positions[4] + 7, y_position - row_height / 2, "Điểm TB")
+            c.drawString(col_positions[0] + 45, y_position - 4 - row_height / 2, "Tên Sinh Viên")
+            c.drawString(col_positions[1] + 20, y_position - 4 - row_height / 2, "Lớp SV")
+            c.drawString(col_positions[2] + 25, y_position - 4 - row_height / 2, "Điểm TB Học Kỳ 1")
+            c.drawString(col_positions[3] + 25, y_position - 4 - row_height / 2, "Điểm TB Học Kỳ 2")
             y_position -= row_height
             c.line(col_positions[0], y_position, col_positions[-1], y_position)
 
@@ -1529,14 +1517,17 @@ def export_pdf():
 
     # Add signature
     c.setFont("Arial", 12)
-    c.drawString(50, 100, "Chữ ký của giáo viên:")
-    c.line(200, 100, 350, 100)
+    c.drawString(50, 50, "Chữ ký của giáo viên:")
+    c.line(200, 50, 350, 50)
 
     c.showPage()
     c.save()
 
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="diem_sinh_vien.pdf", mimetype='application/pdf')
+
+
+
 
 
 
