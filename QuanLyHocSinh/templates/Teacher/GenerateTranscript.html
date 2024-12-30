@@ -32,7 +32,7 @@ Xuất điểm
                 <p>
                     <strong>Lớp:</strong>
                     <input type="text" id="class-input" name="class-input" class="input-field"
-                           placeholder="Nhập lớp (vd: 10A1)"
+                           placeholder="Nhập lớp (vd: 10A)"
                            list="class-list" autocomplete="off">
                     <datalist id="class-list">
                         {%for class  in class_name%}
@@ -41,25 +41,12 @@ Xuất điểm
                     </datalist>
                 </p>
 
-                <!-- Học kỳ -->
-                <p>
-                    <strong>Học kỳ:</strong>
-                    <input type="text" id="semester-input" name="semester-input" class="input-field"
-                           placeholder="Nhập học kỳ (vd: 1, 2)"
-
-                           list="semester-list" autocomplete="off">
-                    <datalist id="semester-list">
-                        {% for semester in unique_semesters %}
-                            <option value="{{ semester }}"></option>
-                        {% endfor %}
-                    </datalist>
-                </p>
 
                 <!-- Năm học -->
                 <p>
                     <strong>Năm học:</strong>
                     <input type="text" id="academic-year-input" name="academic-year-input" class="input-field"
-                           placeholder="Nhập năm học (vd: 2024-2025)" list="academic-year-list" autocomplete="off">
+                           placeholder="Nhập năm học (vd: 2023-2024)" list="academic-year-list" autocomplete="off">
                     <datalist id="academic-year-list">
                         {% for year in unique_years %}
                             <option value="{{ year }}"></option>
@@ -70,11 +57,6 @@ Xuất điểm
             </div>
         </div>
     </form>
-
-
-
-
-
 </div>
 
 
