@@ -797,7 +797,6 @@ def change_password():
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
 
-        # Giải mã mật khẩu hiện tại
 
 
         # Kiểm tra mật khẩu hiện tại
@@ -1009,16 +1008,20 @@ def class_edit():
     class_list = Class.query.all()
     semester_list = Semester.query.all()
     students = []
-    class_id = None
-    semester_id = None
+    selected_class = None
+    selected_semester = None
 
     if request.method == 'POST':
-        # Lấy các tham số từ form
         class_id = request.form.get('class')
         semester_id = request.form.get('semester')
         student_name = request.form.get('searchStudent', '').strip()
 
-        # Truy vấn lại danh sách học sinh
+        if class_id and class_id != "none":
+            selected_class = next((cls for cls in class_list if str(cls.id) == class_id), None)
+        if semester_id and semester_id != "none":
+            selected_semester = next((sem for sem in semester_list if str(sem.id) == semester_id), None)
+
+        # Truy vấn danh sách học sinh dựa trên điều kiện
         if class_id and semester_id and class_id != "none" and semester_id != "none":
             students_query = (
                 Student.query.join(StudentClass)
@@ -1028,7 +1031,6 @@ def class_edit():
                 )
             )
         elif class_id == "none" and semester_id == "none":
-            # Lấy danh sách học sinh không có trong bảng StudentClass
             students_query = Student.query.filter(
                 ~Student.id.in_(
                     db.session.query(StudentClass.student_id).distinct()
@@ -1048,8 +1050,8 @@ def class_edit():
         class_list=class_list,
         students=students,
         semester_list=semester_list,
-        class_id=class_id,
-        semester_id=semester_id
+        selected_class=selected_class,
+        selected_semester=selected_semester,
     )
 @app.route('/staff/student_delete_class', methods=['POST'])
 def student_delete_class():
