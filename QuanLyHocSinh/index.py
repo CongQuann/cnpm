@@ -1,6 +1,8 @@
 import string
 from datetime import datetime
 import random
+
+from select import select
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import render_template, request, redirect, flash, url_for, jsonify, Flask
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
@@ -856,7 +858,9 @@ def class_edit():
     students = []
     class_id = None
     semester_id = None
-
+    # Lấy tên lớp và học kỳ từ ID
+    selected_class = Class.query.get(class_id) if class_id and class_id != "none" else None
+    selected_semester = Semester.query.get(semester_id) if semester_id and semester_id != "none" else None
     if request.method == 'POST':
         # Lấy các tham số từ form
         class_id = request.form.get('class')
@@ -894,7 +898,8 @@ def class_edit():
         students=students,
         semester_list=semester_list,
         class_id=class_id,
-        semester_id=semester_id
+        semester_id=semester_id,
+
     )
 @app.route('/staff/student_delete_class', methods=['POST'])
 def student_delete_class():

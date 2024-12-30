@@ -35,7 +35,7 @@
             <option value="none" {% if not selected_class %}selected{% endif %}>Chưa Chọn Lớp Học</option>
             {% for classes in class_list %}
             <option value="{{ classes.id }}"
-                    {% if selected_class and selected_class.id== classes.id %}selected{% endif %}>
+                    {% if selected_class and selected_class.id == classes.id %}selected{% endif %}>
                 {{ classes.className }}
             </option>
             {% endfor %}
@@ -46,7 +46,7 @@
             {% for semesters in semester_list %}
             <option value="{{ semesters.id }}"
                     {% if selected_semester and selected_semester.id== semesters.id %}selected{% endif %}>
-                {{ semesters.semesterName }} ({{semesters.year}})
+                {{ semesters.semesterName }} - ({{semesters.year}})
             </option>
             {% endfor %}
         </select>
