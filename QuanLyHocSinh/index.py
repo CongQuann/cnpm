@@ -556,7 +556,6 @@ def generate_transcript():
     class_name = sorted({classindex.className for classindex in classes})
     unique_years = list({semester.year for semester in semesters})
     unique_semesters = sorted({semester.semesterName for semester in semesters})
-    subject_name = _subject.subjectName
     # Nếu có môn học, lấy tên môn học
     subject_name = _subject.subjectName
 
@@ -1145,7 +1144,7 @@ def class_filter():
             # Kiểm tra dữ liệu từ form
             if not class_name or not semester_name or not year:
                 flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
-                return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
+                return redirect(url_for('enter_point'))
 
             # Tìm lớp và học kỳ từ dữ liệu nhập vào
             _class = db.session.query(Class).filter(Class.className == class_name).first()
@@ -1155,7 +1154,7 @@ def class_filter():
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester:
                 flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
-                return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
+                return redirect(url_for('enter_point'))
 
             session['class_id'] = _class.id
             session['semester_id'] = _semester.id
@@ -1168,7 +1167,7 @@ def class_filter():
             # Kiểm tra nếu không có sinh viên
             if not students:
                 flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
-                return render_template('Teacher/EnterPoints.html', subject_name=subject_name)
+                return redirect(url_for('enter_point'))
 
 
             existing_15min = {}
@@ -1231,7 +1230,7 @@ def generate():
             # Kiểm tra dữ liệu từ form
             if not class_name or not semester_name or not year:
                 flash("Vui lòng nhập đầy đủ lớp, học kỳ và năm học!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+                return redirect(url_for('generate_transcript'))
 
             # Tìm lớp và học kỳ từ dữ liệu nhập vào
             _class = db.session.query(Class).filter(Class.className == class_name).first()
@@ -1241,7 +1240,7 @@ def generate():
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester:
                 flash("Không tìm thấy lớp hoặc học kỳ phù hợp!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+                return redirect(url_for('generate_transcript'))
             session['class_id'] = _class.id
             session['semester_id'] = _semester.id
             # Lấy danh sách học sinh trong lớp và học kỳ
@@ -1253,7 +1252,7 @@ def generate():
             # Kiểm tra nếu không có sinh viên
             if not students:
                 flash("Không tìm thấy sinh viên trong lớp và học kỳ này!", "error")
-                return render_template('Teacher/GenerateTranscript.html', subject_name=subject_name)
+                return redirect(url_for('generate_transcript'))
 
             # Lấy điểm của các học sinh
             for student in students:
