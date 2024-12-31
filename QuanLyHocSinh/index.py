@@ -855,17 +855,14 @@ def class_edit():
     class_list = Class.query.all()
     semester_list = Semester.query.all()
     students = []
-<<<<<<< HEAD
     class_id = None
     semester_id = None
     # Lấy tên lớp và học kỳ từ ID
     selected_class = Class.query.get(class_id) if class_id and class_id != "none" else None
     selected_semester = Semester.query.get(semester_id) if semester_id and semester_id != "none" else None
-=======
     selected_class = None
     selected_semester = None
 
->>>>>>> 8c801a47c08aa10412d74f32672c11fc44fe9b06
     if request.method == 'POST':
         class_id = request.form.get('class')
         semester_id = request.form.get('semester')
@@ -905,14 +902,10 @@ def class_edit():
         class_list=class_list,
         students=students,
         semester_list=semester_list,
-<<<<<<< HEAD
         class_id=class_id,
         semester_id=semester_id,
-
-=======
         selected_class=selected_class,
         selected_semester=selected_semester,
->>>>>>> 8c801a47c08aa10412d74f32672c11fc44fe9b06
     )
 @app.route('/staff/student_delete_class', methods=['POST'])
 def student_delete_class():
