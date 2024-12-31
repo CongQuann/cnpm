@@ -32,28 +32,42 @@
     <form method="POST" action="{{ url_for('class_edit') }}">
         <label for="class">Lớp:</label>
         <select id="class" name="class">
-            <option value="none" {% if not selected_class %}selected{% endif %}>Chưa Chọn Lớp Học</option>
+            <option value="none" {% if not selected_class %}selected{% endif %}>Chưa Có Lớp Học</option>
             {% for classes in class_list %}
+<<<<<<< HEAD
             <option value="{{ classes.id }}"
                     {% if selected_class and selected_class.id == classes.id %}selected{% endif %}>
+=======
+            <option value="{{ classes.id }}" {% if selected_class and selected_class.id == classes.id %}selected{% endif %}>
+>>>>>>> 8c801a47c08aa10412d74f32672c11fc44fe9b06
                 {{ classes.className }}
             </option>
             {% endfor %}
         </select>
+
         <label for="semester">Học Kỳ:</label>
         <select id="semester" name="semester">
-            <option value="none" {% if not selected_semester %}selected{% endif %}>Chưa Chọn Học Kỳ</option>
+            <option value="none" {% if not selected_semester %}selected{% endif %}>Chưa Có Học Kỳ</option>
             {% for semesters in semester_list %}
+<<<<<<< HEAD
             <option value="{{ semesters.id }}"
                     {% if selected_semester and selected_semester.id== semesters.id %}selected{% endif %}>
                 {{ semesters.semesterName }} - ({{semesters.year}})
+=======
+            <option value="{{ semesters.id }}" {% if selected_semester and selected_semester.id == semesters.id %}selected{% endif %}>
+                {{ semesters.semesterName }} ({{ semesters.year }})
+>>>>>>> 8c801a47c08aa10412d74f32672c11fc44fe9b06
             </option>
             {% endfor %}
         </select>
+
         <label for="searchStudent">Tên:</label>
-        <input type="text" id="searchStudent" name="searchStudent" placeholder="Nhập tên học sinh">
+        <input type="text" id="searchStudent" name="searchStudent" placeholder="Nhập tên học sinh"
+               value="{{ request.form.get('searchStudent', '') }}">
+
         <button type="submit" id="searchBtn" class="btn btn-primary">Tìm kiếm</button>
-        <button type="reset" id="resetBtn" class="btn btn-secondary"><a href="{{ url_for('class_edit') }}">Reset</a>
+        <button type="reset" id="resetBtn" class="btn btn-secondary">
+            <a href="{{ url_for('class_edit') }}">Reset</a>
         </button>
     </form>
 </div>
