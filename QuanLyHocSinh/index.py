@@ -1161,6 +1161,9 @@ def class_filter():
             _class = db.session.query(Class).filter(Class.className == class_name).first()
             _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
                                                           Semester.year == year).first()
+            session["semester_name"]=_semester.semesterName
+            session["class_name"]=_class.className
+            session["year"]=_semester.year
 
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester:
@@ -1217,7 +1220,10 @@ def class_filter():
                                    averages=averages,
                                    existing_15min=existing_15min,
                                    existing_exam =existing_exam,
-                                   existing_test=existing_test)
+                                   existing_test=existing_test,
+                                   semester_name = semester_name,
+                                   year = year,
+                                   class_name = class_name)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/EnterPoints.html', subject_name='', )
 
@@ -1250,6 +1256,7 @@ def generate():
                                                            Semester.year == year).first()
             _semester_2= db.session.query(Semester).filter(Semester.semesterName == "Học kỳ 2",
                                                           Semester.year == year).first()
+            session["year"] = year
 
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester_1 or not _semester_2:
@@ -1301,7 +1308,8 @@ def generate():
                                    students=students,
                                    student_scores_1=student_scores_1,student_scores_2=student_scores_2,
                                    averages_1=averages_1, averages_2=averages_2 ,
-                                   class_name = _class.className)
+                                   class_name = _class.className,
+                                   year=year)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/GenerateTranscript.html', subject_name='', )
 

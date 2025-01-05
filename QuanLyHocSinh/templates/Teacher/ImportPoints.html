@@ -24,6 +24,8 @@ Nhập điểm
 <div class="container">
     <form action="{{ url_for('save_points') }}" method="POST" id="score-form">
         <button type="submit" class="btn btn-primary mt-3">Lưu điểm</button>
+         <h4 class="text-center">Nhập điểm lớp <strong>{{ class_name }}</strong> - Học kỳ <strong>{{ semester_name
+            }} ({{ year }})</strong></h4>
         <table id="scoreboard-table">
             <thead>
             <tr>
