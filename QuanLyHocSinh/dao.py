@@ -98,7 +98,7 @@ def delete_subject_by_id(subject_id):
     db.session.commit()
 
 def check_existing_subject_name(subject_name,subject):
-    if subject.subjectName != subject_name:
+    if subject.subjectName.lower() != subject_name.lower():
         # kiểm tra xem tên người dùng nhập mới đã tồn tại hay chưa
         return Subject.query.filter_by(subjectName=subject_name).first()
 

@@ -266,11 +266,17 @@ def seed_data():
     genders = ["Nam", "Nữ"]
 
     # Thêm dữ liệu mẫu cho bảng Student
+    # Thêm dữ liệu mẫu cho bảng Student
     students = []
     for i in range(1, 121):  # Tạo 120 học sinh (tối đa 15 học sinh * 9 lớp)
         name = random.choice(names) + f" {i}"  # Tạo tên duy nhất
         gender = random.choice(genders)
-        dob = datetime(2010, 1, 1) + timedelta(days=random.randint(0, 365 * 18))  # Sinh từ 2005-2010
+
+        # Sinh trong khoảng từ 01/01/2007 đến 31/12/2009
+        start_date = datetime(2007, 1, 1)
+        end_date = datetime(2009, 12, 31)
+        dob = start_date + timedelta(days=random.randint(0, (end_date - start_date).days))
+
         address = f"Địa chỉ số {i}"
         phone = f"091{random.randint(1000000, 9999999)}"
         email = f"student{i}@gmail.com"
