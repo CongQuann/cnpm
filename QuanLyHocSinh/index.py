@@ -1,6 +1,8 @@
 import string
 from datetime import datetime
 import random
+
+from select import select
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import render_template, request, redirect, flash, url_for, jsonify, Flask
 from flask_login import login_user, LoginManager, login_required, logout_user,current_user
@@ -615,17 +617,9 @@ def export_points():
 @app.route('/staff/InfoUser')
 @login_required
 def info_user():
-    try:
-        # Giải mã User Name và Password
-        username = current_user.userName
-    except Exception as e:
-        username = None
-
-        print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template(
         'staff/InfoUser.html',
         Cuser=current_user,
-        username = username
     )
 
 @app.route('/staff/password_info', methods=['GET'])
@@ -853,6 +847,11 @@ def class_edit():
     class_list = Class.query.all()
     semester_list = Semester.query.all()
     students = []
+    class_id = None
+    semester_id = None
+    # Lấy tên lớp và học kỳ từ ID
+    selected_class = Class.query.get(class_id) if class_id and class_id != "none" else None
+    selected_semester = Semester.query.get(semester_id) if semester_id and semester_id != "none" else None
     selected_class = None
     selected_semester = None
 
@@ -895,6 +894,8 @@ def class_edit():
         class_list=class_list,
         students=students,
         semester_list=semester_list,
+        class_id=class_id,
+        semester_id=semester_id,
         selected_class=selected_class,
         selected_semester=selected_semester,
     )
@@ -1152,6 +1153,9 @@ def class_filter():
             _class = db.session.query(Class).filter(Class.className == class_name).first()
             _semester = db.session.query(Semester).filter(Semester.semesterName == semester_name,
                                                           Semester.year == year).first()
+            session["semester_name"]=_semester.semesterName
+            session["class_name"]=_class.className
+            session["year"]=_semester.year
 
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester:
@@ -1208,7 +1212,10 @@ def class_filter():
                                    averages=averages,
                                    existing_15min=existing_15min,
                                    existing_exam =existing_exam,
-                                   existing_test=existing_test)
+                                   existing_test=existing_test,
+                                   semester_name = semester_name,
+                                   year = year,
+                                   class_name = class_name)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/EnterPoints.html', subject_name='', )
 
@@ -1241,6 +1248,7 @@ def generate():
                                                            Semester.year == year).first()
             _semester_2= db.session.query(Semester).filter(Semester.semesterName == "Học kỳ 2",
                                                           Semester.year == year).first()
+            session["year"] = year
 
             # Kiểm tra nếu không tìm thấy lớp hoặc học kỳ
             if not _class or not _semester_1 or not _semester_2:
@@ -1292,7 +1300,8 @@ def generate():
                                    students=students,
                                    student_scores_1=student_scores_1,student_scores_2=student_scores_2,
                                    averages_1=averages_1, averages_2=averages_2 ,
-                                   class_name = _class.className)
+                                   class_name = _class.className,
+                                   year=year)
     flash("Bạn chưa được cấp chuyên môn. Vui lòng liên hệ quản trị viên!", "error")
     return render_template('Teacher/GenerateTranscript.html', subject_name='', )
 
