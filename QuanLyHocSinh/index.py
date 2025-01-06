@@ -641,17 +641,9 @@ def export_points():
 @app.route('/staff/InfoUser')
 @login_required
 def info_user():
-    try:
-        # Giải mã User Name và Password
-        username = current_user.userName
-    except Exception as e:
-        username = None
-
-        print(f"Lỗi khi giải mã dữ liệu: {e}")
     return render_template(
         'staff/InfoUser.html',
         Cuser=current_user,
-        username = username
     )
 
 @app.route('/staff/password_info', methods=['GET'])
