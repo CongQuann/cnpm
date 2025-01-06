@@ -10,16 +10,18 @@ from sqlalchemy.exc import SQLAlchemyError
 mail = Mail(app)
 
 def calculate_average(student_id, subject_id, semester_id):
+    #truy vấn điểm của học sinh theo học kỳ và môn học nếu có
     query = Point.query.filter_by(studentID=student_id, semesterID=semester_id)
-    if subject_id:
+    if subject_id: #thực hiện filter lại theo môn học nếu như người dùng nhập môn học cụ thể
         query = query.filter_by(subjectID=subject_id)
 
-    points = query.all()
-    total_points = 0
-    total_weight = 0
+    points = query.all() #lấy toàn bộ điểm học sinh phù hợp với điều kiện lọc của query
+    total_points = 0 #tổng điểm
+    total_weight = 0 #Tổng trọng số
 
+    #Duyệt qua từng điểm để tính tổng điểm và tổng trọng số
     for point in points:
-        point_type = point.pointType_point.type
+        point_type = point.pointType_point.type #Kiểm tra loại điểm
 
         if point_type == "15 phút":
             total_points += point.pointValue
@@ -31,13 +33,15 @@ def calculate_average(student_id, subject_id, semester_id):
             total_points += 3 * point.pointValue
             total_weight += 3
 
-    if total_weight == 0:
+    if total_weight == 0: #nếu không có trọng số thì trả về 0 để tránh trường hợp chia 0
         return 0
 
-    average = total_points / total_weight
+    average = total_points / total_weight #thực hiện tính trung bình
 
     return average
 
+
+#hàm thống kê số lượng đạt
 def is_student_passed(student_id, subject_id, semester_id):
     # Tính điểm trung bình của học sinh cho môn học và học kỳ cụ thể
     average = calculate_average(student_id, subject_id, semester_id)
@@ -57,13 +61,14 @@ def get_classes():
 def get_student_classes(class_id, semester_id):
     return StudentClass.query.filter_by(class_id=class_id, semester_id=semester_id).all()
 
+#lấy quy định học sinh
 def get_student_rule():
-    """Lấy quy định về học sinh."""
     return StudentRule.query.first()
-
+#lấy quy định lớp học
 def get_class_rule():
     return ClassRule.query.first()
 
+#hàm cập nhật quy định
 def update_rules(min_age, max_age, max_class_size):
     student_rule = get_student_rule()
     class_rule = get_class_rule()
@@ -77,46 +82,57 @@ def update_rules(min_age, max_age, max_class_size):
         return True  # Cập nhật thành công
     return False  # Không thể cập nhật
 
+#hàm kiểm tra môn học tồn tại hay chưa
 def existing_subject_check(subject_name):
     return Subject.query.filter_by(subjectName=subject_name).first()
 
+#hàm thêm môn học mới
 def add_new_subject(subject_name):
     new_subject = Subject(subjectName=subject_name)
     db.session.add(new_subject)
     db.session.commit()
 
+#lấy tất cả môn học từ csdl
 def get_subject():
     return Subject.query.all()
 
+#lấy tên môn học bằng id
 def get_subject_by_id(subject_id):
     return Subject.query.get(subject_id)
 
-
+#hàm xóa môn học
 def delete_subject_by_id(subject_id):
     subject = Subject.query.filter_by(id=subject_id).first()
     db.session.delete(subject)
     db.session.commit()
 
+#hàm kiểm tra môn học tồn tại (cập nhật môn học)
 def check_existing_subject_name(subject_name,subject):
     if subject.subjectName.lower() != subject_name.lower():
         # kiểm tra xem tên người dùng nhập mới đã tồn tại hay chưa
         return Subject.query.filter_by(subjectName=subject_name).first()
 
+
+#hàm cập nhật môn học
 def update_subject_info(subject,subject_name,subject_requirement,subject_description):
     subject.subjectName = subject_name
     subject.subjectRequirement = subject_requirement
     subject.subjectDescription = subject_description
     db.session.commit()
 
+#hàm kiểm tra người dùng tồn tại
 def existing_user_check(username):
     return User.query.filter_by(userName=username).first()
 
+#hàm kiểm tra email tồn tại
 def existing_email_check(email):
     return User.query.filter_by(email=email).first()
 
+#hàm kiểm tra số điện thoại tồn tại
 def existing_phone_check(phone_number):
     return User.query.filter_by(phoneNumber=phone_number).first()
 
+#hàm tạo bản ghi dựa theo phân quyền của người dùng
 def create_user_by_role(role,name,gender,dob,email,phone_number,username,hashed_password,staff_role,year_experience,admin_role):
     if role == 'Staff':
 
@@ -162,6 +178,7 @@ def create_user_by_role(role,name,gender,dob,email,phone_number,username,hashed_
         db.session.commit()
         # Thêm bản ghi vào cơ sở dữ liệu
 
+#hàm gửi email xác nhận
 def send_email(name,username,email,password):
     msg = Message(
         subject="Xác nhận đăng ký hệ thống quản lý học sinh!",  # Tiêu đề email
@@ -173,8 +190,9 @@ def send_email(name,username,email,password):
     flash('Tạo tài khoản thành công và email xác nhận đã được gửi!', 'success')
 
 
+#hàm lấy dữ liệu người dùng
 def get_user_data():
-    # Lấy danh sách người dùng, bỏ qua người dùng có vai trò là Administrator
+    # Lấy danh sách người dùng
     users = db.session.query(User).options(
         joinedload(User.staffs),
         joinedload(User.teachers),
@@ -213,7 +231,7 @@ def get_user_data():
 
     return user_data
 
-
+#hàm xóa dữ liệu người dùng thông qua id
 def delete_user_by_id(user_id):
     try:
         # Lấy thông tin người dùng từ bảng User
@@ -238,6 +256,7 @@ def delete_user_by_id(user_id):
         db.session.rollback()  # Rollback nếu có lỗi
         return str(e)  # Trả về lỗi
 
+#hàm cập nhật môn học của giáo viên
 def teacher_subject_update():
     # Lặp qua tất cả giáo viên và cập nhật môn học của họ
     for teacher in Teacher.query.all():
@@ -252,9 +271,11 @@ def teacher_subject_update():
     db.session.commit()
     flash('Cập nhật thành công!', 'success')
 
+#hàm lấy tất cả giáo viên
 def get_teacher():
     return Teacher.query.all()
 
+#hàm cập nhật lớp cho giáo viên
 def update_class_to_teacher():
     # Xử lý thêm lớp cho giáo viên
     for teacher in Teacher.query.all():

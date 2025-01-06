@@ -46,7 +46,7 @@ Báo cáo thống kê
 
 
     <!-- Bảng thống kê -->
-    {% if statistics %}
+    {% if statistics %} <!--nếu có dữ liệu từ danh sách thống kê-->
     <div id="report-section" class="mt-4">
         <h4 class="text-center">Thống kê điểm môn <strong>{{ subject_name }}</strong> - Học kỳ <strong>{{ semester_name
             }} ({{ year }})</strong></h4>
@@ -86,7 +86,7 @@ Báo cáo thống kê
         <button id="drawChart" class="btn btn-primary mt-3">Vẽ biểu đồ</button>
 
     </div>
-    {% else %}
+    {% else %}<!--nếu không có dữ liệu từ danh sách thống kê-->
     <p class="text-center">Không có dữ liệu báo cáo.</p>
     {% endif %}
 </div>

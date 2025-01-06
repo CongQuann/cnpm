@@ -28,16 +28,21 @@ from QuanLyHocSinh.dao import get_semester_info, get_subject_name, get_classes, 
     delete_user_by_id, teacher_subject_update, get_teacher, update_class_to_teacher
 from QuanLyHocSinh.models import Class, Student, User, Staff, Subject, Semester, StudentRule, ClassRule, Point, \
     Teacher, Administrator, StudentClass, Teach
-
+# Khởi tạo LoginManager để quản lý quá trình đăng nhập
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = '/'
+login_manager.login_view = '/'  # Đường dẫn để chuyển hướng khi chưa đăng nhập
 mail = Mail(app)
-#khống chế nguời dùng phải đăng nhập trước khi truy cập trang web
+
+# Middleware kiểm tra việc đăng nhập trước khi truy cập các route được bảo vệ
 @app.before_request
 def restrict_routes():
-    # Các route hoặc phần route cần bảo vệ
-    protected_prefixes = ['/Administrator','/Teacher','/staff']
+
+    #Bảo vệ các route được chỉ định, yêu cầu người dùng phải đăng nhập trước khi truy cập.
+    #Nếu người dùng chưa đăng nhập, họ sẽ được chuyển hướng đến trang đăng nhập.
+
+    # Danh sách các tiền tố của route cần bảo vệ
+    protected_prefixes = ['/Administrator', '/Teacher', '/staff']
 
     # Kiểm tra nếu route hiện tại bắt đầu với bất kỳ tiền tố nào trong danh sách
     if any(request.path.startswith(prefix) for prefix in protected_prefixes):
@@ -45,37 +50,43 @@ def restrict_routes():
         if not current_user.is_authenticated:
             return redirect(url_for('login'))
 
+# Middleware kiểm tra quyền truy cập dựa trên vai trò của người dùng
 @app.before_request
 def restrict_by_role():
-    admin_routes = ['/Administrator']
-    staff_routes = ['/staff']
-    teacher_routes = ['/Teacher']
+    """
+    Giới hạn quyền truy cập vào các route dựa trên loại tài khoản người dùng.
+    Hiển thị thông báo lỗi nếu người dùng không có quyền truy cập.
+    """
+    # Danh sách route dành cho từng loại người dùng
+    admin_routes = ['/Administrator']  # Chỉ dành cho quản trị viên
+    staff_routes = ['/staff']          # Chỉ dành cho nhân viên
+    teacher_routes = ['/Teacher']      # Chỉ dành cho giáo viên
+
+    # Kiểm tra nếu người dùng truy cập các route quản trị nhưng không phải quản trị viên
     if any(request.path.startswith(prefix) for prefix in admin_routes) and current_user.type != 'administrator':
-        return "Bạn không có quyền truy cập vào các trang quản trị.", 403
+        return "Bạn không có quyền truy cập vào các trang quản trị.", 403 #trả về lỗi truy cập quyền hạn
+
+    # Kiểm tra nếu người dùng truy cập các route nhân viên nhưng không phải nhân viên
     if any(request.path.startswith(prefix) for prefix in staff_routes) and current_user.type != 'staff':
         return "Bạn không có quyền truy cập vào các trang nhân viên.", 403
+
+    # Kiểm tra nếu người dùng truy cập các route giáo viên nhưng không phải giáo viên
     if any(request.path.startswith(prefix) for prefix in teacher_routes) and current_user.type != 'teacher':
         return "Bạn không có quyền truy cập vào các trang giáo viên.", 403
 
-@app.before_request
-def restrict_routes():
-    # Các route hoặc phần route cần bảo vệ
-    protected_prefixes = ['/Administrator','/Teacher',]
-
-    # Kiểm tra nếu route hiện tại bắt đầu với bất kỳ tiền tố nào trong danh sách
-    if any(request.path.startswith(prefix) for prefix in protected_prefixes):
-        # Nếu người dùng chưa đăng nhập, chuyển hướng đến trang đăng nhập
-        if not current_user.is_authenticated:
-            return redirect(url_for('login'))
 
 @login_manager.user_loader
 def load_user(user_id):
+    #hàm tải người dùng từ cơ sở dữ liệu dựa trên id của người dùng
     return User.query.get(int(user_id))
 
 
 @app.route("/", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
+    #Xử lý logic đăng nhập người dùng
+    #nếu là Get thì hiển thị trang đăng nhập, nếu là Post thì xử lý thông tin đăng nhập và phân quyền người dùng
+    if request.method == "POST": #Xử lý khi người dùng nhấn đăng nhập
+        #lấy thông tin username và password
         username = request.form['username']
         password = request.form['password']
 
@@ -87,8 +98,9 @@ def login():
              # Giải mã tên đăng nhập trong cơ sở dữ liệu
 
             if user.userName == username:  # Nếu username khớp
-
+                #Kiểm tra mật khẩu và phân quyền dựa trên thuộc tính loại tài khoản
                 if check_password_hash(user.password, password) and user.type == 'administrator':
+                    #Nếu mật khẩu đúng và loại tài khoản là quản trị viên thì thực hiện login và chuyển hướng đến trang quản trị viên
                     login_user(user)
                     return redirect("/Administrator/Report")
                 elif check_password_hash(user.password, password) and user.type == 'teacher':
@@ -97,7 +109,9 @@ def login():
                 elif check_password_hash(user.password, password) and user.type == 'staff':
                     login_user(user)
                     return redirect("/staff/class_edit")
+        #Nếu thông tin đăng nhập không trùng khớp thì hiển thị thông báo lỗi
         flash('Tên đăng nhập hoặc mật khẩu không đúng!',"danger")
+        #Nếu get hoặc đăng nhập thất bại thì hiển thị lại trang đăng nhập
     return render_template('index.html')
 
 @app.route("/logout")
@@ -111,25 +125,27 @@ def logout():
 # Route lấy lại mật khẩu
 @app.route('/forgot-password/<int:step>', methods=['GET', 'POST'])
 def forgot_password(step):
-    if step == 1:
-        if request.method == 'POST':
-            username = request.form['username']
-            user = None
-            users = User.query.all()
-            for i in users:
-                if i.userName==username: # Nếu username khớp
+    #Bước 1: Nhập tên tài khoản và gửi mã xác nhận
+    #Bước 2: Nhập mã xác nhận để xác minh tài khoản
+    #Bước 3: Đặt lại mật khẩu mới cho tài khoản
+    if step == 1: #Bước 1
+        if request.method == 'POST': #Nếu người dùng gửi form
+            username = request.form['username'] #Thực hiện lấy username từ form
+            user = None #tạo biến để lưu người dùng nếu tìm thấy
+            users = User.query.all() #lấy tất cả người dùng
+            for i in users:#duyệt qua từng người dùng
+                if i.userName==username: # Nếu username của người dùng và của form khớp thì gán người dùng cho biến user
                     user = i
-            print(user)
-            if not user:
+            if not user: #nếu không tìm được người dùng thì hiển thị thông báo không tồn tại và khởi động lại trang này
                 flash("Tên tài khoản không tồn tại!", "danger")
                 return render_template('Administrator/forgot_password.html', step=1)
 
-            # Tạo mã xác nhận
+            # Tạo mã xác nhận và gán cho thuộc tính verification code của người dùng
             verification_code = ''.join(random.choices(string.digits, k=6))
             user.verification_code = verification_code
             db.session.commit()
 
-            # Gửi mã xác nhận qua email (giả sử có hàm send_email)
+            # Gửi mã xác nhận qua email
             try:
                 # Tạo đối tượng email
                 msg = Message(
@@ -140,16 +156,16 @@ def forgot_password(step):
                 )
                 mail.send(msg)  # Gửi email
                 flash('Đã gửi mã xác nhận!', 'success')
-            except Exception as e:
+            except Exception as e: #Thông báo lỗi nếu có lỗi xảy ra
                 flash(f'Đã xảy ra lỗi khi gửi mã xác nhận: {str(e)}', 'danger')
 
-            return redirect(url_for('forgot_password', step=2, username=username))
+            return redirect(url_for('forgot_password', step=2, username=username)) #chuyển hướng về html bước tiếp theo với tham số username
 
         return render_template('Administrator/forgot_password.html', step=1)
 
     elif step == 2:
-        username = request.args.get('username')
-        if not username:
+        username = request.args.get('username') #lấy username từ tham số trên URL
+        if not username: #nếu không thấy username thì thực hiện lại bước 1
             flash("Vui lòng bắt đầu lại quy trình!", "danger")
             return redirect(url_for('forgot_password', step=1))
 
@@ -158,20 +174,19 @@ def forgot_password(step):
             users = User.query.all()
             for i in users:
 
-
-                if i.userName==username:  # Nếu username khớp
+                if i.userName==username:  # Nếu username khớp, gán người dùng đó cho user
                     user = i
-            input_code = request.form['verification_code']
-            if not user or input_code != user.verification_code:
+            input_code = request.form['verification_code'] # gán mã xác nhận mà người dùng nhập trên form
+            if not user or input_code != user.verification_code: #nếu không tồn tại người dùng hoặc biến chứa mã xác nhận không trùng khớp
                 flash("Mã xác nhận không đúng!", "danger")
-                return render_template('Administrator/forgot_password.html', step=2, username=username)
-
+                return render_template('Administrator/forgot_password.html', step=2, username=username)# khởi động lại trang hiện tại
+            #nếu các thông tin trùng khớp thì chuyển sang html bước tiếp theo
             flash("Mã xác nhận hợp lệ! Hãy đặt lại mật khẩu.", "success")
             return redirect(url_for('forgot_password', step=3, username=username))
-
+        #nếu phương thức là GET thì hiển thị giao diện
         return render_template('Administrator/forgot_password.html', step=2, username=username)
 
-    elif step == 3:
+    elif step == 3: #nếu tham số step ở bước 3
         username = request.args.get('username')
         if not username:
             flash("Vui lòng bắt đầu lại quy trình!", "danger")
@@ -193,11 +208,11 @@ def forgot_password(step):
                 return render_template('Administrator/forgot_password.html', step=3, username=username)
 
             # Cập nhật mật khẩu
-            user.password = generate_password_hash(new_password)
+            user.password = generate_password_hash(new_password) #thực hiện mã hóa
             user.verification_code = None  # Xóa mã xác nhận
             db.session.commit()
             flash("Đặt lại mật khẩu thành công!", "success")
-            return redirect("/")
+            return redirect("/") #chuyển hướng về trang đăng nhập
 
         return render_template('Administrator/forgot_password.html', step=3, username=username)
 # ===========================================================ADMINISTRATOR================================================
@@ -209,34 +224,44 @@ def report():
     subject_list = Subject.query.all()
     semester_list = Semester.query.all()
 
+    #Khởi tạo danh sách thống kê và thông tin cơ bản
     statistics = []
     subject_name = None
     semester_name = None
     year = None
 
+    #Xử lý khi nhận yêu cầu từ form
     if request.method == "POST":
+        #lấy môn học và học kì đã chọn từ form
         selected_subject = request.form.get('subject')
         selected_semester = request.form.get('semester')
 
+        #Nếu cả hai đều được chọn giá trị
         if selected_subject and selected_semester:
             subject_id = selected_subject
             semester_id = selected_semester
 
+            #Lấy thông tin chi tiết từ cơ sở dữ liệu thông qua giá trị id đã chọn trên form
             semester = get_semester_info(semester_id)
             subject_name = get_subject_name(subject_id)
             semester_name = semester.semesterName
             year = semester.year
 
-            classes = get_classes()
+            classes = get_classes()# lấy danh sách lớp
 
-            for cls in classes:
-                student_classes = get_student_classes(cls.id, semester_id)
-                num_students = len(student_classes)
+            for cls in classes: #duyệt qua từng lớp để thực hiện tính toán thống kê
+                student_classes = get_student_classes(cls.id, semester_id) #lấy danh sách học sinh trong lớp học
+                num_students = len(student_classes) #lấy số lượng học sinh
                 num_passed = sum(
-                    is_student_passed(student_class.student_id, subject_id, semester_id)
+                    #thống kê số lượng đạt
+                    is_student_passed(student_class.student_id, subject_id, semester_id) #nếu đạt thì +1 vào sum
                     for student_class in student_classes
                 )
+
+                #tính tỷ lệ đạt
                 pass_rate = (num_passed / num_students * 100) if num_students > 0 else 0
+
+                #thêm thống kê của lớp vào danh sách statistic
                 statistics.append({
                     "class_name": cls.className,
                     "total_students": num_students,
@@ -244,6 +269,7 @@ def report():
                     "pass_rate": f"{pass_rate:.2f}%"
                 })
 
+    #trả về giao diện với dữ liệu báo cáo thống kê
     return render_template(
         'Administrator/Report.html',
         subjects=subject_list,
@@ -260,23 +286,24 @@ def report():
 @login_required
 @app.route("/Administrator/RuleManagement", methods=["GET", "POST"])
 def rule():
-    if request.method == "POST":
+    if request.method == "POST": #nêú người dùng thực hiện gửi form
         # Lấy dữ liệu từ form
         min_age = request.form.get("min_age")
         max_age = request.form.get("max_age")
         max_class_size = request.form.get("max_class_size")
 
         # Kiểm tra giá trị nhập vào
-        if int(max_age) < int(min_age):
+        if int(max_age) < int(min_age): #nếu tuổi tối đa nhỏ hơn tối thiểu
             flash("Tuổi tối đa không được nhỏ hơn tuổi tối thiểu!", "warning")
             return redirect("/Administrator/RuleManagement")
-        if int(max_class_size) <= 0:
+        if int(max_class_size) <= 0: #nếu sĩ số lớp <=0
             flash("Sĩ số tối đa phải lớn hơn 0!", "warning")
             return redirect("/Administrator/RuleManagement")
 
         # Cập nhật quy định
-        success = update_rules(min_age, max_age, max_class_size)
+        success = update_rules(min_age, max_age, max_class_size) #thực hiện hàm cập nhật
 
+        #nêu thành công thì thông báo thành công, ngược lại thông báo không thành công
         if success:
             flash("Quy định đã được cập nhật thành công!", "success")
         else:
@@ -285,8 +312,8 @@ def rule():
         return redirect("/Administrator/RuleManagement")
 
     # Xử lý GET request
-    class_rule = get_class_rule()
-    student_rule = get_student_rule()
+    class_rule = get_class_rule() #lấy thông tin quy định lớp học
+    student_rule = get_student_rule()# lấy thông tin quy định học sinh
 
     return render_template(
         "Administrator/RuleManagement.html",
@@ -297,7 +324,7 @@ def rule():
 @login_required
 @app.route("/Administrator/SubjectManagement", methods=["GET", "POST"])
 def subject_mng():
-    if request.method == "POST":
+    if request.method == "POST": #nếu người dùng chọn thêm môn học
         subject_name = request.form.get("subject_name")  # Lấy tên môn học từ form
 
         if not subject_name:
@@ -322,18 +349,15 @@ def subject_mng():
         return redirect("/Administrator/SubjectManagement")
 
     # Nếu là GET, trả về giao diện
-    get_subject()
+    get_subject() #lấy tất cả môn học
     return render_template('Administrator/SubjectManagement.html', subjects=get_subject())
 
 
 # ======Thêm route xử lý để xóa môn học=======
 @app.route("/Administrator/SubjectManagement/delete", methods=["GET", "POST"])
 def delete_subject():
-    subject_id = request.form.get("subject_id")  # Lấy subject_id từ form
+    subject_id = request.form.get("subject_id")  # Lấy subject_id từ input hidden của môn học đó
 
-    if not subject_id:
-        flash("Không tìm thấy môn học cần xóa.", "danger")
-        return redirect("/Administrator/SubjectManagement")
 
     # Tìm môn học trong cơ sở dữ liệu
     if not get_subject_by_id(subject_id):
@@ -342,7 +366,7 @@ def delete_subject():
 
     # Xóa môn học
     try:
-        delete_subject_by_id(subject_id)
+        delete_subject_by_id(subject_id) #thực hiện hàm xóa môn học
         flash("Xóa môn học thành công!", "success")
     except Exception as e:
         db.session.rollback()
@@ -355,7 +379,7 @@ def delete_subject():
 # ============Phần chỉnh sửa môn học
 @app.route("/Administrator/SubjectManagement/edit/<int:subject_id>")  # route để gọi ra trang chỉnh sửa
 def edit_subject_page(subject_id):
-    subject = get_subject_by_id(subject_id)
+    subject = get_subject_by_id(subject_id)# lấy tên môn học bằng id
     if not subject:
         flash("Môn học không tồn tại.", "warning")
         return redirect("/Administrator/SubjectManagement")
@@ -365,12 +389,12 @@ def edit_subject_page(subject_id):
 @app.route("/Administrator/SubjectManagement/update",
            methods=["POST"])  # route chứa hàm thực hiện chức năng của trang chỉnh sửa
 def update_subject():
-    subject_id = request.form.get("subject_id")
-    subject_name = request.form.get("subject_name")
-    subject_requirement = request.form.get("subject_requirement")
-    subject_description = request.form.get("subject_description")
+    subject_id = request.form.get("subject_id") #lấy id môn học từ input hidden của form
+    subject_name = request.form.get("subject_name") #lấy tên môn học
+    subject_requirement = request.form.get("subject_requirement") #lấy yêu cầu môn học
+    subject_description = request.form.get("subject_description") #lấy mô tả môn học
     # Xử lý cập nhật
-    subject = get_subject_by_id(subject_id)
+    subject = get_subject_by_id(subject_id) #lấy môn học bằng id
     if not subject:
         flash("Không tìm thấy môn học.", "warning")
         return redirect("/Administrator/SubjectManagement")
@@ -382,7 +406,7 @@ def update_subject():
             return redirect(url_for('edit_subject_page'))
 
         #cập nhật các môn học
-        update_subject_info(subject,subject_name,subject_requirement,subject_description)
+        update_subject_info(subject,subject_name,subject_requirement,subject_description) #thực hiện cập nhật
         flash("Cập nhật thành công!", "success")
     except Exception as e:
         db.session.rollback()
@@ -394,7 +418,7 @@ def update_subject():
 # =====================================
 
 
-
+#route tạo người dùng
 @app.route('/Administrator/CreateUser', methods=['GET', 'POST'])
 def create_user():
     if request.method == 'POST':
@@ -403,8 +427,8 @@ def create_user():
         username = request.form['userName']
         email = request.form['email']
         phone_number = request.form['phoneNumber']
-        # Kiểm tra nếu tên đăng nhập đã tồn tại
 
+        # Kiểm tra nếu các thông tin đã tồn tại
         if existing_user_check(username):
             flash("Tên đăng nhập đã được sử dụng!", "danger")
             return render_template('Administrator/CreateUser.html')
@@ -418,7 +442,7 @@ def create_user():
         dob = request.form['DOB']
 
         password = request.form['password']
-        hashed_password = generate_password_hash(request.form['password'])
+        hashed_password = generate_password_hash(request.form['password']) #mã hóa mật khẩu người dùng
         role = request.form['role']
         staff_role = request.form['staffRole']
         year_experience = request.form['yearExperience']
@@ -442,7 +466,7 @@ def user_mng():
     # Render template và truyền dữ liệu vào
     return render_template('Administrator/UserManagement.html', users=users)
 
-
+#hàn chỉnh sửa người dùng dựa vào id người dùng trong trang quản lý người dùng
 @app.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -491,7 +515,7 @@ def delete_user():
 @app.route("/Administrator/TeacherManagement", methods=["GET", "POST"])
 def teacher_mng():
     if request.method == 'POST':
-        teacher_subject_update()
+        teacher_subject_update() #Xử lý cập nhật môn học cho giáo viên
 
     return render_template('Administrator/TeacherManagement.html', teachers=get_teacher(), subjects=get_subject())
 
